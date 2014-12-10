@@ -25,6 +25,16 @@ public :
   }
 };
 
+auto FriendMatcher =
+  friendDecl().bind("friend");
+class FriendPrinter : public MatchFinder::MatchCallback {
+public :
+  virtual void run(const MatchFinder::MatchResult &Result) {
+    if (const FriendDecl *FD = Result.Nodes.getNodeAs<clang::FriendDecl>("friend"))
+      FD->dump();
+  }
+};
+
 // Apply a custom category to all command-line options so that they are the
 // only ones displayed.
 static llvm::cl::OptionCategory MyToolCategory("my-tool options");
@@ -42,9 +52,9 @@ int main(int argc, const char **argv) {
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 
-  LoopPrinter Printer;
+  FriendPrinter Printer;
   MatchFinder Finder;
-  Finder.addMatcher(LoopMatcher, &Printer);
+  Finder.addMatcher(FriendMatcher, &Printer);
 
   return Tool.run(newFrontendActionFactory(&Finder).get());
 }
