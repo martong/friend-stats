@@ -31,8 +31,8 @@ struct FriendStats : ::testing::Test {
     FileA = CurrentDir;
     llvm::sys::path::append(FileA, "a.cc");
 
-    Compilations.reset(new tooling::FixedCompilationDatabase(
-        CurrentDir.str(), {"-std=c++11"}));
+    Compilations.reset(new tooling::FixedCompilationDatabase(CurrentDir.str(),
+                                                             {"-std=c++11"}));
     Sources.push_back(FileA.str());
     Tool.reset(new tooling::ClangTool(*Compilations, Sources));
 
@@ -60,6 +60,28 @@ TEST_F(FriendStats, FuncCount) {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Printer.getResult();
   EXPECT_EQ(res.friendFuncCount, 1);
+}
+
+TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedVariablesInFriendFunc) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  friend void func(A &);
+};
+void func(A &a) {
+  a.a = 1;
+  a.b = 2;
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  EXPECT_EQ(res.friendFuncCount, 1);
+  EXPECT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
 }
 
 struct FriendStatsHeader : ::testing::Test {
@@ -118,3 +140,4 @@ TEST_F(FriendStatsHeader, NoDuplicateCountOnFunctions) {
   auto res = Printer.getResult();
   EXPECT_EQ(res.friendFuncCount, 1);
 }
+

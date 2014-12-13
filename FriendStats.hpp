@@ -1,21 +1,32 @@
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
-#include <set>
+#include <map>
 
 // TODO remove
 using namespace clang;
 using namespace clang::ast_matchers;
 
-struct MyResult {
+class MemberPrinter : public MatchFinder::MatchCallback {
+public:
+  virtual void run(const MatchFinder::MatchResult &Result) {
+    llvm::outs() << "Juppee";
+  }
+};
+
+struct Result {
   int friendClassCount = 0;
   int friendFuncCount = 0;
+  std::map<SourceLocation, int> ClassResults;
+  struct FuncResult {
+    int usedPrivateVarsCount = 0;
+  };
+  std::map<SourceLocation, FuncResult> FuncResults;
 };
 
 auto FriendMatcher = friendDecl().bind("friend");
+
 class FriendPrinter : public MatchFinder::MatchCallback {
-  MyResult result;
-  std::set<SourceLocation> ClassSrcLocs;
-  std::set<SourceLocation> FuncSrcLocs;
+  Result result;
 
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
@@ -24,25 +35,43 @@ public:
       // FD->dump();
       auto srcLoc = FD->getLocation();
       if (FD->getFriendType()) {
-        auto it = ClassSrcLocs.find(srcLoc);
-        if (it == std::end(ClassSrcLocs)) {
-          //llvm::outs() << "Class/Struct\n";
+        auto it = result.ClassResults.find(srcLoc);
+        if (it == std::end(result.ClassResults)) {
+          // llvm::outs() << "Class/Struct\n";
           ++result.friendClassCount;
-          ClassSrcLocs.insert(srcLoc);
+          result.ClassResults.insert({srcLoc, 0});
         }
       } else {
-        auto it = FuncSrcLocs.find(srcLoc);
-        if (it == std::end(FuncSrcLocs)) {
-          //llvm::outs() << "Function\n";
+        auto it = result.FuncResults.find(srcLoc);
+        if (it == std::end(result.FuncResults)) {
+          // llvm::outs() << "Function\n";
           ++result.friendFuncCount;
-          FuncSrcLocs.insert(srcLoc);
+          Result::FuncResult funcRes;
+          if (NamedDecl *ND = FD->getFriendDecl()) {
+            if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
+              if (Stmt *Body = FuncD->getBody()) {
+                Body->dump();
+                // TODO how to call a new MatchFinder on the Body
+                //auto MemberExprMatcher = memberExpr().bind("member");
+                //auto MemberExprMatcher = binaryOperator().bind("member");
+                auto MemberExprMatcher = compoundStmt().bind("member");
+                //auto MemberExprMatcher = decl(forEachDescendant(stmt()));
+                MatchFinder Finder;
+                MemberPrinter Printer;
+                Finder.addMatcher(MemberExprMatcher, &Printer);
+                Finder.match(*Body, *Result.Context);
+                funcRes.usedPrivateVarsCount = 1;
+              }
+            }
+          }
+          result.FuncResults.insert({srcLoc, funcRes});
         }
       }
-      //FD->getLocation().dump(*Result.SourceManager);
-      //llvm::outs() << "\n";
-      //llvm::outs().flush();
+      // FD->getLocation().dump(*Result.SourceManager);
+      // llvm::outs() << "\n";
+      // llvm::outs().flush();
     }
   }
-  const MyResult &getResult() const { return result; }
+  const Result &getResult() const { return result; }
 };
 
