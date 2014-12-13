@@ -54,3 +54,60 @@ TEST_F(FriendStats, FuncCount) {
   auto res = Printer.getResult();
   EXPECT_EQ(res.friendFuncCount, 1);
 }
+
+struct FriendStatsHeader : ::testing::Test {
+  SmallString<128> CurrentDir;
+  SmallString<128> HeaderA;
+  SmallString<128> FileA;
+  SmallString<128> FileB;
+  std::unique_ptr<tooling::FixedCompilationDatabase> Compilations;
+  std::unique_ptr<tooling::ClangTool> Tool;
+  std::vector<std::string> Sources;
+  FriendPrinter Printer;
+  MatchFinder Finder;
+  FriendStatsHeader() {
+    // The directory used is not important since the path gets mapped to a
+    // virtual
+    // file anyway. What is important is that we have an absolute path with
+    // which
+    // to use with mapVirtualFile().
+    std::error_code EC = llvm::sys::fs::current_path(CurrentDir);
+    assert(!EC);
+    (void)EC;
+
+    HeaderA = CurrentDir;
+    llvm::sys::path::append(HeaderA, "a.h");
+    FileA = CurrentDir;
+    llvm::sys::path::append(FileA, "a.cc");
+    FileB = CurrentDir;
+    llvm::sys::path::append(FileB, "b.cc");
+
+    Compilations.reset(new tooling::FixedCompilationDatabase(
+        CurrentDir.str(), std::vector<std::string>()));
+    // Sources.push_back(HeaderA.str());
+    Sources.push_back(FileA.str());
+    Sources.push_back(FileB.str());
+    Tool.reset(new tooling::ClangTool(*Compilations, Sources));
+
+    Finder.addMatcher(FriendMatcher, &Printer);
+  }
+};
+
+TEST_F(FriendStatsHeader, NoDuplicateCountOnClasses) {
+  Tool->mapVirtualFile(HeaderA, "class A { friend class B; }; class B {};");
+  Tool->mapVirtualFile(FileA, R"phi(#include "a.h")phi");
+  Tool->mapVirtualFile(FileB, R"phi(#include "a.h")phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  EXPECT_EQ(res.friendClassCount, 1);
+}
+
+TEST_F(FriendStatsHeader, NoDuplicateCountOnFunctions) {
+  Tool->mapVirtualFile(HeaderA,
+                       "class A { friend void func(); }; void func(){};");
+  Tool->mapVirtualFile(FileA, R"phi(#include "a.h")phi");
+  Tool->mapVirtualFile(FileB, R"phi(#include "a.h")phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  EXPECT_EQ(res.friendFuncCount, 1);
+}
