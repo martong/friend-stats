@@ -9,3 +9,5 @@ target_link_libraries(friend-stats
   clangBasic
   clangASTMatchers
   )
+
+add_subdirectory(ut)
