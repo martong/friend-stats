@@ -32,7 +32,7 @@ struct FriendStats : ::testing::Test {
     llvm::sys::path::append(FileA, "a.cc");
 
     Compilations.reset(new tooling::FixedCompilationDatabase(
-        CurrentDir.str(), std::vector<std::string>()));
+        CurrentDir.str(), {"-std=c++11"}));
     Sources.push_back(FileA.str());
     Tool.reset(new tooling::ClangTool(*Compilations, Sources));
 
@@ -42,6 +42,13 @@ struct FriendStats : ::testing::Test {
 
 TEST_F(FriendStats, ClassCount) {
   Tool->mapVirtualFile(FileA, "class A { friend class B; }; class B {};");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  EXPECT_EQ(res.friendClassCount, 1);
+}
+
+TEST_F(FriendStats, ClassCount_ExtendedFriend) {
+  Tool->mapVirtualFile(FileA, "class Y {}; class A { friend Y; }; ");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Printer.getResult();
   EXPECT_EQ(res.friendClassCount, 1);
