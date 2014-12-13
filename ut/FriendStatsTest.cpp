@@ -10,37 +10,47 @@ using namespace clang::tooling;
 using namespace llvm;
 using namespace clang;
 
-TEST(FriendStats, ClassCount) {
-  // The directory used is not important since the path gets mapped to a virtual
-  // file anyway. What is important is that we have an absolute path with which
-  // to use with mapVirtualFile().
+struct FriendStats : ::testing::Test {
   SmallString<128> CurrentDir;
-  std::error_code EC = llvm::sys::fs::current_path(CurrentDir);
-  assert(!EC);
-  (void)EC;
-
-  SmallString<128> FileA = CurrentDir;
-  llvm::sys::path::append(FileA, "a.cc");
-
-  tooling::FixedCompilationDatabase Compilations(CurrentDir.str(),
-                                                 std::vector<std::string>());
+  SmallString<128> FileA;
+  std::unique_ptr<tooling::FixedCompilationDatabase> Compilations;
+  std::unique_ptr<tooling::ClangTool> Tool;
   std::vector<std::string> Sources;
-  Sources.push_back(FileA.str());
-  tooling::ClangTool Tool(Compilations, Sources);
-
-  Tool.mapVirtualFile(FileA, "class A { friend class B; }; class B {};");
-
   FriendPrinter Printer;
   MatchFinder Finder;
-  Finder.addMatcher(FriendMatcher, &Printer);
+  FriendStats() {
+    // The directory used is not important since the path gets mapped to a
+    // virtual
+    // file anyway. What is important is that we have an absolute path with
+    // which
+    // to use with mapVirtualFile().
+    std::error_code EC = llvm::sys::fs::current_path(CurrentDir);
+    assert(!EC);
+    (void)EC;
 
-  Tool.run(newFrontendActionFactory(&Finder).get());
-  llvm::outs() << "MyResult.Class: " << Printer.getResult().friendClassCount
-               << "\n";
-  llvm::outs() << "MyResult.Func: " << Printer.getResult().friendFuncCount
-               << "\n";
+    FileA = CurrentDir;
+    llvm::sys::path::append(FileA, "a.cc");
+
+    Compilations.reset(new tooling::FixedCompilationDatabase(
+        CurrentDir.str(), std::vector<std::string>()));
+    Sources.push_back(FileA.str());
+    Tool.reset(new tooling::ClangTool(*Compilations, Sources));
+
+    Finder.addMatcher(FriendMatcher, &Printer);
+  }
+};
+
+TEST_F(FriendStats, ClassCount) {
+  Tool->mapVirtualFile(FileA, "class A { friend class B; }; class B {};");
+  Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Printer.getResult();
   EXPECT_EQ(res.friendClassCount, 1);
-  EXPECT_EQ(res.friendFuncCount, 0);
 }
 
+TEST_F(FriendStats, FuncCount) {
+  Tool->mapVirtualFile(FileA,
+                       "class A { friend void func(); }; void func(){};");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  EXPECT_EQ(res.friendFuncCount, 1);
+}
