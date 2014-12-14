@@ -9,7 +9,10 @@ using namespace clang::ast_matchers;
 class MemberPrinter : public MatchFinder::MatchCallback {
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
-    llvm::outs() << "Juppee";
+    if (const MemberExpr *ME = Result.Nodes.getNodeAs<MemberExpr>("member")) {
+      llvm::outs() << "ME: \n";
+      ME->dump();
+    }
   }
 };
 
@@ -52,10 +55,11 @@ public:
               if (Stmt *Body = FuncD->getBody()) {
                 Body->dump();
                 // TODO how to call a new MatchFinder on the Body
-                //auto MemberExprMatcher = memberExpr().bind("member");
-                //auto MemberExprMatcher = binaryOperator().bind("member");
-                auto MemberExprMatcher = compoundStmt().bind("member");
-                //auto MemberExprMatcher = decl(forEachDescendant(stmt()));
+                // auto MemberExprMatcher = memberExpr().bind("member");
+                // auto MemberExprMatcher = binaryOperator().bind("member");
+                // auto MemberExprMatcher = compoundStmt().bind("member");
+                // auto MemberExprMatcher = decl(forEachDescendant(stmt()));
+                auto MemberExprMatcher = findAll(memberExpr().bind("member"));
                 MatchFinder Finder;
                 MemberPrinter Printer;
                 Finder.addMatcher(MemberExprMatcher, &Printer);
