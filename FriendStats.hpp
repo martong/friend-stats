@@ -7,10 +7,21 @@ using namespace clang;
 using namespace clang::ast_matchers;
 
 class MemberPrinter : public MatchFinder::MatchCallback {
+  // TODO should this be just RecordDecl ?
+  const CXXRecordDecl *Class;
+
 public:
+  MemberPrinter(const CXXRecordDecl *Class) : Class(Class) {}
   virtual void run(const MatchFinder::MatchResult &Result) {
     if (const MemberExpr *ME = Result.Nodes.getNodeAs<MemberExpr>("member")) {
       llvm::outs() << "ME: \n";
+      if (const FieldDecl *FD =
+              dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
+        const RecordDecl* Parent = FD->getParent();
+        if (Parent == Class) {
+          llvm::outs() << "MATCH\n";
+        }
+      }
       ME->dump();
     }
   }
@@ -64,9 +75,12 @@ public:
                 // auto MemberExprMatcher = binaryOperator().bind("member");
                 // auto MemberExprMatcher = compoundStmt().bind("member");
                 // auto MemberExprMatcher = decl(forEachDescendant(stmt()));
+                const CXXRecordDecl *RD =
+                    Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
+                assert(RD);
                 auto MemberExprMatcher = findAll(memberExpr().bind("member"));
                 MatchFinder Finder;
-                MemberPrinter Printer;
+                MemberPrinter Printer{RD};
                 Finder.addMatcher(MemberExprMatcher, &Printer);
                 Finder.match(*Body, *Result.Context);
                 funcRes.usedPrivateVarsCount = 1;
