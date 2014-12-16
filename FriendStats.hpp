@@ -26,13 +26,18 @@ struct Result {
   std::map<SourceLocation, FuncResult> FuncResults;
 };
 
-auto FriendMatcher = friendDecl().bind("friend");
+auto FriendMatcher = recordDecl(has(friendDecl().bind("friend"))).bind("class");
 
 class FriendPrinter : public MatchFinder::MatchCallback {
   Result result;
 
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
+    if (const CXXRecordDecl *RD =
+            Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class")) {
+      RD->dump();
+    }
+
     if (const FriendDecl *FD =
             Result.Nodes.getNodeAs<clang::FriendDecl>("friend")) {
       // FD->dump();
