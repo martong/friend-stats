@@ -17,8 +17,10 @@ public:
       llvm::outs() << "ME: \n";
       if (const FieldDecl *FD =
               dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
-        const RecordDecl* Parent = FD->getParent();
-        if (Parent == Class) {
+        const RecordDecl *Parent = FD->getParent();
+        bool privateOrProtected =
+            FD->getAccess() == AS_private || FD->getAccess() == AS_protected;
+        if (Parent == Class && privateOrProtected) {
           llvm::outs() << "MATCH\n";
         }
       }
@@ -38,6 +40,7 @@ struct Result {
 };
 
 auto FriendMatcher = recordDecl(has(friendDecl().bind("friend"))).bind("class");
+auto xxxMatcher = fieldDecl(isPrivate());
 
 class FriendPrinter : public MatchFinder::MatchCallback {
   Result result;
