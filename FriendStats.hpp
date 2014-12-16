@@ -6,37 +6,52 @@
 using namespace clang;
 using namespace clang::ast_matchers;
 
-class MemberPrinter : public MatchFinder::MatchCallback {
-  // TODO should this be just RecordDecl ?
-  const CXXRecordDecl *Class;
-
-public:
-  MemberPrinter(const CXXRecordDecl *Class) : Class(Class) {}
-  virtual void run(const MatchFinder::MatchResult &Result) {
-    if (const MemberExpr *ME = Result.Nodes.getNodeAs<MemberExpr>("member")) {
-      llvm::outs() << "ME: \n";
-      if (const FieldDecl *FD =
-              dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
-        const RecordDecl *Parent = FD->getParent();
-        bool privateOrProtected =
-            FD->getAccess() == AS_private || FD->getAccess() == AS_protected;
-        if (Parent == Class && privateOrProtected) {
-          llvm::outs() << "MATCH\n";
-        }
-      }
-      ME->dump();
-    }
-  }
-};
-
 struct Result {
   int friendClassCount = 0;
   int friendFuncCount = 0;
   std::map<SourceLocation, int> ClassResults;
   struct FuncResult {
+    // The number of used variables in this (friend) function
     int usedPrivateVarsCount = 0;
+    // The number of priv/protected variables
+    // in this (friend) function's referred class.
+    int parentPrivateVarsCount = 0;
   };
   std::map<SourceLocation, FuncResult> FuncResults;
+};
+
+int numberOfPrivOrProtMembers(const RecordDecl* RD) {
+  int res = 0;
+  for (const auto& x : RD->fields()) { ++res; (void)x; }
+  return res;
+}
+
+class MemberPrinter : public MatchFinder::MatchCallback {
+  // TODO should this be just RecordDecl ?
+  const CXXRecordDecl *Class;
+  Result::FuncResult funcResult;
+
+public:
+  MemberPrinter(const CXXRecordDecl *Class) : Class(Class) {}
+  virtual void run(const MatchFinder::MatchResult &Result) {
+    if (const MemberExpr *ME = Result.Nodes.getNodeAs<MemberExpr>("member")) {
+      // llvm::outs() << "ME: \n";
+      if (const FieldDecl *FD =
+              dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
+        const RecordDecl *Parent = FD->getParent();
+        // TODO count this only once:
+        funcResult.parentPrivateVarsCount = numberOfPrivOrProtMembers(Parent);
+        bool privateOrProtected =
+            FD->getAccess() == AS_private || FD->getAccess() == AS_protected;
+        if (Parent == Class && privateOrProtected) {
+          ++funcResult.usedPrivateVarsCount;
+          // llvm::outs() << "MATCH\n";
+        }
+      }
+      // ME->dump();
+    }
+  }
+  const Result::FuncResult &getResult() const { return funcResult; }
 };
 
 auto FriendMatcher = recordDecl(has(friendDecl().bind("friend"))).bind("class");
@@ -86,7 +101,7 @@ public:
                 MemberPrinter Printer{RD};
                 Finder.addMatcher(MemberExprMatcher, &Printer);
                 Finder.match(*Body, *Result.Context);
-                funcRes.usedPrivateVarsCount = 1;
+                funcRes = Printer.getResult();
               }
             }
           }

@@ -81,7 +81,8 @@ void func(A &a) {
   EXPECT_EQ(res.friendFuncCount, 1);
   EXPECT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
-  EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
 
 struct FriendStatsHeader : ::testing::Test {
