@@ -36,7 +36,7 @@ int numberOfPrivOrProtMembers(const RecordDecl *RD) {
 class MemberPrinter : public MatchFinder::MatchCallback {
   // TODO should this be just RecordDecl ?
   const CXXRecordDecl *Class;
-  std::set<const FieldDecl*> fields;
+  std::set<const FieldDecl *> fields;
   Result::FuncResult funcResult;
 
 public:
@@ -72,10 +72,10 @@ class FriendPrinter : public MatchFinder::MatchCallback {
 
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
-    if (const CXXRecordDecl *RD =
-            Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class")) {
-      // RD->dump();
-    }
+    // if (const CXXRecordDecl *RD =
+    // Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class")) {
+    //// RD->dump();
+    //}
 
     if (const FriendDecl *FD =
             Result.Nodes.getNodeAs<clang::FriendDecl>("friend")) {
@@ -95,7 +95,7 @@ public:
           ++result.friendFuncCount;
           Result::FuncResult funcRes;
           if (NamedDecl *ND = FD->getFriendDecl()) {
-            if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
+            auto handleFuncD = [&](FunctionDecl *FuncD) {
               if (Stmt *Body = FuncD->getBody()) {
                 // Body->dump();
                 const CXXRecordDecl *RD =
@@ -110,6 +110,12 @@ public:
                 funcRes.locationStr =
                     srcLoc.printToString(*Result.SourceManager);
               }
+            };
+            if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
+              handleFuncD(FuncD);
+            } else if (FunctionTemplateDecl *FTD =
+                           dyn_cast<FunctionTemplateDecl>(ND)) {
+              handleFuncD(FTD->getTemplatedDecl());
             }
           }
           result.FuncResults.insert({srcLoc, funcRes});
