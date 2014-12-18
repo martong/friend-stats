@@ -36,7 +36,8 @@ int numberOfPrivOrProtMembers(const RecordDecl *RD) {
 class MemberPrinter : public MatchFinder::MatchCallback {
   // TODO should this be just RecordDecl ?
   const CXXRecordDecl *Class;
-  std::set<const FieldDecl*> fields;
+  std::set<const FieldDecl *> fields;
+  std::map<const RecordDecl *, int> parentData;
   Result::FuncResult funcResult;
 
 public:
@@ -47,8 +48,15 @@ public:
       if (const FieldDecl *FD =
               dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
         const RecordDecl *Parent = FD->getParent();
-        // TODO count this only once:
-        funcResult.parentPrivateVarsCount = numberOfPrivOrProtMembers(Parent);
+
+        auto it = parentData.find(Parent);
+        if (it == std::end(parentData)) {
+          auto res = parentData.insert({Parent, numberOfPrivOrProtMembers(Parent)});
+          assert(res.second);
+          it = res.first;
+        }
+        funcResult.parentPrivateVarsCount = it->second;
+
         bool privateOrProtected =
             FD->getAccess() == AS_private || FD->getAccess() == AS_protected;
         if (Parent == Class && privateOrProtected) {
