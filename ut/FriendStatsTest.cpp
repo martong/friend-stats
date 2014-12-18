@@ -129,6 +129,100 @@ void func(A &a) {
   EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
 }
 
+// ================= Template  Tests ======================================== //
+struct TemplateFriendStats : FriendStats {};
+
+TEST_F(TemplateFriendStats, FuncCount) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  template <typename T>
+  friend void f(T) {}
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  EXPECT_EQ(res.friendFuncCount, 1);
+}
+
+TEST_F(TemplateFriendStats,
+       NumberOfUsedPrivateOrProtectedVariablesInFriendFunc) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  template <typename T>
+  friend void func(T, A& a) {
+    a.a = 1;
+    a.b = 2;
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+}
+
+TEST_F(TemplateFriendStats,
+       NumberOfUsedPrivateOrProtectedVariablesInFriendFuncOutLineDef) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  template <typename T>
+  friend void func(T, A& a);
+};
+template <typename T>
+void func(T, A& a) {
+  a.a = 1;
+  a.b = 2;
+}
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+}
+
+TEST_F(TemplateFriendStats,
+       TemplateHostClass) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+template <typename T>
+class A {
+  int a = 0;
+  int b;
+  int c;
+  friend void func(A &);
+};
+template <typename T>
+void func(A<T> &a) {
+  a.a = 1;
+  a.b = 2;
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+}
+
+// ================= Duplicate Tests ======================================== //
+
 struct FriendStatsHeader : ::testing::Test {
   SmallString<128> CurrentDir;
   SmallString<128> HeaderA;
