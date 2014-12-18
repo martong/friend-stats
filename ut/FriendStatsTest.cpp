@@ -85,6 +85,50 @@ void func(A &a) {
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
 
+TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedVariablesInFriendOpEqual) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  friend bool operator==(A x, A y) {
+    return x.a == y.a;
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
+}
+
+TEST_F(FriendStats, NumberOfPrivateOrProtectedVariablesInParent) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+public:
+  int c;
+  friend void func(A &);
+};
+void func(A &a) {
+  a.a = 1;
+  a.b = 2;
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Printer.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
+}
+
 struct FriendStatsHeader : ::testing::Test {
   SmallString<128> CurrentDir;
   SmallString<128> HeaderA;
