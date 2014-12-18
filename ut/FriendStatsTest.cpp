@@ -78,8 +78,8 @@ void func(A &a) {
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Printer.getResult();
-  EXPECT_EQ(res.friendFuncCount, 1);
-  EXPECT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
   EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
