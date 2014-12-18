@@ -37,27 +37,23 @@ int main(int argc, const char **argv) {
                << "\n";
   llvm::outs() << "MyResult.Func: " << Printer.getResult().friendFuncCount
                << "\n";
+
+  double sum = 0.0;
+  int num = 0;
+  for (const auto &v : Printer.getResult().FuncResults) {
+    const auto &funcRes = v.second;
+    if (funcRes.parentPrivateVarsCount) {
+      ++num;
+      sum += funcRes.usedPrivateVarsCount / funcRes.parentPrivateVarsCount;
+      llvm::outs() << "loc: " << funcRes.locationStr << "\n";
+      llvm::outs() << "usedPrivateVarsCount: " << funcRes.usedPrivateVarsCount
+                   << "\n";
+      llvm::outs() << "parentPrivateVarsCount: "
+                   << funcRes.parentPrivateVarsCount << "\n";
+    }
+  }
+  sum /= num;
+  llvm::outs() << "Avarage usage of priv variables: " << sum << "\n";
   return ret;
 }
 
-// int main() {
-// std::string error;
-// std::vector<std::string> sources{"test1.cpp"};
-// auto compDb = CompilationDatabase::autoDetectFromDirectory("./test", error);
-// if (!error.empty()) {
-// llvm::outs() << "ERROR: ";
-// llvm::outs() << error << "\n";
-//}
-// ClangTool Tool(*compDb, sources);
-
-// FriendPrinter Printer;
-// MatchFinder Finder;
-// Finder.addMatcher(FriendMatcher, &Printer);
-
-// auto ret = Tool.run(newFrontendActionFactory(&Finder).get());
-// llvm::outs() << "MyResult.Class: " << Printer.getResult().friendClassCount
-//<< "\n";
-// llvm::outs() << "MyResult.Func: " << Printer.getResult().friendFuncCount
-//<< "\n";
-// return ret;
-//}
