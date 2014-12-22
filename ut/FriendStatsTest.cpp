@@ -199,18 +199,18 @@ TEST_F(TemplateFriendStats,
        TemplateHostClass) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
-template <typename T>
-class A {
+template <typename T> class A {
   int a = 0;
   int b;
   int c;
-  friend void func(A &);
+  friend void func(A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
 };
-template <typename T>
-void func(A<T> &a) {
-  a.a = 1;
-  a.b = 2;
-};
+// explicit call to func is needed otherwise it's body is not generated in the
+// ClassTemplateSpecializationDecl.
+void f() { A<int> aint; func(aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Printer.getResult();

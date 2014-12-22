@@ -72,58 +72,61 @@ class FriendPrinter : public MatchFinder::MatchCallback {
 
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
-    // if (const CXXRecordDecl *RD =
-    // Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class")) {
-    //// RD->dump();
-    //}
-
-    if (const FriendDecl *FD =
-            Result.Nodes.getNodeAs<clang::FriendDecl>("friend")) {
-      // FD->dump();
-      auto srcLoc = FD->getLocation();
-      if (FD->getFriendType()) { // friend class
-        auto it = result.ClassResults.find(srcLoc);
-        if (it == std::end(result.ClassResults)) {
-          // llvm::outs() << "Class/Struct\n";
-          ++result.friendClassCount;
-          result.ClassResults.insert({srcLoc, 0});
-        }
-      } else { // friend function
-        auto it = result.FuncResults.find(srcLoc);
-        if (it == std::end(result.FuncResults)) {
-          // llvm::outs() << "Function\n";
-          ++result.friendFuncCount;
-          Result::FuncResult funcRes;
-          if (NamedDecl *ND = FD->getFriendDecl()) {
-            auto handleFuncD = [&](FunctionDecl *FuncD) {
-              if (Stmt *Body = FuncD->getBody()) {
-                // Body->dump();
-                const CXXRecordDecl *RD =
-                    Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
-                assert(RD);
-                auto MemberExprMatcher = findAll(memberExpr().bind("member"));
-                MatchFinder Finder;
-                MemberPrinter Printer{RD};
-                Finder.addMatcher(MemberExprMatcher, &Printer);
-                Finder.match(*Body, *Result.Context);
-                funcRes = Printer.getResult();
-                funcRes.locationStr =
-                    srcLoc.printToString(*Result.SourceManager);
+    if (const CXXRecordDecl *RD =
+            Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class")) {
+      // This CXXRecordDecl is not the child of a ClassTemplateDecl
+      // i.e. this is a template instantiation/specialization.
+      if (!RD->getDescribedClassTemplate()) {
+        if (const FriendDecl *FD =
+                Result.Nodes.getNodeAs<clang::FriendDecl>("friend")) {
+          // FD->dump();
+          auto srcLoc = FD->getLocation();
+          if (FD->getFriendType()) { // friend class
+            auto it = result.ClassResults.find(srcLoc);
+            if (it == std::end(result.ClassResults)) {
+              // llvm::outs() << "Class/Struct\n";
+              ++result.friendClassCount;
+              result.ClassResults.insert({srcLoc, 0});
+            }
+          } else { // friend function
+            auto it = result.FuncResults.find(srcLoc);
+            if (it == std::end(result.FuncResults)) {
+              // llvm::outs() << "Function\n";
+              ++result.friendFuncCount;
+              Result::FuncResult funcRes;
+              if (NamedDecl *ND = FD->getFriendDecl()) {
+                auto handleFuncD = [&](FunctionDecl *FuncD) {
+                  if (Stmt *Body = FuncD->getBody()) {
+                    // Body->dump();
+                    const CXXRecordDecl *RD =
+                        Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
+                    assert(RD);
+                    auto MemberExprMatcher =
+                        findAll(memberExpr().bind("member"));
+                    MatchFinder Finder;
+                    MemberPrinter Printer{RD};
+                    Finder.addMatcher(MemberExprMatcher, &Printer);
+                    Finder.match(*Body, *Result.Context);
+                    funcRes = Printer.getResult();
+                    funcRes.locationStr =
+                        srcLoc.printToString(*Result.SourceManager);
+                  }
+                };
+                if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
+                  handleFuncD(FuncD);
+                } else if (FunctionTemplateDecl *FTD =
+                               dyn_cast<FunctionTemplateDecl>(ND)) {
+                  handleFuncD(FTD->getTemplatedDecl());
+                }
               }
-            };
-            if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
-              handleFuncD(FuncD);
-            } else if (FunctionTemplateDecl *FTD =
-                           dyn_cast<FunctionTemplateDecl>(ND)) {
-              handleFuncD(FTD->getTemplatedDecl());
+              result.FuncResults.insert({srcLoc, funcRes});
             }
           }
-          result.FuncResults.insert({srcLoc, funcRes});
+          // FD->getLocation().dump(*Result.SourceManager);
+          // llvm::outs() << "\n";
+          // llvm::outs().flush();
         }
       }
-      // FD->getLocation().dump(*Result.SourceManager);
-      // llvm::outs() << "\n";
-      // llvm::outs().flush();
     }
   }
   const Result &getResult() const { return result; }
