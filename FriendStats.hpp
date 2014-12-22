@@ -96,58 +96,73 @@ public:
       return;
     }
     // FD->dump();
+
     auto srcLoc = FD->getLocation();
     if (FD->getFriendType()) { // friend class
-      auto it = result.ClassResults.find(srcLoc);
-      if (it == std::end(result.ClassResults)) {
-        // llvm::outs() << "Class/Struct\n";
-        ++result.friendClassCount;
-        result.ClassResults.insert({srcLoc, 0});
-      }
+      handleFriendClass(RD, FD, srcLoc, Result);
     } else { // friend function
-      auto it = result.FuncResults.find(srcLoc);
-      if (it != std::end(result.FuncResults)) {
-        return;
-      }
-      // llvm::outs() << "Function\n";
-      ++result.friendFuncCount;
-      Result::FuncResult funcRes;
-      NamedDecl *ND = FD->getFriendDecl();
-      if (!ND) {
-        return;
-      }
-      auto handleFuncD = [&](FunctionDecl *FuncD) {
-        Stmt *Body = FuncD->getBody();
-        if (!Body) {
-          return;
-        }
-        assert(RD);
-        auto MemberExprMatcher = findAll(memberExpr().bind("member"));
-        MatchFinder Finder;
-        MemberHandler memberHandler{RD};
-        Finder.addMatcher(MemberExprMatcher, &memberHandler);
-        Finder.match(*Body, *Result.Context);
-        funcRes = memberHandler.getResult();
-        funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
-      };
-      if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
-        handleFuncD(FuncD);
-      } else if (FunctionTemplateDecl *FTD =
-                     dyn_cast<FunctionTemplateDecl>(ND)) {
-        // int numOfFuncSpecs = std::distance(FTD->specializations().begin(),
-        // FTD->specializations().end());
-        // llvm::outs() << "FTD specs: " << numOfFuncSpecs << "\n";
-        for (const auto &spec : FTD->specializations()) {
-          handleFuncD(spec);
-        }
-        handleFuncD(FTD->getTemplatedDecl());
-      }
-      result.FuncResults.insert({srcLoc, funcRes});
+      handleFriendFunction(RD, FD, srcLoc, Result);
     }
     // FD->getLocation().dump(*Result.SourceManager);
     // llvm::outs() << "\n";
     // llvm::outs().flush();
   }
   const Result &getResult() const { return result; }
+
+private:
+
+  void handleFriendClass(const CXXRecordDecl *RD, const FriendDecl *FD,
+                         const SourceLocation &srcLoc,
+                         const MatchFinder::MatchResult &Result) {
+    auto it = result.ClassResults.find(srcLoc);
+    if (it != std::end(result.ClassResults)) {
+      return;
+    }
+    // llvm::outs() << "Class/Struct\n";
+    ++result.friendClassCount;
+    result.ClassResults.insert({srcLoc, 0});
+  }
+
+  void handleFriendFunction(const CXXRecordDecl *RD, const FriendDecl *FD,
+                            const SourceLocation &srcLoc,
+                            const MatchFinder::MatchResult &Result) {
+    auto it = result.FuncResults.find(srcLoc);
+    if (it != std::end(result.FuncResults)) {
+      return;
+    }
+    // llvm::outs() << "Function\n";
+    ++result.friendFuncCount;
+    Result::FuncResult funcRes;
+    NamedDecl *ND = FD->getFriendDecl();
+    if (!ND) {
+      return;
+    }
+    auto handleFuncD = [&](FunctionDecl *FuncD) {
+      Stmt *Body = FuncD->getBody();
+      if (!Body) {
+        return;
+      }
+      assert(RD);
+      auto MemberExprMatcher = findAll(memberExpr().bind("member"));
+      MatchFinder Finder;
+      MemberHandler memberHandler{RD};
+      Finder.addMatcher(MemberExprMatcher, &memberHandler);
+      Finder.match(*Body, *Result.Context);
+      funcRes = memberHandler.getResult();
+      funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
+    };
+    if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
+      handleFuncD(FuncD);
+    } else if (FunctionTemplateDecl *FTD = dyn_cast<FunctionTemplateDecl>(ND)) {
+      // int numOfFuncSpecs = std::distance(FTD->specializations().begin(),
+      // FTD->specializations().end());
+      // llvm::outs() << "FTD specs: " << numOfFuncSpecs << "\n";
+      for (const auto &spec : FTD->specializations()) {
+        handleFuncD(spec);
+      }
+      handleFuncD(FTD->getTemplatedDecl());
+    }
+    result.FuncResults.insert({srcLoc, funcRes});
+  }
 };
 
