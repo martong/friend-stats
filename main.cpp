@@ -42,18 +42,28 @@ int main(int argc, const char **argv) {
   int num = 0;
   for (const auto &v : Handler.getResult().FuncResults) {
     const auto &funcRes = v.second;
-    if (funcRes.parentPrivateVarsCount) {
+    int numerator =
+        funcRes.usedPrivateVarsCount + funcRes.usedPrivateMethodsCount;
+    int denominator =
+        funcRes.parentPrivateVarsCount + funcRes.parentPrivateMethodsCount;
+    if (denominator) {
       ++num;
-      sum += funcRes.usedPrivateVarsCount / funcRes.parentPrivateVarsCount;
+      sum += numerator / denominator;
       llvm::outs() << "loc: " << funcRes.locationStr << "\n";
       llvm::outs() << "usedPrivateVarsCount: " << funcRes.usedPrivateVarsCount
                    << "\n";
       llvm::outs() << "parentPrivateVarsCount: "
                    << funcRes.parentPrivateVarsCount << "\n";
+      llvm::outs() << "usedPrivateMethodsCount: "
+                   << funcRes.usedPrivateMethodsCount << "\n";
+      llvm::outs() << "parentPrivateMethodsCount: "
+                   << funcRes.parentPrivateMethodsCount << "\n";
     }
   }
+  llvm::outs() << "Number of uninterpreted friend function declarations: "
+               << Handler.getResult().friendFuncCount - num << "\n";
   sum /= num;
-  llvm::outs() << "Avarage usage of priv variables: " << sum << "\n";
+  llvm::outs() << "Avarage usage of priv variables/methods: " << sum << "\n";
   return ret;
 }
 
