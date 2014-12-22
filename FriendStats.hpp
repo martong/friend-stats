@@ -72,11 +72,20 @@ class FriendHandler : public MatchFinder::MatchCallback {
 
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
+
+    // auto tuPrinter = [&Result]() {
+    // Result.Context->getTranslationUnitDecl()->dump();
+    // return 0;
+    //};
+    // const static int x = tuPrinter();
+    //(void)x;
+
     const CXXRecordDecl *RD =
         Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
     if (!RD) {
       return;
     }
+    // RD->dump();
     // This CXXRecordDecl is the child of a ClassTemplateDecl
     // i.e. this is not a template instantiation/specialization.
     if (RD->getDescribedClassTemplate()) {
@@ -108,24 +117,29 @@ public:
         return;
       }
       auto handleFuncD = [&](FunctionDecl *FuncD) {
-        if (Stmt *Body = FuncD->getBody()) {
-          // Body->dump();
-          const CXXRecordDecl *RD =
-              Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
-          assert(RD);
-          auto MemberExprMatcher = findAll(memberExpr().bind("member"));
-          MatchFinder Finder;
-          MemberHandler memberHandler{RD};
-          Finder.addMatcher(MemberExprMatcher, &memberHandler);
-          Finder.match(*Body, *Result.Context);
-          funcRes = memberHandler.getResult();
-          funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
+        Stmt *Body = FuncD->getBody();
+        if (!Body) {
+          return;
         }
+        assert(RD);
+        auto MemberExprMatcher = findAll(memberExpr().bind("member"));
+        MatchFinder Finder;
+        MemberHandler memberHandler{RD};
+        Finder.addMatcher(MemberExprMatcher, &memberHandler);
+        Finder.match(*Body, *Result.Context);
+        funcRes = memberHandler.getResult();
+        funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
       };
       if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
         handleFuncD(FuncD);
       } else if (FunctionTemplateDecl *FTD =
                      dyn_cast<FunctionTemplateDecl>(ND)) {
+        // int numOfFuncSpecs = std::distance(FTD->specializations().begin(),
+        // FTD->specializations().end());
+        // llvm::outs() << "FTD specs: " << numOfFuncSpecs << "\n";
+        for (const auto &spec : FTD->specializations()) {
+          handleFuncD(spec);
+        }
         handleFuncD(FTD->getTemplatedDecl());
       }
       result.FuncResults.insert({srcLoc, funcRes});

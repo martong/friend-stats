@@ -221,6 +221,33 @@ void f() { A<int> aint; func(aint); }
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
 
+TEST_F(TemplateFriendStats,
+       ClassTemplateFuncTemplate) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+template <typename T> class A {
+  int a = 0;
+  int b;
+  int c;
+  template <typename U>
+  friend void func(U, A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+};
+// explicit call to func is needed otherwise it's body is not generated in the
+// ClassTemplateSpecializationDecl.
+void f() { A<int> aint; func(1, aint); }
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+}
+
 // ================= Duplicate Tests ======================================== //
 
 struct FriendStatsHeader : ::testing::Test {
