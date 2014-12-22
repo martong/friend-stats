@@ -65,7 +65,10 @@ public:
   const Result::FuncResult &getResult() const { return funcResult; }
 };
 
-auto FriendMatcher = recordDecl(has(friendDecl().bind("friend"))).bind("class");
+// auto FriendMatcher =
+// recordDecl(has(friendDecl().bind("friend"))).bind("class");
+auto FriendMatcher =
+    friendDecl(hasParent(recordDecl().bind("class"))).bind("friend");
 
 class FriendHandler : public MatchFinder::MatchCallback {
   Result result;
@@ -73,12 +76,12 @@ class FriendHandler : public MatchFinder::MatchCallback {
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
 
-    // auto tuPrinter = [&Result]() {
-    // Result.Context->getTranslationUnitDecl()->dump();
-    // return 0;
-    //};
-    // const static int x = tuPrinter();
-    //(void)x;
+    auto tuPrinter = [&Result]() {
+      Result.Context->getTranslationUnitDecl()->dump();
+      return 0;
+    };
+    const static int x = tuPrinter();
+    (void)x;
 
     const CXXRecordDecl *RD =
         Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
@@ -96,6 +99,8 @@ public:
       return;
     }
     // FD->dump();
+    //llvm::outs() << "FD: " << FD << "\n";
+    //llvm::outs() << "RD: " << RD << "\n";
 
     auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
     if (FD->getFriendType()) { // friend class
@@ -110,7 +115,6 @@ public:
   const Result &getResult() const { return result; }
 
 private:
-
   void handleFriendClass(const CXXRecordDecl *RD, const FriendDecl *FD,
                          const FullSourceLoc &srcLoc,
                          const MatchFinder::MatchResult &Result) {
