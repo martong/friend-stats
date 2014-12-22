@@ -170,7 +170,7 @@ class A {
 }
 
 TEST_F(TemplateFriendStats,
-       NumberOfUsedPrivateOrProtectedVariablesInFriendFuncOutLineDef) {
+       NumberOfUsedPrivateOrProtectedVariablesInFriendFuncOutOfLineDef) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
 class A {
@@ -195,7 +195,7 @@ void func(T, A& a) {
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
 
-TEST_F(TemplateFriendStats, TemplateHostClass) {
+TEST_F(TemplateFriendStats, ClassTemplate) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
 template <typename T> class A {
@@ -283,6 +283,50 @@ void f() { A<int> aint; func(1, aint); func2(aint); }
     EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
   }
 }
+
+TEST_F(TemplateFriendStats, ClassTemplateFuncTemplateOutOfLineDef) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+template <typename T> class A;
+
+template <typename T>
+void func(A<T> &a);
+
+template <typename T> class A {
+  int a = 0;
+  int b;
+  int c;
+
+  // refers to a full specialization for this particular T
+  friend void func <T> (A &a);
+};
+
+template <typename T>
+void func(A<T>& a) {
+  a.a = 1;
+}
+
+template void func(A<int>& a);
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto it = res.FuncResults.begin();
+  //{
+    //auto p = *it;
+    //EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
+    //EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+  //}
+  //++it;
+ {
+    auto p = *it;
+    EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
+    EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+  }
+
+}
+
 // ================= Duplicate Tests ======================================== //
 
 struct FriendStatsHeader : ::testing::Test {
