@@ -10,7 +10,7 @@ using namespace clang::ast_matchers;
 struct Result {
   int friendClassCount = 0;
   int friendFuncCount = 0;
-  std::map<SourceLocation, int> ClassResults;
+  std::map<FullSourceLoc, int> ClassResults;
   struct FuncResult {
     std::string locationStr;
     // The number of used variables in this (friend) function
@@ -20,7 +20,7 @@ struct Result {
     int parentPrivateVarsCount = 0;
     // TODO what about static members ?
   };
-  std::map<SourceLocation, FuncResult> FuncResults;
+  std::map<FullSourceLoc, FuncResult> FuncResults;
 };
 
 int numberOfPrivOrProtMembers(const RecordDecl *RD) {
@@ -97,7 +97,7 @@ public:
     }
     // FD->dump();
 
-    auto srcLoc = FD->getLocation();
+    auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
     if (FD->getFriendType()) { // friend class
       handleFriendClass(RD, FD, srcLoc, Result);
     } else { // friend function
@@ -112,7 +112,7 @@ public:
 private:
 
   void handleFriendClass(const CXXRecordDecl *RD, const FriendDecl *FD,
-                         const SourceLocation &srcLoc,
+                         const FullSourceLoc &srcLoc,
                          const MatchFinder::MatchResult &Result) {
     auto it = result.ClassResults.find(srcLoc);
     if (it != std::end(result.ClassResults)) {
@@ -124,7 +124,7 @@ private:
   }
 
   void handleFriendFunction(const CXXRecordDecl *RD, const FriendDecl *FD,
-                            const SourceLocation &srcLoc,
+                            const FullSourceLoc &srcLoc,
                             const MatchFinder::MatchResult &Result) {
     auto it = result.FuncResults.find(srcLoc);
     if (it != std::end(result.FuncResults)) {
