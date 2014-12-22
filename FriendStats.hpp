@@ -33,14 +33,14 @@ int numberOfPrivOrProtMembers(const RecordDecl *RD) {
   return res;
 }
 
-class MemberPrinter : public MatchFinder::MatchCallback {
+class MemberHandler : public MatchFinder::MatchCallback {
   // TODO should this be just RecordDecl ?
   const CXXRecordDecl *Class;
   std::set<const FieldDecl *> fields;
   Result::FuncResult funcResult;
 
 public:
-  MemberPrinter(const CXXRecordDecl *Class) : Class(Class) {}
+  MemberHandler(const CXXRecordDecl *Class) : Class(Class) {}
   virtual void run(const MatchFinder::MatchResult &Result) {
     if (const MemberExpr *ME = Result.Nodes.getNodeAs<MemberExpr>("member")) {
       // llvm::outs() << "ME: \n";
@@ -67,67 +67,72 @@ public:
 
 auto FriendMatcher = recordDecl(has(friendDecl().bind("friend"))).bind("class");
 
-class FriendPrinter : public MatchFinder::MatchCallback {
+class FriendHandler : public MatchFinder::MatchCallback {
   Result result;
 
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
-    if (const CXXRecordDecl *RD =
-            Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class")) {
-      // This CXXRecordDecl is not the child of a ClassTemplateDecl
-      // i.e. this is a template instantiation/specialization.
-      if (!RD->getDescribedClassTemplate()) {
-        if (const FriendDecl *FD =
-                Result.Nodes.getNodeAs<clang::FriendDecl>("friend")) {
-          // FD->dump();
-          auto srcLoc = FD->getLocation();
-          if (FD->getFriendType()) { // friend class
-            auto it = result.ClassResults.find(srcLoc);
-            if (it == std::end(result.ClassResults)) {
-              // llvm::outs() << "Class/Struct\n";
-              ++result.friendClassCount;
-              result.ClassResults.insert({srcLoc, 0});
-            }
-          } else { // friend function
-            auto it = result.FuncResults.find(srcLoc);
-            if (it == std::end(result.FuncResults)) {
-              // llvm::outs() << "Function\n";
-              ++result.friendFuncCount;
-              Result::FuncResult funcRes;
-              if (NamedDecl *ND = FD->getFriendDecl()) {
-                auto handleFuncD = [&](FunctionDecl *FuncD) {
-                  if (Stmt *Body = FuncD->getBody()) {
-                    // Body->dump();
-                    const CXXRecordDecl *RD =
-                        Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
-                    assert(RD);
-                    auto MemberExprMatcher =
-                        findAll(memberExpr().bind("member"));
-                    MatchFinder Finder;
-                    MemberPrinter Printer{RD};
-                    Finder.addMatcher(MemberExprMatcher, &Printer);
-                    Finder.match(*Body, *Result.Context);
-                    funcRes = Printer.getResult();
-                    funcRes.locationStr =
-                        srcLoc.printToString(*Result.SourceManager);
-                  }
-                };
-                if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
-                  handleFuncD(FuncD);
-                } else if (FunctionTemplateDecl *FTD =
-                               dyn_cast<FunctionTemplateDecl>(ND)) {
-                  handleFuncD(FTD->getTemplatedDecl());
-                }
-              }
-              result.FuncResults.insert({srcLoc, funcRes});
-            }
-          }
-          // FD->getLocation().dump(*Result.SourceManager);
-          // llvm::outs() << "\n";
-          // llvm::outs().flush();
-        }
-      }
+    const CXXRecordDecl *RD =
+        Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
+    if (!RD) {
+      return;
     }
+    // This CXXRecordDecl is the child of a ClassTemplateDecl
+    // i.e. this is not a template instantiation/specialization.
+    if (RD->getDescribedClassTemplate()) {
+      return;
+    }
+    const FriendDecl *FD = Result.Nodes.getNodeAs<clang::FriendDecl>("friend");
+    if (!FD) {
+      return;
+    }
+    // FD->dump();
+    auto srcLoc = FD->getLocation();
+    if (FD->getFriendType()) { // friend class
+      auto it = result.ClassResults.find(srcLoc);
+      if (it == std::end(result.ClassResults)) {
+        // llvm::outs() << "Class/Struct\n";
+        ++result.friendClassCount;
+        result.ClassResults.insert({srcLoc, 0});
+      }
+    } else { // friend function
+      auto it = result.FuncResults.find(srcLoc);
+      if (it != std::end(result.FuncResults)) {
+        return;
+      }
+      // llvm::outs() << "Function\n";
+      ++result.friendFuncCount;
+      Result::FuncResult funcRes;
+      NamedDecl *ND = FD->getFriendDecl();
+      if (!ND) {
+        return;
+      }
+      auto handleFuncD = [&](FunctionDecl *FuncD) {
+        if (Stmt *Body = FuncD->getBody()) {
+          // Body->dump();
+          const CXXRecordDecl *RD =
+              Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
+          assert(RD);
+          auto MemberExprMatcher = findAll(memberExpr().bind("member"));
+          MatchFinder Finder;
+          MemberHandler memberHandler{RD};
+          Finder.addMatcher(MemberExprMatcher, &memberHandler);
+          Finder.match(*Body, *Result.Context);
+          funcRes = memberHandler.getResult();
+          funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
+        }
+      };
+      if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
+        handleFuncD(FuncD);
+      } else if (FunctionTemplateDecl *FTD =
+                     dyn_cast<FunctionTemplateDecl>(ND)) {
+        handleFuncD(FTD->getTemplatedDecl());
+      }
+      result.FuncResults.insert({srcLoc, funcRes});
+    }
+    // FD->getLocation().dump(*Result.SourceManager);
+    // llvm::outs() << "\n";
+    // llvm::outs().flush();
   }
   const Result &getResult() const { return result; }
 };

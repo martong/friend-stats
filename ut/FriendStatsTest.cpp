@@ -16,7 +16,7 @@ struct FriendStats : ::testing::Test {
   std::unique_ptr<tooling::FixedCompilationDatabase> Compilations;
   std::unique_ptr<tooling::ClangTool> Tool;
   std::vector<std::string> Sources;
-  FriendPrinter Printer;
+  FriendHandler Handler;
   MatchFinder Finder;
   FriendStats() {
     // The directory used is not important since the path gets mapped to a
@@ -36,21 +36,21 @@ struct FriendStats : ::testing::Test {
     Sources.push_back(FileA.str());
     Tool.reset(new tooling::ClangTool(*Compilations, Sources));
 
-    Finder.addMatcher(FriendMatcher, &Printer);
+    Finder.addMatcher(FriendMatcher, &Handler);
   }
 };
 
 TEST_F(FriendStats, ClassCount) {
   Tool->mapVirtualFile(FileA, "class A { friend class B; }; class B {};");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   EXPECT_EQ(res.friendClassCount, 1);
 }
 
 TEST_F(FriendStats, ClassCount_ExtendedFriend) {
   Tool->mapVirtualFile(FileA, "class Y {}; class A { friend Y; }; ");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   EXPECT_EQ(res.friendClassCount, 1);
 }
 
@@ -58,7 +58,7 @@ TEST_F(FriendStats, FuncCount) {
   Tool->mapVirtualFile(FileA,
                        "class A { friend void func(); }; void func(){};");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncCount, 1);
 }
 
@@ -77,7 +77,7 @@ void func(A &a) {
 };
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
@@ -98,7 +98,7 @@ class A {
 };
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
@@ -122,7 +122,7 @@ void func(A &a) {
 };
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
@@ -141,7 +141,7 @@ class A {
 };
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncCount, 1);
 }
 
@@ -161,7 +161,7 @@ class A {
 };
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
@@ -187,7 +187,7 @@ void func(T, A& a) {
 }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
@@ -213,7 +213,7 @@ template <typename T> class A {
 void f() { A<int> aint; func(aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
@@ -231,7 +231,7 @@ struct FriendStatsHeader : ::testing::Test {
   std::unique_ptr<tooling::FixedCompilationDatabase> Compilations;
   std::unique_ptr<tooling::ClangTool> Tool;
   std::vector<std::string> Sources;
-  FriendPrinter Printer;
+  FriendHandler Handler;
   MatchFinder Finder;
   FriendStatsHeader() {
     // The directory used is not important since the path gets mapped to a
@@ -257,7 +257,7 @@ struct FriendStatsHeader : ::testing::Test {
     Sources.push_back(FileB.str());
     Tool.reset(new tooling::ClangTool(*Compilations, Sources));
 
-    Finder.addMatcher(FriendMatcher, &Printer);
+    Finder.addMatcher(FriendMatcher, &Handler);
   }
 };
 
@@ -266,7 +266,7 @@ TEST_F(FriendStatsHeader, NoDuplicateCountOnClasses) {
   Tool->mapVirtualFile(FileA, R"phi(#include "a.h")phi");
   Tool->mapVirtualFile(FileB, R"phi(#include "a.h")phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   EXPECT_EQ(res.friendClassCount, 1);
 }
 
@@ -276,7 +276,7 @@ TEST_F(FriendStatsHeader, NoDuplicateCountOnFunctions) {
   Tool->mapVirtualFile(FileA, R"phi(#include "a.h")phi");
   Tool->mapVirtualFile(FileB, R"phi(#include "a.h")phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Printer.getResult();
+  auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncCount, 1);
 }
 

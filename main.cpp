@@ -28,19 +28,19 @@ int main(int argc, const char **argv) {
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 
-  FriendPrinter Printer;
+  FriendHandler Handler;
   MatchFinder Finder;
-  Finder.addMatcher(FriendMatcher, &Printer);
+  Finder.addMatcher(FriendMatcher, &Handler);
 
   auto ret = Tool.run(newFrontendActionFactory(&Finder).get());
-  llvm::outs() << "MyResult.Class: " << Printer.getResult().friendClassCount
+  llvm::outs() << "MyResult.Class: " << Handler.getResult().friendClassCount
                << "\n";
-  llvm::outs() << "MyResult.Func: " << Printer.getResult().friendFuncCount
+  llvm::outs() << "MyResult.Func: " << Handler.getResult().friendFuncCount
                << "\n";
 
   double sum = 0.0;
   int num = 0;
-  for (const auto &v : Printer.getResult().FuncResults) {
+  for (const auto &v : Handler.getResult().FuncResults) {
     const auto &funcRes = v.second;
     if (funcRes.parentPrivateVarsCount) {
       ++num;
