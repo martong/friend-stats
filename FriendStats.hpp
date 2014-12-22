@@ -18,14 +18,29 @@ struct Result {
     // The number of priv/protected variables
     // in this (friend) function's referred class.
     int parentPrivateVarsCount = 0;
+    // The number of used methods in this (friend) function
+    int usedPrivateMethodsCount = 0;
+    // The number of priv/protected methods
+    // in this (friend) function's referred class.
+    int parentPrivateMethodsCount = 0;
     // TODO what about static members ?
   };
   std::map<FullSourceLoc, FuncResult> FuncResults;
 };
 
-int numberOfPrivOrProtMembers(const RecordDecl *RD) {
+int numberOfPrivOrProtFields(const RecordDecl *RD) {
   int res = 0;
   for (const auto &x : RD->fields()) {
+    if (x->getAccess() == AS_private || x->getAccess() == AS_protected) {
+      ++res;
+    }
+  }
+  return res;
+}
+
+int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
+  int res = 0;
+  for (const auto &x : RD->methods()) {
     if (x->getAccess() == AS_private || x->getAccess() == AS_protected) {
       ++res;
     }
@@ -37,26 +52,38 @@ class MemberHandler : public MatchFinder::MatchCallback {
   // TODO should this be just RecordDecl ?
   const CXXRecordDecl *Class;
   std::set<const FieldDecl *> fields;
+  std::set<const CXXMethodDecl *> methods;
   Result::FuncResult funcResult;
 
 public:
   MemberHandler(const CXXRecordDecl *Class) : Class(Class) {}
   virtual void run(const MatchFinder::MatchResult &Result) {
     if (const MemberExpr *ME = Result.Nodes.getNodeAs<MemberExpr>("member")) {
-      // llvm::outs() << "ME: \n";
+      //llvm::outs() << "ME: \n";
       if (const FieldDecl *FD =
               dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
         const RecordDecl *Parent = FD->getParent();
         // TODO count this only once:
-        funcResult.parentPrivateVarsCount = numberOfPrivOrProtMembers(Parent);
+        funcResult.parentPrivateVarsCount = numberOfPrivOrProtFields(Parent);
         bool privateOrProtected =
             FD->getAccess() == AS_private || FD->getAccess() == AS_protected;
         if (Parent == Class && privateOrProtected) {
           fields.insert(FD);
           // TODO this could be calculated once in getResult
           funcResult.usedPrivateVarsCount = fields.size();
-          //++funcResult.usedPrivateVarsCount;
-          // llvm::outs() << "MATCH\n";
+        }
+      } else if (const CXXMethodDecl *MD =
+                     dyn_cast_or_null<const CXXMethodDecl>(
+                         ME->getMemberDecl())) {
+        const CXXRecordDecl *Parent = MD->getParent();
+        // TODO count this only once:
+        funcResult.parentPrivateMethodsCount = numberOfPrivOrProtMethods(Parent);
+        bool privateOrProtected =
+            MD->getAccess() == AS_private || MD->getAccess() == AS_protected;
+        if (Parent == Class && privateOrProtected) {
+          methods.insert(MD);
+          // TODO this could be calculated once in getResult
+          funcResult.usedPrivateMethodsCount = methods.size();
         }
       }
       // ME->dump();
@@ -76,12 +103,12 @@ class FriendHandler : public MatchFinder::MatchCallback {
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
 
-    auto tuPrinter = [&Result]() {
-      Result.Context->getTranslationUnitDecl()->dump();
-      return 0;
-    };
-    const static int x = tuPrinter();
-    (void)x;
+    //auto tuPrinter = [&Result]() {
+      //Result.Context->getTranslationUnitDecl()->dump();
+      //return 0;
+    //};
+    //const static int x = tuPrinter();
+    //(void)x;
 
     const CXXRecordDecl *RD =
         Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
@@ -99,8 +126,8 @@ public:
       return;
     }
     // FD->dump();
-    //llvm::outs() << "FD: " << FD << "\n";
-    //llvm::outs() << "RD: " << RD << "\n";
+    // llvm::outs() << "FD: " << FD << "\n";
+    // llvm::outs() << "RD: " << RD << "\n";
 
     auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
     if (FD->getFriendType()) { // friend class
