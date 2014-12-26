@@ -85,32 +85,6 @@ void func(A &a) {
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
 
-TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedMembersInFriendFunc) {
-  Tool->mapVirtualFile(FileA,
-                       R"phi(
-class A {
-  int a = 0;
-  int b = 0;
-  void privFunc() {}
-  void privFunc(int) {}
-  friend void func(A &);
-};
-void func(A &a) {
-  a.a = 1;
-  a.privFunc();
-};
-    )phi");
-  Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Handler.getResult();
-  ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
-  EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
-  EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
-  EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
-  EXPECT_EQ(p.second.parentPrivateMethodsCount, 2);
-}
-
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedVariablesInFriendOpEqual) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
@@ -153,6 +127,56 @@ void func(A &a) {
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
   EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
+}
+
+// TODO test only the methods and write separate composite test
+TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedMethodsInFriendFunc) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b = 0;
+  void privFunc() {}
+  void privFunc(int) {}
+  friend void func(A &);
+};
+void func(A &a) {
+  a.a = 1;
+  a.privFunc();
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
+  EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
+  EXPECT_EQ(p.second.parentPrivateMethodsCount, 2);
+}
+
+TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedTypesInFriendFunc) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  using Int = int;
+  friend void func(Int);
+};
+void func(A::Int) {
+  struct X {
+	A::Int i;
+	void foo(A::Int);
+  };
+  using MyInt = A::Int;
+  A::Int i = 0;
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
 }
 
 // ================= Template  Tests ======================================== //

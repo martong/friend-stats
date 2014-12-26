@@ -1,5 +1,7 @@
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
+#include "clang/AST/RecursiveASTVisitor.h"
+#include "clang/AST/TypeVisitor.h"
 #include <map>
 #include <set>
 
@@ -48,6 +50,101 @@ int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
   return res;
 }
 
+class TypeHandler : public MatchFinder::MatchCallback {
+  const CXXRecordDecl *Class;
+
+public:
+  TypeHandler(const CXXRecordDecl *Class) : Class(Class) {}
+  virtual void run(const MatchFinder::MatchResult &Result) {
+    llvm::outs() << "RUN: "
+                 << "\n";
+    // if (const QualType *QT = Result.Nodes.getNodeAs<QualType>("type")) {
+    // llvm::outs() << "QT: " << QT << "\n";
+    //}
+    // if (const ValueDecl *VD = Result.Nodes.getNodeAs<ValueDecl>("valueDecl"))
+    // {
+    // llvm::outs() << "VD: " << VD << "\n";
+    //}
+    if (const VarDecl *VD = Result.Nodes.getNodeAs<VarDecl>("decl")) {
+      llvm::outs() << "VD: " << VD << "\n";
+    }
+  }
+};
+
+class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
+public:
+  bool VisitValueDecl(ValueDecl *D) {
+    // For debugging, dumping the AST nodes will show which nodes are already
+    // being visited.
+    // D->dump();
+    // D->getType()->dump();
+
+    // The return value indicates whether we want the visitation to proceed.
+    // Return false to stop the traversal of the AST.
+    return true;
+  }
+  bool VisitTypedefNameDecl(TypedefNameDecl *TD) {
+
+    //TD->dump();
+
+    TD->getUnderlyingType()->dump();
+
+    //for (const auto x : TD->redecls()) {
+      //llvm::outs() << "Redecl: ";
+      //x->dump();
+      //llvm::outs() << "\n";
+    //}
+
+    QualType QT = TD->getUnderlyingType();
+    const Type *T = QT.getTypePtr(); 
+    llvm::outs() << "Type1: " << T << "\n"; // ElaboratedType
+    llvm::outs() << "TypeClassName: " << T->getTypeClassName() << "\n"; // ElaboratedType
+    //QualType SingleStepDesugar =
+        //T->getLocallyUnqualifiedSingleStepDesugaredType();
+    //while (SingleStepDesugar != QualType(T, 0)) {
+    while (true) {
+
+      //if (!SingleStepDesugar.getTypePtr()) break;
+      QualType SingleStepDesugar = T->getLocallyUnqualifiedSingleStepDesugaredType();
+      const Type *T2 = SingleStepDesugar.getTypePtr();
+      if (SingleStepDesugar == QualType(T, 0)) break;
+      llvm::outs() << "Type2: " << T2 << "\n";
+      llvm::outs() << "TypeClassName: " << T2->getTypeClassName() << "\n"; // ElaboratedType
+      T2->dump();
+      if (const TypedefType* TT = dyn_cast<TypedefType>(T2)) {
+        //VisitTypedefNameDecl(TT->getDecl());
+        llvm::outs() << "Decl: " << TT->getDecl() << "\n";
+      }
+
+      T = T2;
+    }
+
+    //QualType QT = TD->getUnderlyingType();
+    //const Type *T = QT.getTypePtr(); 
+    //T->dump();
+    //struct TVisitor : TypeVisitor<TVisitor> {
+      //void VisitTypedefType(const TypedefType *T) {
+        //llvm::outs() << "TypedefType: ";
+        //T->dump();
+        //llvm::outs() << "\n";
+      //}
+      //void VisitElaboratedType(const ElaboratedType *T) {
+        //llvm::outs() << "ElaboratedType: " << T;
+        //T->dump();
+        //llvm::outs() << "\n";
+        //llvm::outs() << "ET: namedType: " << T->getNamedType().getTypePtr();
+      //}
+    //} tvisitor;
+    //tvisitor.Visit(T);
+
+
+    // TD->getUnderlyingType()->elabo
+    // ElaboratedType* ET; ET->typedef
+    // llvm::outs() << "TD under: " << TD->getUnderlyingType()->alias << "\n";
+    return true;
+  }
+};
+
 class MemberHandler : public MatchFinder::MatchCallback {
   // TODO should this be just RecordDecl ?
   const CXXRecordDecl *Class;
@@ -59,7 +156,7 @@ public:
   MemberHandler(const CXXRecordDecl *Class) : Class(Class) {}
   virtual void run(const MatchFinder::MatchResult &Result) {
     if (const MemberExpr *ME = Result.Nodes.getNodeAs<MemberExpr>("member")) {
-      //llvm::outs() << "ME: \n";
+      // llvm::outs() << "ME: \n";
       if (const FieldDecl *FD =
               dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
         const RecordDecl *Parent = FD->getParent();
@@ -77,7 +174,8 @@ public:
                          ME->getMemberDecl())) {
         const CXXRecordDecl *Parent = MD->getParent();
         // TODO count this only once:
-        funcResult.parentPrivateMethodsCount = numberOfPrivOrProtMethods(Parent);
+        funcResult.parentPrivateMethodsCount =
+            numberOfPrivOrProtMethods(Parent);
         bool privateOrProtected =
             MD->getAccess() == AS_private || MD->getAccess() == AS_protected;
         if (Parent == Class && privateOrProtected) {
@@ -92,8 +190,6 @@ public:
   const Result::FuncResult &getResult() const { return funcResult; }
 };
 
-// auto FriendMatcher =
-// recordDecl(has(friendDecl().bind("friend"))).bind("class");
 auto FriendMatcher =
     friendDecl(hasParent(recordDecl().bind("class"))).bind("friend");
 
@@ -103,12 +199,12 @@ class FriendHandler : public MatchFinder::MatchCallback {
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
 
-    //auto tuPrinter = [&Result]() {
-      //Result.Context->getTranslationUnitDecl()->dump();
-      //return 0;
-    //};
-    //const static int x = tuPrinter();
-    //(void)x;
+    auto tuPrinter = [&Result]() {
+      Result.Context->getTranslationUnitDecl()->dump();
+      return 0;
+    };
+    const static int x = tuPrinter();
+    (void)x;
 
     const CXXRecordDecl *RD =
         Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
@@ -174,11 +270,29 @@ private:
         return;
       }
       assert(RD);
+
       auto MemberExprMatcher = findAll(memberExpr().bind("member"));
       MatchFinder Finder;
       MemberHandler memberHandler{RD};
       Finder.addMatcher(MemberExprMatcher, &memberHandler);
       Finder.match(*Body, *Result.Context);
+
+      {
+        // ValueDecl* VD;
+        // VD->getType();
+        // TypedefNameDecl* TD;
+        // TD->getUnderlyingType();
+        // auto Matcher = findAll(qualType().bind("type"));
+        // auto Matcher = findAll(decl().bind("decl"));
+        // MatchFinder Finder;
+        // TypeHandler typeHandler{RD};
+        // Finder.addMatcher(Matcher, &typeHandler);
+        // Finder.match(*Body, *Result.Context);
+      }
+
+      TypeHandlerVisitor Visitor;
+      Visitor.TraverseStmt(Body);
+
       funcRes = memberHandler.getResult();
       funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
     };
