@@ -159,22 +159,22 @@ void func(A &a) {
 // ================= Type Tests ============================================= //
 struct FriendStatsForTypes : FriendStats {};
 
-//TEST_F(FriendStatsForTypes, FuncParameter) {
-  //Tool->mapVirtualFile(FileA,
-                       //R"phi(
-//class A {
-  //using Int = int;
-  //friend void func(Int);
+// TEST_F(FriendStatsForTypes, FuncParameter) {
+// Tool->mapVirtualFile(FileA,
+// R"phi(
+// class A {
+// using Int = int;
+// friend void func(Int);
 //};
-//void func(A::Int) {
+// void func(A::Int) {
 //};
-    //)phi");
-  //Tool->run(newFrontendActionFactory(&Finder).get());
-  //auto res = Handler.getResult();
-  //ASSERT_EQ(res.friendFuncCount, 1);
-  //ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  //auto p = *res.FuncResults.begin();
-  //EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+//)phi");
+// Tool->run(newFrontendActionFactory(&Finder).get());
+// auto res = Handler.getResult();
+// ASSERT_EQ(res.friendFuncCount, 1);
+// ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+// auto p = *res.FuncResults.begin();
+// EXPECT_EQ(p.second.types.usedPrivateCount, 1);
 //}
 
 TEST_F(FriendStatsForTypes, Variable) {
@@ -194,6 +194,88 @@ void func() {
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
   EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+}
+
+TEST_F(FriendStatsForTypes, ParentPrivateCount) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+
+  // two private types defined
+  using Int = int;
+  struct Nested1 {};
+
+  friend void func();
+
+public:
+
+  struct Nested2 {};
+  using Int2 = int;
+};
+
+void func() {
+  A::Int i = 0;
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+  EXPECT_EQ(p.second.types.parentPrivateCount, 2);
+}
+
+TEST_F(FriendStatsForTypes, ParentPrivateCountComplex) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+
+  // two private types defined
+  using Int = int;
+  struct Nested1 {};
+
+  friend void f();
+
+public:
+
+  struct Nested2 {};
+  using Int2 = int;
+};
+
+void f() {
+  A::Int i = 0;
+};
+
+class B {
+
+  // 3 private types defined
+  using Int = int;
+  struct Nested1 {};
+  using Double = double;
+
+  friend void g();
+
+public:
+
+  struct Nested2 {};
+  using Int2 = int;
+};
+
+void g() {
+  B::Int i = 0;
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 2);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{2});
+  auto p = res.FuncResults.begin();
+  EXPECT_EQ(p->second.types.usedPrivateCount, 1);
+  EXPECT_EQ(p->second.types.parentPrivateCount, 2);
+  ++p;
+  EXPECT_EQ(p->second.types.usedPrivateCount, 1);
+  EXPECT_EQ(p->second.types.parentPrivateCount, 3);
 }
 
 TEST_F(FriendStatsForTypes, NumberOfUsedPrivateOrProtectedTypesInFriendFunc) {
@@ -404,17 +486,16 @@ template void func(A<int>& a);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto it = res.FuncResults.begin();
   //{
-    //auto p = *it;
-    //EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
-    //EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+  // auto p = *it;
+  // EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
+  // EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
   //}
   //++it;
- {
+  {
     auto p = *it;
     EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
     EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
   }
-
 }
 
 // ================= Duplicate Tests ======================================== //

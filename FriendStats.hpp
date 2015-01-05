@@ -34,7 +34,6 @@ struct Result {
       // in this (friend) function's referred class.
       int parentPrivateCount = 0;
     } types;
-
   };
   std::map<FullSourceLoc, FuncResult> FuncResults;
 };
@@ -49,10 +48,14 @@ int numberOfPrivOrProtFields(const RecordDecl *RD) {
   return res;
 }
 
+template <typename T> bool privOrProt(const T *x) {
+  return x->getAccess() == AS_private || x->getAccess() == AS_protected;
+}
+
 int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
   int res = 0;
   for (const auto &x : RD->methods()) {
-    if (x->getAccess() == AS_private || x->getAccess() == AS_protected) {
+    if (privOrProt(x)) {
       ++res;
     }
   }
@@ -80,15 +83,37 @@ public:
   }
 };
 
+class PrivTypeCounter : public RecursiveASTVisitor<PrivTypeCounter> {
+  int result = 0;
+
+public:
+  int getResult() const { return result; }
+  bool VisitRecordDecl(const RecordDecl *RD) {
+    llvm::outs() << "PrivTypeCounter RD"
+                 << "\n";
+    if (privOrProt(RD)) {
+      ++result;
+    }
+    return true;
+  }
+  bool VisitTypedefNameDecl(const TypedefNameDecl *TD) {
+    llvm::outs() << "PrivTypeCounter TND"
+                 << "\n";
+    if (privOrProt(TD)) {
+      ++result;
+    }
+    return true;
+  }
+};
+
 class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
   const CXXRecordDecl *Class;
   Result::FuncResult::Types typesResult;
 
 public:
-
   TypeHandlerVisitor(const CXXRecordDecl *Class) : Class(Class) {}
 
-  const Result::FuncResult::Types& getResult() const { return typesResult; }
+  const Result::FuncResult::Types &getResult() const { return typesResult; }
 
   // TODO Verify and make it nicer
   TypedefNameDecl *GetTypeAliasDecl(QualType QT) {
@@ -229,11 +254,16 @@ public:
     // llvm::outs() << "FD: " << FD << "\n";
     // llvm::outs() << "RD: " << RD << "\n";
 
+    PrivTypeCounter Visitor;
+    Visitor.TraverseCXXRecordDecl(const_cast<CXXRecordDecl *>(RD));
+
     auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
     if (FD->getFriendType()) { // friend class
       handleFriendClass(RD, FD, srcLoc, Result);
     } else { // friend function
       handleFriendFunction(RD, FD, srcLoc, Result);
+      result.FuncResults.at(srcLoc).types.parentPrivateCount =
+          Visitor.getResult();
     }
     // FD->getLocation().dump(*Result.SourceManager);
     // llvm::outs() << "\n";
