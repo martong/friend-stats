@@ -26,6 +26,15 @@ struct Result {
     // in this (friend) function's referred class.
     int parentPrivateMethodsCount = 0;
     // TODO what about static members ?
+
+    struct Types {
+      // The number of used types in this (friend) function
+      int usedPrivateCount = 0;
+      // The number of priv/protected types
+      // in this (friend) function's referred class.
+      int parentPrivateCount = 0;
+    } types;
+
   };
   std::map<FullSourceLoc, FuncResult> FuncResults;
 };
@@ -72,81 +81,76 @@ public:
 };
 
 class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
+  const CXXRecordDecl *Class;
+  Result::FuncResult::Types typesResult;
+
 public:
+
+  TypeHandlerVisitor(const CXXRecordDecl *Class) : Class(Class) {}
+
+  const Result::FuncResult::Types& getResult() const { return typesResult; }
+
+  // TODO Verify and make it nicer
+  TypedefNameDecl *GetTypeAliasDecl(QualType QT) {
+    const Type *T = QT.getTypePtr();
+    while (true) {
+      QualType SingleStepDesugar =
+          T->getLocallyUnqualifiedSingleStepDesugaredType();
+      const Type *T2 = SingleStepDesugar.getTypePtr();
+      if (SingleStepDesugar == QualType(T, 0))
+        break;
+      // T2->dump();
+      if (const TypedefType *TT = dyn_cast<TypedefType>(T2)) {
+        return TT->getDecl();
+      }
+      T = T2;
+    }
+    return nullptr;
+  }
+
   bool VisitValueDecl(ValueDecl *D) {
-    // For debugging, dumping the AST nodes will show which nodes are already
-    // being visited.
-    // D->dump();
-    // D->getType()->dump();
+    QualType QT = D->getType();
+    QT->dump();
+
+    // TODO handle funtion proto
+    const Type *T = QT.getTypePtr();
+    if (T->isFunctionProtoType()) {
+      return true;
+    }
+
+    TypedefNameDecl *TND = GetTypeAliasDecl(QT);
+    llvm::outs() << "Decl: " << TND << "\n";
+    llvm::outs() << "DeclContext: " << TND->getDeclContext() << "\n";
+    CXXRecordDecl *RD = dyn_cast<CXXRecordDecl>(TND->getDeclContext());
+    llvm::outs() << "DeclContext RD: " << RD << "\n";
+    if (RD == Class) {
+      ++typesResult.usedPrivateCount;
+    }
 
     // The return value indicates whether we want the visitation to proceed.
     // Return false to stop the traversal of the AST.
     return true;
   }
-  bool VisitTypedefNameDecl(TypedefNameDecl *TD) {
 
-    //TD->dump();
+  bool VisitTypedefNameDecl(TypedefNameDecl *TD) {
 
     TD->getUnderlyingType()->dump();
 
-    //for (const auto x : TD->redecls()) {
-      //llvm::outs() << "Redecl: ";
-      //x->dump();
-      //llvm::outs() << "\n";
-    //}
-
     QualType QT = TD->getUnderlyingType();
-    const Type *T = QT.getTypePtr(); 
-    llvm::outs() << "Type1: " << T << "\n"; // ElaboratedType
-    llvm::outs() << "TypeClassName: " << T->getTypeClassName() << "\n"; // ElaboratedType
-    //QualType SingleStepDesugar =
-        //T->getLocallyUnqualifiedSingleStepDesugaredType();
-    //while (SingleStepDesugar != QualType(T, 0)) {
-    while (true) {
-
-      //if (!SingleStepDesugar.getTypePtr()) break;
-      QualType SingleStepDesugar = T->getLocallyUnqualifiedSingleStepDesugaredType();
-      const Type *T2 = SingleStepDesugar.getTypePtr();
-      if (SingleStepDesugar == QualType(T, 0)) break;
-      llvm::outs() << "Type2: " << T2 << "\n";
-      llvm::outs() << "TypeClassName: " << T2->getTypeClassName() << "\n"; // ElaboratedType
-      T2->dump();
-      if (const TypedefType* TT = dyn_cast<TypedefType>(T2)) {
-        //VisitTypedefNameDecl(TT->getDecl());
-        llvm::outs() << "Decl: " << TT->getDecl() << "\n";
-      }
-
-      T = T2;
+    TypedefNameDecl *TND = GetTypeAliasDecl(QT);
+    llvm::outs() << "Decl: " << TND << "\n";
+    llvm::outs() << "DeclContext: " << TND->getDeclContext() << "\n";
+    CXXRecordDecl *RD = dyn_cast<CXXRecordDecl>(TND->getDeclContext());
+    llvm::outs() << "DeclContext RD: " << RD << "\n";
+    if (RD == Class) {
+      ++typesResult.usedPrivateCount;
     }
 
-    //QualType QT = TD->getUnderlyingType();
-    //const Type *T = QT.getTypePtr(); 
-    //T->dump();
-    //struct TVisitor : TypeVisitor<TVisitor> {
-      //void VisitTypedefType(const TypedefType *T) {
-        //llvm::outs() << "TypedefType: ";
-        //T->dump();
-        //llvm::outs() << "\n";
-      //}
-      //void VisitElaboratedType(const ElaboratedType *T) {
-        //llvm::outs() << "ElaboratedType: " << T;
-        //T->dump();
-        //llvm::outs() << "\n";
-        //llvm::outs() << "ET: namedType: " << T->getNamedType().getTypePtr();
-      //}
-    //} tvisitor;
-    //tvisitor.Visit(T);
-
-
-    // TD->getUnderlyingType()->elabo
-    // ElaboratedType* ET; ET->typedef
-    // llvm::outs() << "TD under: " << TD->getUnderlyingType()->alias << "\n";
     return true;
   }
 };
 
 class MemberHandler : public MatchFinder::MatchCallback {
-  // TODO should this be just RecordDecl ?
   const CXXRecordDecl *Class;
   std::set<const FieldDecl *> fields;
   std::set<const CXXMethodDecl *> methods;
@@ -290,11 +294,14 @@ private:
         // Finder.match(*Body, *Result.Context);
       }
 
-      TypeHandlerVisitor Visitor;
+      TypeHandlerVisitor Visitor{RD};
       Visitor.TraverseStmt(Body);
 
+      // This is location dependent
+      // TODO funcRes.members = ...
       funcRes = memberHandler.getResult();
       funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
+      funcRes.types = Visitor.getResult();
     };
     if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
       handleFuncD(FuncD);

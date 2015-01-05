@@ -156,7 +156,47 @@ void func(A &a) {
   EXPECT_EQ(p.second.parentPrivateMethodsCount, 2);
 }
 
-TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedTypesInFriendFunc) {
+// ================= Type Tests ============================================= //
+struct FriendStatsForTypes : FriendStats {};
+
+//TEST_F(FriendStatsForTypes, FuncParameter) {
+  //Tool->mapVirtualFile(FileA,
+                       //R"phi(
+//class A {
+  //using Int = int;
+  //friend void func(Int);
+//};
+//void func(A::Int) {
+//};
+    //)phi");
+  //Tool->run(newFrontendActionFactory(&Finder).get());
+  //auto res = Handler.getResult();
+  //ASSERT_EQ(res.friendFuncCount, 1);
+  //ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  //auto p = *res.FuncResults.begin();
+  //EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+//}
+
+TEST_F(FriendStatsForTypes, Variable) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  using Int = int;
+  friend void func();
+};
+void func() {
+  A::Int i = 0;
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+}
+
+TEST_F(FriendStatsForTypes, NumberOfUsedPrivateOrProtectedTypesInFriendFunc) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
 class A {
