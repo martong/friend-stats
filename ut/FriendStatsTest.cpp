@@ -204,11 +204,12 @@ TEST_F(FriendStatsForTypes, TypeAlias) {
                        R"phi(
 class A {
   using Int = int;
+  using Int2 = int;
   friend void func();
 };
 void func() {
   using X = A::Int;
-  typedef A::Int Y;
+  typedef A::Int2 Y;
 };
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
@@ -224,12 +225,13 @@ TEST_F(FriendStatsForTypes, NestedTypeAlias) {
                        R"phi(
 class A {
   using Int = int;
+  using Int2 = int;
   friend void func();
 };
 void func() {
   struct S {
     using X = A::Int;
-    typedef A::Int Y;
+    typedef A::Int2 Y;
   };
 };
     )phi");
