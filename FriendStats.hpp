@@ -110,14 +110,12 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
   const CXXRecordDecl *Class;
   Result::FuncResult::Types typesResult;
 
-public:
-  TypeHandlerVisitor(const CXXRecordDecl *Class) : Class(Class) {}
-
-  const Result::FuncResult::Types &getResult() const { return typesResult; }
-
   // TODO Verify and make it nicer
   TypedefNameDecl *GetTypeAliasDecl(QualType QT) {
     const Type *T = QT.getTypePtr();
+    if (const TypedefType *TT = dyn_cast<TypedefType>(T)) {
+      return TT->getDecl();
+    }
     while (true) {
       QualType SingleStepDesugar =
           T->getLocallyUnqualifiedSingleStepDesugaredType();
@@ -133,17 +131,12 @@ public:
     return nullptr;
   }
 
-  bool VisitValueDecl(ValueDecl *D) {
-    QualType QT = D->getType();
-    QT->dump();
-
-    // TODO handle funtion proto
-    const Type *T = QT.getTypePtr();
-    if (T->isFunctionProtoType()) {
-      return true;
+  void HandleType(QualType QT) {
+    TypedefNameDecl *TND = GetTypeAliasDecl(QT);
+    if (!TND) {
+      return;
     }
 
-    TypedefNameDecl *TND = GetTypeAliasDecl(QT);
     llvm::outs() << "Decl: " << TND << "\n";
     llvm::outs() << "DeclContext: " << TND->getDeclContext() << "\n";
     CXXRecordDecl *RD = dyn_cast<CXXRecordDecl>(TND->getDeclContext());
@@ -151,7 +144,35 @@ public:
     if (RD == Class) {
       ++typesResult.usedPrivateCount;
     }
+  }
 
+public:
+  TypeHandlerVisitor(const CXXRecordDecl *Class) : Class(Class) {}
+
+  const Result::FuncResult::Types &getResult() const { return typesResult; }
+
+  bool VisitValueDecl(ValueDecl *D) {
+    llvm::outs() << "VisitValueDecl: "
+                 << "\n";
+    QualType QT = D->getType();
+    QT->dump();
+
+    const Type *T = QT.getTypePtr();
+    if (const FunctionProtoType *FP = T->getAs<FunctionProtoType>()) {
+      // if (T->isFunctionProtoType()) {
+      // llvm::outs() << "FunctionProtoType: "
+      //<< "\n";
+      QualType RetType = FP->getReturnType();
+      HandleType(RetType);
+      // for (const auto &x : FP->getParamTypes()) {
+      // llvm::outs() << "Param Type   ";
+      // x->dump();
+      // HandleType(x);
+      //}
+      return true;
+    }
+
+    HandleType(QT);
     // The return value indicates whether we want the visitation to proceed.
     // Return false to stop the traversal of the AST.
     return true;
@@ -162,14 +183,7 @@ public:
     TD->getUnderlyingType()->dump();
 
     QualType QT = TD->getUnderlyingType();
-    TypedefNameDecl *TND = GetTypeAliasDecl(QT);
-    llvm::outs() << "Decl: " << TND << "\n";
-    llvm::outs() << "DeclContext: " << TND->getDeclContext() << "\n";
-    CXXRecordDecl *RD = dyn_cast<CXXRecordDecl>(TND->getDeclContext());
-    llvm::outs() << "DeclContext RD: " << RD << "\n";
-    if (RD == Class) {
-      ++typesResult.usedPrivateCount;
-    }
+    HandleType(QT);
 
     return true;
   }
@@ -299,7 +313,9 @@ private:
       return;
     }
     auto handleFuncD = [&](FunctionDecl *FuncD) {
-      Stmt *Body = FuncD->getBody();
+      const FunctionDecl *FuncDefinition =
+          nullptr; // This will be set to the decl with the body
+      Stmt *Body = FuncD->getBody(FuncDefinition);
       if (!Body) {
         return;
       }
@@ -325,7 +341,12 @@ private:
       }
 
       TypeHandlerVisitor Visitor{RD};
-      Visitor.TraverseStmt(Body);
+      // Traverse the function header and body
+      // or just the header if body is not existent.
+      FuncDefinition
+          ? Visitor.TraverseFunctionDecl(
+                const_cast<FunctionDecl *>(FuncDefinition))
+          : Visitor.TraverseFunctionDecl(FuncD);
 
       // This is location dependent
       // TODO funcRes.members = ...
