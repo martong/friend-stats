@@ -38,18 +38,18 @@ struct Result {
   std::map<FullSourceLoc, FuncResult> FuncResults;
 };
 
+template <typename T> bool privOrProt(const T *x) {
+  return x->getAccess() == AS_private || x->getAccess() == AS_protected;
+}
+
 int numberOfPrivOrProtFields(const RecordDecl *RD) {
   int res = 0;
   for (const auto &x : RD->fields()) {
-    if (x->getAccess() == AS_private || x->getAccess() == AS_protected) {
+    if (privOrProt(x)) {
       ++res;
     }
   }
   return res;
-}
-
-template <typename T> bool privOrProt(const T *x) {
-  return x->getAccess() == AS_private || x->getAccess() == AS_protected;
 }
 
 int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
@@ -61,27 +61,6 @@ int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
   }
   return res;
 }
-
-class TypeHandler : public MatchFinder::MatchCallback {
-  const CXXRecordDecl *Class;
-
-public:
-  TypeHandler(const CXXRecordDecl *Class) : Class(Class) {}
-  virtual void run(const MatchFinder::MatchResult &Result) {
-    llvm::outs() << "RUN: "
-                 << "\n";
-    // if (const QualType *QT = Result.Nodes.getNodeAs<QualType>("type")) {
-    // llvm::outs() << "QT: " << QT << "\n";
-    //}
-    // if (const ValueDecl *VD = Result.Nodes.getNodeAs<ValueDecl>("valueDecl"))
-    // {
-    // llvm::outs() << "VD: " << VD << "\n";
-    //}
-    if (const VarDecl *VD = Result.Nodes.getNodeAs<VarDecl>("decl")) {
-      llvm::outs() << "VD: " << VD << "\n";
-    }
-  }
-};
 
 class PrivTypeCounter : public RecursiveASTVisitor<PrivTypeCounter> {
   int result = 0;
