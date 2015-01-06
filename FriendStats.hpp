@@ -88,6 +88,7 @@ public:
 class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
   const CXXRecordDecl *Class;
   Result::FuncResult::Types typesResult;
+  std::set<const Type*> countedTypes;
 
   // TODO Verify and make it nicer
   TypedefNameDecl *GetTypeAliasDecl(QualType QT) {
@@ -121,14 +122,14 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
     CXXRecordDecl *RD = dyn_cast<CXXRecordDecl>(TND->getDeclContext());
     llvm::outs() << "DeclContext RD: " << RD << "\n";
     if (RD == Class) {
-      ++typesResult.usedPrivateCount;
+      countedTypes.insert(QT.getTypePtr());
     }
   }
 
 public:
   TypeHandlerVisitor(const CXXRecordDecl *Class) : Class(Class) {}
 
-  const Result::FuncResult::Types &getResult() const { return typesResult; }
+  std::size_t getResult() const { return countedTypes.size(); }
 
   bool VisitValueDecl(ValueDecl *D) {
     llvm::outs() << "VisitValueDecl: "
@@ -331,7 +332,7 @@ private:
       // TODO funcRes.members = ...
       funcRes = memberHandler.getResult();
       funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
-      funcRes.types = Visitor.getResult();
+      funcRes.types.usedPrivateCount = Visitor.getResult();
     };
     if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
       handleFuncD(FuncD);
