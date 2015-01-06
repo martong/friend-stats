@@ -159,24 +159,6 @@ void func(A &a) {
 // ================= Type Tests ============================================= //
 struct FriendStatsForTypes : FriendStats {};
 
-// TEST_F(FriendStatsForTypes, FuncParameter) {
-// Tool->mapVirtualFile(FileA,
-// R"phi(
-// class A {
-// using Int = int;
-// friend void func(Int);
-//};
-// void func(A::Int) {
-//};
-//)phi");
-// Tool->run(newFrontendActionFactory(&Finder).get());
-// auto res = Handler.getResult();
-// ASSERT_EQ(res.friendFuncCount, 1);
-// ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-// auto p = *res.FuncResults.begin();
-// EXPECT_EQ(p.second.types.usedPrivateCount, 1);
-//}
-
 TEST_F(FriendStatsForTypes, Variable) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
@@ -186,6 +168,127 @@ class A {
 };
 void func() {
   A::Int i = 0;
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+}
+
+TEST_F(FriendStatsForTypes, NestedVariable) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  using Int = int;
+  friend void func();
+};
+void func() {
+  struct X {
+    A::Int i = 0;
+  };
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+}
+
+TEST_F(FriendStatsForTypes, TypeAlias) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  using Int = int;
+  friend void func();
+};
+void func() {
+  using X = A::Int;
+  typedef A::Int Y;
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.types.usedPrivateCount, 2);
+}
+
+TEST_F(FriendStatsForTypes, NestedTypeAlias) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  using Int = int;
+  friend void func();
+};
+void func() {
+  struct S {
+    using X = A::Int;
+    typedef A::Int Y;
+  };
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.types.usedPrivateCount, 2);
+}
+
+TEST_F(FriendStatsForTypes, FuncParameter) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  using Int = int;
+  using Double = double;
+  friend A::Double func(Int);
+};
+A::Double func(A::Int) {
+    return 0.0;
+}
+)phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.types.usedPrivateCount, 2);
+}
+
+TEST_F(FriendStatsForTypes, FuncParameterNoDuplicates) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  using Int = int;
+  friend A::Int func(Int);
+};
+A::Int func(A::Int) { }
+)phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+}
+
+TEST_F(FriendStatsForTypes, NestedFunctionParameter) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  using Int = int;
+  friend void func();
+};
+void func() {
+  struct X {
+	void foo(A::Int);
+  };
 };
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
