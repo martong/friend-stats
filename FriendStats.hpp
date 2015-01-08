@@ -123,20 +123,31 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
         dyn_cast<CXXRecordDecl>(TND->getDeclContext());
     llvm::outs() << "DeclContext RD: " << DeclContextRD << "\n";
     llvm::outs() << "Class: " << Class << "\n";
+
     // The actual CXXRecordDecl where our friend function is declared is a
     // class template specialization.
     if (const ClassTemplateSpecializationDecl *CTSD =
             dyn_cast<ClassTemplateSpecializationDecl>(Class)) {
-      // Get the template declaration for this specialization
-      ClassTemplateDecl *CTD = CTSD->getSpecializedTemplate();
-      llvm::outs() << "CTD CXXRD: " << CTD->getTemplatedDecl() << "\n";
-      // The type originally defined in the (CXXRecordDecl of the)
-      // class template.
-      if (DeclContextRD == CTD->getTemplatedDecl()) {
-        countedTypes.insert(QT.getTypePtr());
+
+      auto Union = CTSD->getSpecializedTemplateOrPartial();
+
+      // Handle the primary class template
+      if (ClassTemplateDecl *CTD = Union.dyn_cast<ClassTemplateDecl *>()) {
+        // The type originally defined in the (CXXRecordDecl of the)
+        // class template.
+        if (DeclContextRD == CTD->getTemplatedDecl()) {
+          countedTypes.insert(QT.getTypePtr());
+        }
+      // Handle the partial specialization
+      } else if (ClassTemplatePartialSpecializationDecl *CTPSD = Union.dyn_cast<
+                     ClassTemplatePartialSpecializationDecl *>()) {
+        if (DeclContextRD == CTPSD) {
+          countedTypes.insert(QT.getTypePtr());
+        }
       }
-    }
-    if (DeclContextRD == Class) {
+
+    // Regular class (not template instantiation)
+    } else if (DeclContextRD == Class) {
       countedTypes.insert(QT.getTypePtr());
     }
   }
@@ -249,12 +260,15 @@ public:
     if (!RD) {
       return;
     }
-    // RD->dump();
+
     // This CXXRecordDecl is the child of a ClassTemplateDecl
     // i.e. this is not a template instantiation/specialization.
+    // We want to collect statistics only on instantiations/specializations.
+    // We are not interested in not used templates.
     if (RD->getDescribedClassTemplate()) {
       return;
     }
+
     const FriendDecl *FD = Result.Nodes.getNodeAs<clang::FriendDecl>("friend");
     if (!FD) {
       return;
