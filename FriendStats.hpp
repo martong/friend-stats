@@ -88,7 +88,7 @@ public:
 class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
   const CXXRecordDecl *Class;
   Result::FuncResult::Types typesResult;
-  std::set<const Type*> countedTypes;
+  std::set<const Type *> countedTypes;
 
   // TODO Verify and make it nicer
   TypedefNameDecl *GetTypeAliasDecl(QualType QT) {
@@ -119,9 +119,24 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
 
     llvm::outs() << "Decl: " << TND << "\n";
     llvm::outs() << "DeclContext: " << TND->getDeclContext() << "\n";
-    CXXRecordDecl *RD = dyn_cast<CXXRecordDecl>(TND->getDeclContext());
-    llvm::outs() << "DeclContext RD: " << RD << "\n";
-    if (RD == Class) {
+    CXXRecordDecl *DeclContextRD =
+        dyn_cast<CXXRecordDecl>(TND->getDeclContext());
+    llvm::outs() << "DeclContext RD: " << DeclContextRD << "\n";
+    llvm::outs() << "Class: " << Class << "\n";
+    // The actual CXXRecordDecl where our friend function is declared is a
+    // class template specialization.
+    if (const ClassTemplateSpecializationDecl *CTSD =
+            dyn_cast<ClassTemplateSpecializationDecl>(Class)) {
+      // Get the template declaration for this specialization
+      ClassTemplateDecl *CTD = CTSD->getSpecializedTemplate();
+      llvm::outs() << "CTD CXXRD: " << CTD->getTemplatedDecl() << "\n";
+      // The type originally defined in the (CXXRecordDecl of the)
+      // class template.
+      if (DeclContextRD == CTD->getTemplatedDecl()) {
+        countedTypes.insert(QT.getTypePtr());
+      }
+    }
+    if (DeclContextRD == Class) {
       countedTypes.insert(QT.getTypePtr());
     }
   }
