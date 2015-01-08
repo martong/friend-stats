@@ -571,16 +571,10 @@ template <typename T> class A {
   friend void func2(A&) {
     X x; ++x;
   }
-  //template <typename U>
-  //friend Y func(U, A&) {
-    //X x; ++x;
-    //Y y; ++y;
-    //return y;
-  //}
 };
 // explicit call to func is needed otherwise it's body is not generated in the
 // ClassTemplateSpecializationDecl.
-void f() { A<int> aint; /*func(1, aint);*/ func2(aint); }
+void f() { A<int> aint; func2(aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
@@ -590,6 +584,66 @@ void f() { A<int> aint; /*func(1, aint);*/ func2(aint); }
   {
     auto p = *it;
     EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+    EXPECT_EQ(p.second.types.parentPrivateCount, 3);
+  }
+}
+
+TEST_F(TemplateFriendStats,
+       ClassTemplatePartialSpecializationFriendFunctionUsingPrivTypes) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+template <typename T> class A {};
+template <typename T>
+class A<T*> {
+  using X = int;
+  using Y = int;
+  using Z = int;
+  friend void func2(A&) {
+    X x; ++x;
+  }
+};
+// explicit call to func is needed otherwise it's body is not generated in the
+// ClassTemplateSpecializationDecl.
+void f() { A<int*> aint; func2(aint); }
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto it = res.FuncResults.begin();
+  {
+    auto p = *it;
+    EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+    EXPECT_EQ(p.second.types.parentPrivateCount, 3);
+  }
+}
+
+TEST_F(TemplateFriendStats, ClassTemplateFriendFunctionTemplateUsingPrivTypes) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+template <typename T> class A {
+  using X = int;
+  using Y = int;
+  using Z = int;
+  template <typename U>
+  friend Y func(U, A&) {
+    X x; ++x;
+    Y y; ++y;
+    return y;
+  }
+};
+// explicit call to func is needed otherwise it's body is not generated in the
+// ClassTemplateSpecializationDecl.
+void f() { A<int> aint; func(1, aint); }
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto it = res.FuncResults.begin();
+  {
+    auto p = *it;
+    EXPECT_EQ(p.second.types.usedPrivateCount, 2);
     EXPECT_EQ(p.second.types.parentPrivateCount, 3);
   }
 }
