@@ -42,10 +42,12 @@ int main(int argc, const char **argv) {
   int num = 0;
   for (const auto &v : Handler.getResult().FuncResults) {
     const auto &funcRes = v.second;
-    int numerator =
-        funcRes.usedPrivateVarsCount + funcRes.usedPrivateMethodsCount;
-    int denominator =
-        funcRes.parentPrivateVarsCount + funcRes.parentPrivateMethodsCount;
+    int numerator = funcRes.usedPrivateVarsCount +
+                    funcRes.usedPrivateMethodsCount +
+                    funcRes.types.usedPrivateCount;
+    int denominator = funcRes.parentPrivateVarsCount +
+                      funcRes.parentPrivateMethodsCount +
+                      funcRes.types.parentPrivateCount;
     if (denominator) {
       ++num;
       sum += numerator / denominator;
@@ -58,6 +60,10 @@ int main(int argc, const char **argv) {
                    << funcRes.usedPrivateMethodsCount << "\n";
       llvm::outs() << "parentPrivateMethodsCount: "
                    << funcRes.parentPrivateMethodsCount << "\n";
+      llvm::outs() << "types.usedPrivateCount: "
+                   << funcRes.types.usedPrivateCount << "\n";
+      llvm::outs() << "types.parentPrivateCount: "
+                   << funcRes.types.parentPrivateCount << "\n";
     }
   }
   llvm::outs() << "Number of uninterpreted friend function declarations: "
