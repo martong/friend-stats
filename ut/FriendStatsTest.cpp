@@ -85,6 +85,47 @@ void func(A &a) {
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
 
+TEST_F(FriendStats, NumberOfUsedNestedPrivateOrProtectedVariablesInFriendFunc) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+// The below example is not valid C++, but it is here for completeness.
+// The friend function of A cannot access A's nested class' (B) members.
+/*
+class A {
+  class B {
+    int x;
+    int y;
+    int z;
+  };
+  friend void func(B &);
+};
+void func(A::B &b) {
+  b.x = 1;
+  b.y = 2;
+};
+*/
+
+class A {
+  class B {
+    int x;
+    int y;
+    int z;
+	friend void func(B &b) {
+	  b.x = 1;
+	  b.y = 2;
+	}
+  };
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+}
+
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedVariablesInFriendOpEqual) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
