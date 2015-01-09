@@ -81,6 +81,17 @@ int main(int argc, const char **argv) {
 
   llvm::outs() << "Avarage usage of priv entities (vars, funcs, types): " << sum
                << "\n";
+
+  // Self Diagnostics:
+  for (const auto &v : Handler.getResult().FuncResults) {
+    const auto &funcRes = v.second;
+    if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
+        funcRes.usedPrivateMethodsCount > funcRes.parentPrivateMethodsCount ||
+        funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
+      llvm::errs() << "WRONG MEASURE here: \n" << funcRes.locationStr << "\n";
+    }
+  }
+
   return ret;
 }
 
