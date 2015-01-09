@@ -5,13 +5,14 @@
 #include <map>
 #include <set>
 
-const bool debug = true;
+// TODO this should be a command line parameter or something similar, but
+// definitely should not be in vcs.
+const bool debug = false;
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
 }
 
-// TODO remove
 using namespace clang;
 using namespace clang::ast_matchers;
 
@@ -344,19 +345,6 @@ private:
       MemberHandler memberHandler{RD};
       Finder.addMatcher(MemberExprMatcher, &memberHandler);
       Finder.match(*Body, *Result.Context);
-
-      {
-        // ValueDecl* VD;
-        // VD->getType();
-        // TypedefNameDecl* TD;
-        // TD->getUnderlyingType();
-        // auto Matcher = findAll(qualType().bind("type"));
-        // auto Matcher = findAll(decl().bind("decl"));
-        // MatchFinder Finder;
-        // TypeHandler typeHandler{RD};
-        // Finder.addMatcher(Matcher, &typeHandler);
-        // Finder.match(*Body, *Result.Context);
-      }
 
       TypeHandlerVisitor Visitor{RD};
       // Traverse the function header and body
