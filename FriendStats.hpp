@@ -5,6 +5,12 @@
 #include <map>
 #include <set>
 
+const bool debug = true;
+
+inline llvm::raw_ostream &debug_stream() {
+  return debug ? llvm::outs() : llvm::nulls();
+}
+
 // TODO remove
 using namespace clang;
 using namespace clang::ast_matchers;
@@ -68,16 +74,16 @@ class PrivTypeCounter : public RecursiveASTVisitor<PrivTypeCounter> {
 public:
   int getResult() const { return result; }
   bool VisitRecordDecl(const RecordDecl *RD) {
-    llvm::outs() << "PrivTypeCounter RD"
-                 << "\n";
+    debug_stream() << "PrivTypeCounter RD"
+                   << "\n";
     if (privOrProt(RD)) {
       ++result;
     }
     return true;
   }
   bool VisitTypedefNameDecl(const TypedefNameDecl *TD) {
-    llvm::outs() << "PrivTypeCounter TND"
-                 << "\n";
+    debug_stream() << "PrivTypeCounter TND"
+                   << "\n";
     if (privOrProt(TD)) {
       ++result;
     }
@@ -102,7 +108,7 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
       const Type *T2 = SingleStepDesugar.getTypePtr();
       if (SingleStepDesugar == QualType(T, 0))
         break;
-      // T2->dump();
+      // if (debug) { T2->dump };
       if (const TypedefType *TT = dyn_cast<TypedefType>(T2)) {
         return TT->getDecl();
       }
@@ -117,12 +123,12 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
       return;
     }
 
-    llvm::outs() << "Decl: " << TND << "\n";
-    llvm::outs() << "DeclContext: " << TND->getDeclContext() << "\n";
+    debug_stream() << "Decl: " << TND << "\n";
+    debug_stream() << "DeclContext: " << TND->getDeclContext() << "\n";
     CXXRecordDecl *DeclContextRD =
         dyn_cast<CXXRecordDecl>(TND->getDeclContext());
-    llvm::outs() << "DeclContext RD: " << DeclContextRD << "\n";
-    llvm::outs() << "Class: " << Class << "\n";
+    debug_stream() << "DeclContext RD: " << DeclContextRD << "\n";
+    debug_stream() << "Class: " << Class << "\n";
 
     // The actual CXXRecordDecl where our friend function is declared is a
     // class template specialization.
@@ -138,7 +144,7 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
         if (DeclContextRD == CTD->getTemplatedDecl()) {
           countedTypes.insert(QT.getTypePtr());
         }
-      // Handle the partial specialization
+        // Handle the partial specialization
       } else if (ClassTemplatePartialSpecializationDecl *CTPSD = Union.dyn_cast<
                      ClassTemplatePartialSpecializationDecl *>()) {
         if (DeclContextRD == CTPSD) {
@@ -146,7 +152,7 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
         }
       }
 
-    // Regular class (not template instantiation)
+      // Regular class (not template instantiation)
     } else if (DeclContextRD == Class) {
       countedTypes.insert(QT.getTypePtr());
     }
@@ -158,21 +164,22 @@ public:
   std::size_t getResult() const { return countedTypes.size(); }
 
   bool VisitValueDecl(ValueDecl *D) {
-    llvm::outs() << "VisitValueDecl: "
-                 << "\n";
+    debug_stream() << "VisitValueDecl: "
+                   << "\n";
     QualType QT = D->getType();
-    QT->dump();
+    if (debug)
+      QT->dump();
 
     const Type *T = QT.getTypePtr();
     if (const FunctionProtoType *FP = T->getAs<FunctionProtoType>()) {
       // if (T->isFunctionProtoType()) {
-      // llvm::outs() << "FunctionProtoType: "
+      // debug_stream() << "FunctionProtoType: "
       //<< "\n";
       QualType RetType = FP->getReturnType();
       HandleType(RetType);
       // for (const auto &x : FP->getParamTypes()) {
-      // llvm::outs() << "Param Type   ";
-      // x->dump();
+      // debug_stream() << "Param Type   ";
+      // if (debug) x->dump();
       // HandleType(x);
       //}
       return true;
@@ -186,7 +193,8 @@ public:
 
   bool VisitTypedefNameDecl(TypedefNameDecl *TD) {
 
-    TD->getUnderlyingType()->dump();
+    if (debug)
+      TD->getUnderlyingType()->dump();
 
     QualType QT = TD->getUnderlyingType();
     HandleType(QT);
@@ -205,7 +213,7 @@ public:
   MemberHandler(const CXXRecordDecl *Class) : Class(Class) {}
   virtual void run(const MatchFinder::MatchResult &Result) {
     if (const MemberExpr *ME = Result.Nodes.getNodeAs<MemberExpr>("member")) {
-      // llvm::outs() << "ME: \n";
+      // debug_stream() << "ME: \n";
       if (const FieldDecl *FD =
               dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
         const RecordDecl *Parent = FD->getParent();
@@ -233,7 +241,7 @@ public:
           funcResult.usedPrivateMethodsCount = methods.size();
         }
       }
-      // ME->dump();
+      // if (debug) ME->dump();
     }
   }
   const Result::FuncResult &getResult() const { return funcResult; }
@@ -249,7 +257,8 @@ public:
   virtual void run(const MatchFinder::MatchResult &Result) {
 
     auto tuPrinter = [&Result]() {
-      Result.Context->getTranslationUnitDecl()->dump();
+      if (debug)
+        Result.Context->getTranslationUnitDecl()->dump();
       return 0;
     };
     const static int x = tuPrinter();
@@ -273,9 +282,9 @@ public:
     if (!FD) {
       return;
     }
-    // FD->dump();
-    // llvm::outs() << "FD: " << FD << "\n";
-    // llvm::outs() << "RD: " << RD << "\n";
+    // if (debug) FD->dump();
+    // debug_stream() << "FD: " << FD << "\n";
+    // debug_stream() << "RD: " << RD << "\n";
 
     PrivTypeCounter Visitor;
     Visitor.TraverseCXXRecordDecl(const_cast<CXXRecordDecl *>(RD));
@@ -288,9 +297,9 @@ public:
       result.FuncResults.at(srcLoc).types.parentPrivateCount =
           Visitor.getResult();
     }
-    // FD->getLocation().dump(*Result.SourceManager);
-    // llvm::outs() << "\n";
-    // llvm::outs().flush();
+    // if (debug) FD->getLocation().dump(*Result.SourceManager);
+    // debug_stream() << "\n";
+    // debug_stream().flush();
   }
   const Result &getResult() const { return result; }
 
@@ -302,7 +311,7 @@ private:
     if (it != std::end(result.ClassResults)) {
       return;
     }
-    // llvm::outs() << "Class/Struct\n";
+    // debug_stream() << "Class/Struct\n";
     ++result.friendClassCount;
     result.ClassResults.insert({srcLoc, 0});
   }
@@ -314,7 +323,7 @@ private:
     if (it != std::end(result.FuncResults)) {
       return;
     }
-    // llvm::outs() << "Function\n";
+    // debug_stream() << "Function\n";
     ++result.friendFuncCount;
     Result::FuncResult funcRes;
     NamedDecl *ND = FD->getFriendDecl();
@@ -368,7 +377,7 @@ private:
     } else if (FunctionTemplateDecl *FTD = dyn_cast<FunctionTemplateDecl>(ND)) {
       // int numOfFuncSpecs = std::distance(FTD->specializations().begin(),
       // FTD->specializations().end());
-      // llvm::outs() << "FTD specs: " << numOfFuncSpecs << "\n";
+      // debug_stream() << "FTD specs: " << numOfFuncSpecs << "\n";
       for (const auto &spec : FTD->specializations()) {
         handleFuncD(spec);
       }
