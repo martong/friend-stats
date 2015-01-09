@@ -170,6 +170,25 @@ void func(A &a) {
   EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
 }
 
+TEST_F(FriendStats, PrivOperatorUsedInFriendFunction) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  void operator+=(A& x) {}
+  friend void foo(A& x, A& y) {
+    x += y;
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateMethodsCount, 1);
+  EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
+}
+
 // TODO test only the methods and write separate composite test
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedMethodsInFriendFunc) {
   Tool->mapVirtualFile(FileA,
