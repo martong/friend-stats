@@ -40,6 +40,7 @@ int main(int argc, const char **argv) {
 
   double sum = 0.0;
   int num = 0;
+  int numZeroDenom = 0;
   for (const auto &v : Handler.getResult().FuncResults) {
     const auto &funcRes = v.second;
     int numerator = funcRes.usedPrivateVarsCount +
@@ -48,28 +49,38 @@ int main(int argc, const char **argv) {
     int denominator = funcRes.parentPrivateVarsCount +
                       funcRes.parentPrivateMethodsCount +
                       funcRes.types.parentPrivateCount;
+    ++num;
+    // If denominator is zero that means there are no priv or protected
+    // entitties
+    // in the class, only publicly availble entities are there.
+    // If a friend function accesses only public entites that means, it should
+    // not be friend at all, therefore we add nothing (zero) to sum in such
+    // cases.
     if (denominator) {
-      ++num;
       sum += numerator / denominator;
-      llvm::outs() << "loc: " << funcRes.locationStr << "\n";
-      llvm::outs() << "usedPrivateVarsCount: " << funcRes.usedPrivateVarsCount
-                   << "\n";
-      llvm::outs() << "parentPrivateVarsCount: "
-                   << funcRes.parentPrivateVarsCount << "\n";
-      llvm::outs() << "usedPrivateMethodsCount: "
-                   << funcRes.usedPrivateMethodsCount << "\n";
-      llvm::outs() << "parentPrivateMethodsCount: "
-                   << funcRes.parentPrivateMethodsCount << "\n";
-      llvm::outs() << "types.usedPrivateCount: "
-                   << funcRes.types.usedPrivateCount << "\n";
-      llvm::outs() << "types.parentPrivateCount: "
-                   << funcRes.types.parentPrivateCount << "\n";
+      ++numZeroDenom;
     }
+    llvm::outs() << "loc: " << funcRes.locationStr << "\n";
+    llvm::outs() << "usedPrivateVarsCount: " << funcRes.usedPrivateVarsCount
+                 << "\n";
+    llvm::outs() << "parentPrivateVarsCount: " << funcRes.parentPrivateVarsCount
+                 << "\n";
+    llvm::outs() << "usedPrivateMethodsCount: "
+                 << funcRes.usedPrivateMethodsCount << "\n";
+    llvm::outs() << "parentPrivateMethodsCount: "
+                 << funcRes.parentPrivateMethodsCount << "\n";
+    llvm::outs() << "types.usedPrivateCount: " << funcRes.types.usedPrivateCount
+                 << "\n";
+    llvm::outs() << "types.parentPrivateCount: "
+                 << funcRes.types.parentPrivateCount << "\n";
   }
   llvm::outs() << "Number of uninterpreted friend function declarations: "
-               << Handler.getResult().friendFuncCount - num << "\n";
+               << numZeroDenom << "\n";
+
   sum /= num;
-  llvm::outs() << "Avarage usage of priv variables/methods: " << sum << "\n";
+
+  llvm::outs() << "Avarage usage of priv entities (vars, funcs, types): " << sum
+               << "\n";
   return ret;
 }
 
