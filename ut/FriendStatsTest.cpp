@@ -311,7 +311,7 @@ class A {
   using Int = int;
   friend A::Int func(Int);
 };
-A::Int func(A::Int) { }
+A::Int func(A::Int) { return 0; }
 )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
