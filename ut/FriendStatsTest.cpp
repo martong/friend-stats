@@ -484,8 +484,6 @@ template <typename T> class A {
     a.b = 2;
   }
 };
-// explicit call to func is needed otherwise it's body is not generated in the
-// ClassTemplateSpecializationDecl.
 void f() { A<int> aint; func(aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
@@ -510,8 +508,6 @@ template <typename T> class A {
     a.b = 2;
   }
 };
-// explicit call to func is needed otherwise it's body is not generated in the
-// ClassTemplateSpecializationDecl.
 void f() { A<int> aint; func(1, aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
@@ -539,8 +535,6 @@ template <typename T> class A {
     a.b = 2;
   }
 };
-// explicit call to func is needed otherwise it's body is not generated in the
-// ClassTemplateSpecializationDecl.
 void f() { A<int> aint; func(1, aint); func2(aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
@@ -572,8 +566,6 @@ template <typename T> class A {
     X x; ++x;
   }
 };
-// explicit call to func is needed otherwise it's body is not generated in the
-// ClassTemplateSpecializationDecl.
 void f() { A<int> aint; func2(aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
@@ -602,8 +594,6 @@ class A<T*> {
     X x; ++x;
   }
 };
-// explicit call to func is needed otherwise it's body is not generated in the
-// ClassTemplateSpecializationDecl.
 void f() { A<int*> aint; func2(aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
@@ -632,8 +622,6 @@ template <typename T> class A {
     return y;
   }
 };
-// explicit call to func is needed otherwise it's body is not generated in the
-// ClassTemplateSpecializationDecl.
 void f() { A<int> aint; func(1, aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
