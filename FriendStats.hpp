@@ -366,6 +366,8 @@ private:
       Finder.addMatcher(MemberExprMatcher, &memberHandler);
       Finder.match(*Body, *Result.Context);
 
+      // TODO implementd the 3 visitor in one visitor,
+      // so we would traverse the tree only once!
       OperatorCallVisitor operatorCallVisitor{RD};
       // Traverse the function header and body
       // or just the header if body is not existent.
