@@ -208,7 +208,6 @@ class MemberHandler : public MatchFinder::MatchCallback {
   const CXXRecordDecl *Class;
   std::set<const FieldDecl *> fields;
   std::set<const CXXMethodDecl *> methods;
-  Result::FuncResult funcResult;
 
 public:
   MemberHandler(const CXXRecordDecl *Class) : Class(Class) {}
@@ -222,8 +221,6 @@ public:
             FD->getAccess() == AS_private || FD->getAccess() == AS_protected;
         if (Parent == Class && privateOrProtected) {
           fields.insert(FD);
-          // TODO this could be calculated once in getResult
-          funcResult.usedPrivateVarsCount = fields.size();
         }
       } else if (const CXXMethodDecl *MD =
                      dyn_cast_or_null<const CXXMethodDecl>(
@@ -233,14 +230,17 @@ public:
             MD->getAccess() == AS_private || MD->getAccess() == AS_protected;
         if (Parent == Class && privateOrProtected) {
           methods.insert(MD);
-          // TODO this could be calculated once in getResult
-          funcResult.usedPrivateMethodsCount = methods.size();
         }
       }
       // if (debug) ME->dump();
     }
   }
-  const Result::FuncResult &getResult() const { return funcResult; }
+  const Result::FuncResult getResult() const {
+    Result::FuncResult funcResult;
+    funcResult.usedPrivateVarsCount = fields.size();
+    funcResult.usedPrivateMethodsCount = methods.size();
+    return funcResult;
+  }
 };
 
 auto FriendMatcher =
