@@ -32,7 +32,7 @@ struct FriendStats : ::testing::Test {
     llvm::sys::path::append(FileA, "a.cc");
 
     Compilations.reset(new tooling::FixedCompilationDatabase(CurrentDir.str(),
-                                                             {"-std=c++11"}));
+                                                             {"-std=c++14"}));
     Sources.push_back(FileA.str());
     Tool.reset(new tooling::ClangTool(*Compilations, Sources));
 
@@ -464,6 +464,68 @@ void func(A::Int) {
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
+}
+
+// ===================== Friend function uses template members ================
+
+TEST_F(FriendStats, PrivTemplateMemberFunctionUsedInFriendFunction) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  template <typename T>
+  void foo(T x) {}
+  friend void friend_foo(A& x) {
+    x.foo(1);
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateMethodsCount, 1);
+  EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
+}
+
+TEST_F(FriendStats, PrivTemplateMemberOperatorUsedInFriendFunction) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  template <typename T>
+  void operator+=(T& x) {}
+  friend void foo(A& x, A& y) {
+    x += y;
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateMethodsCount, 1);
+  EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
+}
+
+TEST_F(FriendStats, PrivTemplateMemberVariableUsedInFriendFunction) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  template<class T>
+  static constexpr T pi = T(3.1415926535897932385);  // variable template
+  friend void friend_foo() {
+    int a = A::pi<int>;
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 1);
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
 }
 
 // ================= Template  Tests ======================================== //
