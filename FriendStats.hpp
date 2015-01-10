@@ -218,8 +218,6 @@ public:
       if (const FieldDecl *FD =
               dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
         const RecordDecl *Parent = FD->getParent();
-        // TODO count this only once:
-        funcResult.parentPrivateVarsCount = numberOfPrivOrProtFields(Parent);
         bool privateOrProtected =
             FD->getAccess() == AS_private || FD->getAccess() == AS_protected;
         if (Parent == Class && privateOrProtected) {
@@ -231,9 +229,6 @@ public:
                      dyn_cast_or_null<const CXXMethodDecl>(
                          ME->getMemberDecl())) {
         const CXXRecordDecl *Parent = MD->getParent();
-        // TODO count this only once:
-        funcResult.parentPrivateMethodsCount =
-            numberOfPrivOrProtMethods(Parent);
         bool privateOrProtected =
             MD->getAccess() == AS_private || MD->getAccess() == AS_protected;
         if (Parent == Class && privateOrProtected) {
@@ -283,20 +278,19 @@ public:
     if (!FD) {
       return;
     }
-    // if (debug) FD->dump();
-    // debug_stream() << "FD: " << FD << "\n";
-    // debug_stream() << "RD: " << RD << "\n";
 
-    PrivTypeCounter Visitor;
-    Visitor.TraverseCXXRecordDecl(const_cast<CXXRecordDecl *>(RD));
+    PrivTypeCounter privTypeCounter;
+    privTypeCounter.TraverseCXXRecordDecl(const_cast<CXXRecordDecl *>(RD));
 
     auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
     if (FD->getFriendType()) { // friend class
       handleFriendClass(RD, FD, srcLoc, Result);
     } else { // friend function
       handleFriendFunction(RD, FD, srcLoc, Result);
-      result.FuncResults.at(srcLoc).types.parentPrivateCount =
-          Visitor.getResult();
+      auto &funcRes = result.FuncResults.at(srcLoc);
+      funcRes.parentPrivateVarsCount = numberOfPrivOrProtFields(RD);
+      funcRes.parentPrivateMethodsCount = numberOfPrivOrProtMethods(RD);
+      funcRes.types.parentPrivateCount = privTypeCounter.getResult();
     }
     // if (debug) FD->getLocation().dump(*Result.SourceManager);
     // debug_stream() << "\n";
