@@ -125,7 +125,7 @@ public:
     debug_stream() << "Dref: " << DRef << "\n";
     debug_stream() << "Dref Decl: " << DRef->getDecl() << "\n";
     if (CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(DRef->getDecl())) {
-      if (Class == MD->getDeclContext()) {
+      if (Class == MD->getDeclContext() && privOrProt(MD)) {
         countedDecls.insert(MD);
       }
     }
@@ -172,6 +172,11 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
     debug_stream() << "DeclContext RD: " << DeclContextRD << "\n";
     debug_stream() << "Class: " << Class << "\n";
 
+    auto insert = [&](QualType QT) {
+      if (privOrProt(TND))
+        countedTypes.insert(QT.getTypePtr());
+    };
+
     // The actual CXXRecordDecl where our friend function is declared is a
     // class template specialization.
     if (const ClassTemplateSpecializationDecl *CTSD =
@@ -184,19 +189,19 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
         // The type originally defined in the (CXXRecordDecl of the)
         // class template.
         if (DeclContextRD == CTD->getTemplatedDecl()) {
-          countedTypes.insert(QT.getTypePtr());
+          insert(QT);
         }
         // Handle the partial specialization
       } else if (ClassTemplatePartialSpecializationDecl *CTPSD = Union.dyn_cast<
                      ClassTemplatePartialSpecializationDecl *>()) {
         if (DeclContextRD == CTPSD) {
-          countedTypes.insert(QT.getTypePtr());
+          insert(QT);
         }
       }
 
       // Regular class (not template instantiation)
     } else if (DeclContextRD == Class) {
-      countedTypes.insert(QT.getTypePtr());
+      insert(QT);
     }
   }
 
@@ -206,8 +211,7 @@ public:
   std::size_t getResult() const { return countedTypes.size(); }
 
   bool VisitValueDecl(ValueDecl *D) {
-    debug_stream() << "VisitValueDecl: "
-                   << "\n";
+    debug_stream() << "ValueDecl: " << D << "\n";
     QualType QT = D->getType();
     if (debug)
       QT->dump();
@@ -254,20 +258,19 @@ public:
   MemberHandlerVisitor(const CXXRecordDecl *Class) : Class(Class) {}
 
   bool VisitMemberExpr(MemberExpr *ME) {
+    // debug_stream() << "MemberExpr: " << ME << "\n";
     if (const FieldDecl *FD =
             dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
+      // debug_stream() << "FieldDecl: " << FD << "\n";
       const RecordDecl *Parent = FD->getParent();
-      bool privateOrProtected =
-          FD->getAccess() == AS_private || FD->getAccess() == AS_protected;
-      if (Parent == Class && privateOrProtected) {
+      // debug_stream() << "Parent: " << Parent << "\n";
+      if (Parent == Class && privOrProt(FD)) {
         fields.insert(FD);
       }
     } else if (const CXXMethodDecl *MD =
                    dyn_cast_or_null<const CXXMethodDecl>(ME->getMemberDecl())) {
       const CXXRecordDecl *Parent = MD->getParent();
-      bool privateOrProtected =
-          MD->getAccess() == AS_private || MD->getAccess() == AS_protected;
-      if (Parent == Class && privateOrProtected) {
+      if (Parent == Class && privOrProt(MD)) {
         methods.insert(MD);
       }
     }
