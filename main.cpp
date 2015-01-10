@@ -58,6 +58,8 @@ int main(int argc, const char **argv) {
     // cases.
     if (denominator) {
       sum += numerator / denominator;
+    } else {
+      llvm::outs() << "ZERO PRIV" << "\n";
       ++numZeroDenom;
     }
     llvm::outs() << "loc: " << funcRes.locationStr << "\n";
@@ -74,8 +76,9 @@ int main(int argc, const char **argv) {
     llvm::outs() << "types.parentPrivateCount: "
                  << funcRes.types.parentPrivateCount << "\n";
   }
-  llvm::outs() << "Number of uninterpreted friend function declarations: "
-               << numZeroDenom << "\n";
+  llvm::outs()
+      << "Number of friend function declarations with zero priv entity declared: "
+      << numZeroDenom << "\n";
 
   sum /= num;
 
