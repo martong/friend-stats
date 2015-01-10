@@ -147,6 +147,32 @@ class A {
   EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
 }
 
+TEST_F(FriendStats, BugAtExternalASTSource_h_575) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+template <class T>
+class XXX {
+  public:
+class A {
+  int a = 0;
+  int b;
+  int c;
+  friend bool operator==(A x, A y) {
+    return x.a == y.a;
+  }
+};
+};
+void foo() { XXX<int>::A x; bool b = x == x; }
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
+}
+
 TEST_F(FriendStats, NumberOfPrivateOrProtectedVariablesInParent) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
@@ -236,6 +262,29 @@ void func() {
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
   auto p = *res.FuncResults.begin();
   EXPECT_EQ(p.second.types.usedPrivateCount, 1);
+}
+
+TEST_F(FriendStatsForTypes, DoNotCountSelf) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int Position;
+public:
+    typedef int                 difference_type;
+    friend A& operator+=(A &X, difference_type D) {
+      X.Position += D;
+      return X;
+    }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.types.parentPrivateCount, 0);
+  EXPECT_EQ(p.second.types.usedPrivateCount, 0);
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
 }
 
 TEST_F(FriendStatsForTypes, NestedVariable) {
