@@ -93,16 +93,12 @@ class PrivTypeCounter : public RecursiveASTVisitor<PrivTypeCounter> {
 public:
   int getResult() const { return result; }
   bool VisitRecordDecl(const RecordDecl *RD) {
-    debug_stream() << "PrivTypeCounter RD"
-                   << "\n";
     if (privOrProt(RD)) {
       ++result;
     }
     return true;
   }
   bool VisitTypedefNameDecl(const TypedefNameDecl *TD) {
-    debug_stream() << "PrivTypeCounter TND"
-                   << "\n";
     if (privOrProt(TD)) {
       ++result;
     }
@@ -258,12 +254,12 @@ public:
   MemberHandlerVisitor(const CXXRecordDecl *Class) : Class(Class) {}
 
   bool VisitMemberExpr(MemberExpr *ME) {
-    // debug_stream() << "MemberExpr: " << ME << "\n";
+    debug_stream() << "MemberExpr: " << ME << "\n";
     if (const FieldDecl *FD =
             dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
-      // debug_stream() << "FieldDecl: " << FD << "\n";
+      debug_stream() << "FieldDecl: " << FD << "\n";
       const RecordDecl *Parent = FD->getParent();
-      // debug_stream() << "Parent: " << Parent << "\n";
+      debug_stream() << "Parent: " << Parent << "\n";
       if (Parent == Class && privOrProt(FD)) {
         fields.insert(FD);
       }
@@ -315,6 +311,24 @@ public:
     if (RD->getDescribedClassTemplate()) {
       return;
     }
+    // We have to investigate all the parent CXXRecordDecls up in the tree
+    // and ensure that they are not template declarations.
+    // Again, we want to collect stats only on instantiation/specializations.
+    const DeclContext* iRD = dyn_cast<DeclContext>(RD);
+    while(iRD->getParent()) {
+      if(auto* CRD = dyn_cast<CXXRecordDecl>(iRD->getParent())) {
+        debug_stream() << "Babocico parent: " << CRD << "\n";
+        if (CRD->getDescribedClassTemplate()) {
+          return;
+        }
+      }
+      iRD=iRD->getParent();
+    }
+    debug_stream() << "CXXRecordDecl with friend: " << RD << "\n";
+
+    //debug_stream() << "Babocico: " << RD->getMemberSpecializationInfo() << "\n";
+    //debug_stream() << "Babocico2: " << RD->getInstantiatedFromMemberClass() << "\n";
+    //debug_stream() << "Babocico3: " << RD->getTemplateInstantiationPattern() << "\n";
 
     const FriendDecl *FD = Result.Nodes.getNodeAs<clang::FriendDecl>("friend");
     if (!FD) {

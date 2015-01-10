@@ -154,7 +154,7 @@ template <class T>
 class XXX {
   public:
 class A {
-  int a = 0;
+  int a;
   int b;
   int c;
   friend bool operator==(A x, A y) {
