@@ -245,37 +245,35 @@ public:
   }
 };
 
-class MemberHandler : public MatchFinder::MatchCallback {
+class MemberHandlerVisitor : public RecursiveASTVisitor<MemberHandlerVisitor> {
   const CXXRecordDecl *Class;
   std::set<const FieldDecl *> fields;
   std::set<const CXXMethodDecl *> methods;
 
 public:
-  MemberHandler(const CXXRecordDecl *Class) : Class(Class) {}
-  virtual void run(const MatchFinder::MatchResult &Result) {
-    if (const MemberExpr *ME = Result.Nodes.getNodeAs<MemberExpr>("member")) {
-      // debug_stream() << "ME: \n";
-      if (const FieldDecl *FD =
-              dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
-        const RecordDecl *Parent = FD->getParent();
-        bool privateOrProtected =
-            FD->getAccess() == AS_private || FD->getAccess() == AS_protected;
-        if (Parent == Class && privateOrProtected) {
-          fields.insert(FD);
-        }
-      } else if (const CXXMethodDecl *MD =
-                     dyn_cast_or_null<const CXXMethodDecl>(
-                         ME->getMemberDecl())) {
-        const CXXRecordDecl *Parent = MD->getParent();
-        bool privateOrProtected =
-            MD->getAccess() == AS_private || MD->getAccess() == AS_protected;
-        if (Parent == Class && privateOrProtected) {
-          methods.insert(MD);
-        }
+  MemberHandlerVisitor(const CXXRecordDecl *Class) : Class(Class) {}
+
+  bool VisitMemberExpr(MemberExpr *ME) {
+    if (const FieldDecl *FD =
+            dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
+      const RecordDecl *Parent = FD->getParent();
+      bool privateOrProtected =
+          FD->getAccess() == AS_private || FD->getAccess() == AS_protected;
+      if (Parent == Class && privateOrProtected) {
+        fields.insert(FD);
       }
-      // if (debug) ME->dump();
+    } else if (const CXXMethodDecl *MD =
+                   dyn_cast_or_null<const CXXMethodDecl>(ME->getMemberDecl())) {
+      const CXXRecordDecl *Parent = MD->getParent();
+      bool privateOrProtected =
+          MD->getAccess() == AS_private || MD->getAccess() == AS_protected;
+      if (Parent == Class && privateOrProtected) {
+        methods.insert(MD);
+      }
     }
+    return true;
   }
+
   const Result::FuncResult getResult() const {
     Result::FuncResult funcResult;
     funcResult.usedPrivateVarsCount = fields.size();
@@ -378,14 +376,16 @@ private:
       }
       assert(RD);
 
-      auto MemberExprMatcher = findAll(memberExpr().bind("member"));
-      MatchFinder Finder;
-      MemberHandler memberHandler{RD};
-      Finder.addMatcher(MemberExprMatcher, &memberHandler);
-      Finder.match(*Body, *Result.Context);
-
       // TODO implementd the 3 visitor in one visitor,
       // so we would traverse the tree only once!
+      MemberHandlerVisitor memberHandlerVisitor{RD};
+      // Traverse the function header and body
+      // or just the header if body is not existent.
+      FuncDefinition
+          ? memberHandlerVisitor.TraverseFunctionDecl(
+                const_cast<FunctionDecl *>(FuncDefinition))
+          : memberHandlerVisitor.TraverseFunctionDecl(FuncD);
+
       OperatorCallVisitor operatorCallVisitor{RD};
       // Traverse the function header and body
       // or just the header if body is not existent.
@@ -404,7 +404,7 @@ private:
 
       // This is location dependent
       // TODO funcRes.members = ...
-      funcRes = memberHandler.getResult();
+      funcRes = memberHandlerVisitor.getResult();
       funcRes.usedPrivateMethodsCount += operatorCallVisitor.getResult();
       funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
       funcRes.types.usedPrivateCount = Visitor.getResult();
