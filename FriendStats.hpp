@@ -7,7 +7,7 @@
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
-const bool debug = false;
+const bool debug = true;
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
@@ -87,6 +87,29 @@ public:
                    << "\n";
     if (privOrProt(TD)) {
       ++result;
+    }
+    return true;
+  }
+};
+
+class OperatorCallVisitor : public RecursiveASTVisitor<OperatorCallVisitor> {
+  const CXXRecordDecl *Class;
+  std::set<Decl *> countedDecls;
+
+public:
+  std::size_t getResult() const { return countedDecls.size(); }
+  OperatorCallVisitor(const CXXRecordDecl *Class) : Class(Class) {}
+  // bool VisitCXXOperatorCallExpr(CXXOperatorCallExpr *OCE) {
+  // debug_stream() << "OCE: " << OCE << "\n";
+  // return true;
+  //}
+  bool VisitDeclRefExpr(DeclRefExpr *DRef) {
+    debug_stream() << "Dref: " << DRef << "\n";
+    debug_stream() << "Dref Decl: " << DRef->getDecl() << "\n";
+    if (CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(DRef->getDecl())) {
+      if (Class == MD->getDeclContext()) {
+        countedDecls.insert(MD);
+      }
     }
     return true;
   }
@@ -283,6 +306,7 @@ public:
     privTypeCounter.TraverseCXXRecordDecl(const_cast<CXXRecordDecl *>(RD));
 
     auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
+
     if (FD->getFriendType()) { // friend class
       handleFriendClass(RD, FD, srcLoc, Result);
     } else { // friend function
@@ -292,9 +316,6 @@ public:
       funcRes.parentPrivateMethodsCount = numberOfPrivOrProtMethods(RD);
       funcRes.types.parentPrivateCount = privTypeCounter.getResult();
     }
-    // if (debug) FD->getLocation().dump(*Result.SourceManager);
-    // debug_stream() << "\n";
-    // debug_stream().flush();
   }
   const Result &getResult() const { return result; }
 
@@ -325,7 +346,12 @@ private:
     if (!ND) {
       return;
     }
+
+    // Here FuncD is the declaration of the function, which may or may not
+    // has a body.
     auto handleFuncD = [&](FunctionDecl *FuncD) {
+      // Get the Body and the function declaration which contains it,
+      // i.e. that \cDecl is the function definition itself.
       const FunctionDecl *FuncDefinition =
           nullptr; // This will be set to the decl with the body
       Stmt *Body = FuncD->getBody(FuncDefinition);
@@ -340,6 +366,14 @@ private:
       Finder.addMatcher(MemberExprMatcher, &memberHandler);
       Finder.match(*Body, *Result.Context);
 
+      OperatorCallVisitor operatorCallVisitor{RD};
+      // Traverse the function header and body
+      // or just the header if body is not existent.
+      FuncDefinition
+          ? operatorCallVisitor.TraverseFunctionDecl(
+                const_cast<FunctionDecl *>(FuncDefinition))
+          : operatorCallVisitor.TraverseFunctionDecl(FuncD);
+
       TypeHandlerVisitor Visitor{RD};
       // Traverse the function header and body
       // or just the header if body is not existent.
@@ -351,9 +385,11 @@ private:
       // This is location dependent
       // TODO funcRes.members = ...
       funcRes = memberHandler.getResult();
+      funcRes.usedPrivateMethodsCount += operatorCallVisitor.getResult();
       funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
       funcRes.types.usedPrivateCount = Visitor.getResult();
     };
+
     if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
       handleFuncD(FuncD);
     } else if (FunctionTemplateDecl *FTD = dyn_cast<FunctionTemplateDecl>(ND)) {
