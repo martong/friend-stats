@@ -242,6 +242,28 @@ void func(A &a) {
   EXPECT_EQ(p.second.parentPrivateMethodsCount, 2);
 }
 
+TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedStaticVariablesInFriend) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  static int a;
+  static int b;
+  friend void foo() {
+    A::a = 1;
+  }
+};
+int A::a = 0;
+int A::b = 0;
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
+}
+
 // ================= Type Tests ============================================= //
 struct FriendStatsForTypes : FriendStats {};
 
