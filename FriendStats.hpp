@@ -56,6 +56,20 @@ int numberOfPrivOrProtFields(const RecordDecl *RD) {
       ++res;
     }
   }
+
+  // To get the static variables in the class we go over all the VarDecls.
+  // Unfortunately this is not exposed in RecordDecl as it is done with
+  // fields().
+  using var_decl_it = DeclContext::specific_decl_iterator<VarDecl>;
+  using var_decl_range = llvm::iterator_range<var_decl_it>;
+  auto var_decl_begin = var_decl_it{RD->decls_begin()};
+  auto var_decl_end = var_decl_it{RD->decls_end()};
+  auto var_decls = var_decl_range{var_decl_begin, var_decl_end};
+  for (const VarDecl *VD : var_decls) {
+    debug_stream() << "VarDecl: " << VD << "\n";
+    ++res;
+  }
+
   return res;
 }
 
@@ -314,21 +328,24 @@ public:
     // We have to investigate all the parent CXXRecordDecls up in the tree
     // and ensure that they are not template declarations.
     // Again, we want to collect stats only on instantiation/specializations.
-    const DeclContext* iRD = dyn_cast<DeclContext>(RD);
-    while(iRD->getParent()) {
-      if(auto* CRD = dyn_cast<CXXRecordDecl>(iRD->getParent())) {
+    const DeclContext *iRD = dyn_cast<DeclContext>(RD);
+    while (iRD->getParent()) {
+      if (auto *CRD = dyn_cast<CXXRecordDecl>(iRD->getParent())) {
         debug_stream() << "Babocico parent: " << CRD << "\n";
         if (CRD->getDescribedClassTemplate()) {
           return;
         }
       }
-      iRD=iRD->getParent();
+      iRD = iRD->getParent();
     }
     debug_stream() << "CXXRecordDecl with friend: " << RD << "\n";
 
-    //debug_stream() << "Babocico: " << RD->getMemberSpecializationInfo() << "\n";
-    //debug_stream() << "Babocico2: " << RD->getInstantiatedFromMemberClass() << "\n";
-    //debug_stream() << "Babocico3: " << RD->getTemplateInstantiationPattern() << "\n";
+    // debug_stream() << "Babocico: " << RD->getMemberSpecializationInfo() <<
+    // "\n";
+    // debug_stream() << "Babocico2: " << RD->getInstantiatedFromMemberClass()
+    // << "\n";
+    // debug_stream() << "Babocico3: " << RD->getTemplateInstantiationPattern()
+    // << "\n";
 
     const FriendDecl *FD = Result.Nodes.getNodeAs<clang::FriendDecl>("friend");
     if (!FD) {
