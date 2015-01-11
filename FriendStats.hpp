@@ -32,7 +32,6 @@ struct Result {
     // The number of priv/protected methods
     // in this (friend) function's referred class.
     int parentPrivateMethodsCount = 0;
-    // TODO what about static members ?
 
     struct Types {
       // The number of used types in this (friend) function
@@ -137,6 +136,27 @@ public:
     if (CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(DRef->getDecl())) {
       if (Class == MD->getDeclContext() && privOrProt(MD)) {
         countedDecls.insert(MD);
+      }
+    }
+    return true;
+  }
+};
+
+class StaticVarsVisitor : public RecursiveASTVisitor<StaticVarsVisitor> {
+  const CXXRecordDecl *Class;
+  std::set<Decl *> countedDecls;
+
+public:
+  std::size_t getResult() const { return countedDecls.size(); }
+  StaticVarsVisitor(const CXXRecordDecl *Class) : Class(Class) {}
+  // bool VisitCXXOperatorCallExpr(CXXOperatorCallExpr *OCE) {
+  // debug_stream() << "OCE: " << OCE << "\n";
+  // return true;
+  //}
+  bool VisitDeclRefExpr(DeclRefExpr *DRef) {
+    if (VarDecl *D = dyn_cast<VarDecl>(DRef->getDecl())) {
+      if (Class == D->getDeclContext() && privOrProt(D)) {
+        countedDecls.insert(D);
       }
     }
     return true;
@@ -412,6 +432,7 @@ private:
 
       // TODO implementd the 3 visitor in one visitor,
       // so we would traverse the tree only once!
+      // TODO eliminate copy-paste code below
       MemberHandlerVisitor memberHandlerVisitor{RD};
       // Traverse the function header and body
       // or just the header if body is not existent.
@@ -419,6 +440,14 @@ private:
           ? memberHandlerVisitor.TraverseFunctionDecl(
                 const_cast<FunctionDecl *>(FuncDefinition))
           : memberHandlerVisitor.TraverseFunctionDecl(FuncD);
+
+      StaticVarsVisitor staticVarsVisitor{RD};
+      // Traverse the function header and body
+      // or just the header if body is not existent.
+      FuncDefinition
+          ? staticVarsVisitor.TraverseFunctionDecl(
+                const_cast<FunctionDecl *>(FuncDefinition))
+          : staticVarsVisitor.TraverseFunctionDecl(FuncD);
 
       OperatorCallVisitor operatorCallVisitor{RD};
       // Traverse the function header and body
@@ -439,6 +468,7 @@ private:
       // This is location dependent
       // TODO funcRes.members = ...
       funcRes = memberHandlerVisitor.getResult();
+      funcRes.usedPrivateVarsCount += staticVarsVisitor.getResult();
       funcRes.usedPrivateMethodsCount += operatorCallVisitor.getResult();
       funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
       funcRes.types.usedPrivateCount = Visitor.getResult();

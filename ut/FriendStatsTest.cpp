@@ -262,6 +262,8 @@ int A::b = 0;
   auto p = *res.FuncResults.begin();
   EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
   EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
+  EXPECT_EQ(p.second.parentPrivateMethodsCount, 0);
+  EXPECT_EQ(p.second.usedPrivateMethodsCount, 0);
 }
 
 // ================= Type Tests ============================================= //
