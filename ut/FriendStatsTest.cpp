@@ -266,6 +266,76 @@ int A::b = 0;
   EXPECT_EQ(p.second.usedPrivateMethodsCount, 0);
 }
 
+TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedStaticMehtodsInFriend) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  static void a() {};
+  static void b() {};
+  friend void foo() {
+    A::a();
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 0);
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 0);
+  EXPECT_EQ(p.second.parentPrivateMethodsCount, 2);
+  EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
+}
+
+TEST_F(FriendStats,
+       NumberOfUsedPrivateOrProtectedStaticTemplateMehtodsInFriend) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  template <typename T>
+  static void a() {};
+  friend void foo() {
+    A::a<int>();
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 0);
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 0);
+  EXPECT_EQ(p.second.parentPrivateMethodsCount, 1);
+  EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
+}
+
+TEST_F(FriendStats,
+       PublicStaticFunctionsIsNotCounted) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  template <typename T>
+  static void a() {};
+public:
+  static void b() {};
+  friend void foo() {
+    A::a<int>();
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto p = *res.FuncResults.begin();
+  EXPECT_EQ(p.second.parentPrivateVarsCount, 0);
+  EXPECT_EQ(p.second.usedPrivateVarsCount, 0);
+  EXPECT_EQ(p.second.parentPrivateMethodsCount, 1);
+  EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
+}
+
 // ================= Type Tests ============================================= //
 struct FriendStatsForTypes : FriendStats {};
 
