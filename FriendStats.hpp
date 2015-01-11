@@ -119,6 +119,8 @@ public:
   }
 };
 
+// TODO rename to CallExprVisitor
+// It handles static methods as well.
 class OperatorCallVisitor : public RecursiveASTVisitor<OperatorCallVisitor> {
   const CXXRecordDecl *Class;
   std::set<Decl *> countedDecls;
