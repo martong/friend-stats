@@ -311,8 +311,7 @@ class A {
   EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
 }
 
-TEST_F(FriendStats,
-       PublicStaticFunctionsIsNotCounted) {
+TEST_F(FriendStats, PublicStaticFunctionsIsNotCounted) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
 class A {
@@ -586,26 +585,27 @@ void g() {
   EXPECT_EQ(p->second.types.parentPrivateCount, 3);
 }
 
-//TEST_F(FriendStatsForTypes, NumberOfUsedPrivateOrProtectedTypesInFriendFunc) {
-  //Tool->mapVirtualFile(FileA,
-                       //R"phi(
-//class A {
-  //using Int = int;
-  //friend void func(Int);
+// TEST_F(FriendStatsForTypes, NumberOfUsedPrivateOrProtectedTypesInFriendFunc)
+// {
+// Tool->mapVirtualFile(FileA,
+// R"phi(
+// class A {
+// using Int = int;
+// friend void func(Int);
 //};
-//void func(A::Int) {
-  //struct X {
-	//A::Int i;
-	//void foo(A::Int);
-  //};
-  //using MyInt = A::Int;
-  //A::Int i = 0;
+// void func(A::Int) {
+// struct X {
+// A::Int i;
+// void foo(A::Int);
 //};
-    //)phi");
-  //Tool->run(newFrontendActionFactory(&Finder).get());
-  //auto res = Handler.getResult();
-  //ASSERT_EQ(res.friendFuncCount, 1);
-  //ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+// using MyInt = A::Int;
+// A::Int i = 0;
+//};
+//)phi");
+// Tool->run(newFrontendActionFactory(&Finder).get());
+// auto res = Handler.getResult();
+// ASSERT_EQ(res.friendFuncCount, 1);
+// ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
 //}
 
 // ===================== Friend function uses template members ================
@@ -756,11 +756,21 @@ void func(T, A& a) {
   a.a = 1;
   a.b = 2;
 }
-// Full specialization
+
+// Full(explicit) specialization
+// Remember: There is no such thing as partial function template specialization!
+// template <typename T> void func<T*>(T*, A&) would be a new base template.
+// http://www.gotw.ca/publications/mill17.htm
 template <> void func<double>(double, A& a) { a.a = 1; }
-// Explicit instantiations
+
+// Instantiations
 template void func<int>(int, A&);
+//template void func<char>(char, A&);
+// The below lines are not redundant, because
+// the same FunctionTemplateSpecializationInfo* refers to both the explicit
+// specialization and the explicit/implicit instantiations.
 template void func<double>(double, A&);
+void fooo() { A a; func<double>(1.0,a); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
@@ -770,7 +780,6 @@ template void func<double>(double, A&);
   // Go over the instantiations
   auto p = res.FuncResults.begin()->second.begin();
   // TODO query by double/int
-  // double
   EXPECT_EQ(p->second.usedPrivateVarsCount, 1);
   EXPECT_EQ(p->second.parentPrivateVarsCount, 3);
   ++p;

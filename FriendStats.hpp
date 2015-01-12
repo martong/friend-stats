@@ -67,7 +67,8 @@ struct Result {
   // templates with body (i.e if they have the definition provided).
   // Each friend function template could have different specializations with
   // their own definition.
-  std::map<FullSourceLoc, std::map<const FunctionDecl *, FuncResult>> FuncResults;
+  std::map<FullSourceLoc, std::map<const FunctionDecl *, FuncResult>>
+      FuncResults;
 
   // const SourceManager *SrcMgr;
 };
@@ -532,10 +533,10 @@ private:
         llvm::outs() << "function def: " << FuncDefinition << "\n";
       }
 
-      auto& funcResultsPerSrcLoc = result.FuncResults[srcLoc];
+      auto &funcResultsPerSrcLoc = result.FuncResults[srcLoc];
 
       funcResultsPerSrcLoc.insert({FuncDefinition, funcRes});
-      //result.FuncResults.insert({srcLoc, {{FuncDefinition, funcRes}}});
+      // result.FuncResults.insert({srcLoc, {{FuncDefinition, funcRes}}});
     };
 
     if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
@@ -545,11 +546,21 @@ private:
       // FTD->specializations().end());
       // debug_stream() << "FTD specs: " << numOfFuncSpecs << "\n";
       for (FunctionDecl *spec : FTD->specializations()) {
+        // The same FunctionTemplateSpecializationInfo* refers to both the
+        // explicit
+        // specialization and the explicit/implicit instantiations.
+
+        // auto tsk_kind = spec->getTemplateSpecializationKind();
+        // if (tsk_kind == TSK_ImplicitInstantiation ||
+        // tsk_kind == TSK_ExplicitInstantiationDefinition ||
+        // tsk_kind == TSK_ExplicitInstantiationDeclaration) {
+        // handleFuncD(spec);
+        //}
         handleFuncD(spec);
       }
-      // We want to handle only the instantiatiions!
-      //handleFuncD(FTD->getTemplatedDecl());
     }
+    // We want to handle only the instantiatiions!
+    // handleFuncD(FTD->getTemplatedDecl());
   }
 };
 
