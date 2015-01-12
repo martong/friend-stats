@@ -690,16 +690,19 @@ TEST_F(TemplateFriendStats,
        NumberOfUsedPrivateOrProtectedVariablesInFriendFunc) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
+class A;
+template <typename T> void func(T, A a);
 class A {
   int a = 0;
   int b;
   int c;
   template <typename T>
-  friend void func(T, A& a) {
+  friend void func(T, A a) {
     a.a = 1;
     a.b = 2;
   }
 };
+template void func<int>(int, A);
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
@@ -726,6 +729,7 @@ void func(T, A& a) {
   a.a = 1;
   a.b = 2;
 }
+template void func<int>(int, A&);
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
@@ -734,6 +738,45 @@ void func(T, A& a) {
   auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
+}
+
+TEST_F(TemplateFriendStats,
+       NumberOfUsedPrivateOrProtectedVariablesInFriendFuncSpecialization) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  template <typename T>
+  friend void func(T, A& a);
+};
+template <typename T>
+void func(T, A& a) {
+  a.a = 1;
+  a.b = 2;
+}
+// Full specialization
+template <> void func<double>(double, A& a) { a.a = 1; }
+// Explicit instantiations
+template void func<int>(int, A&);
+template void func<double>(double, A&);
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  EXPECT_EQ(res.FuncResults.begin()->second.size(), std::size_t{2});
+  // Go over the instantiations
+  auto p = res.FuncResults.begin()->second.begin();
+  // TODO query by double/int
+  // double
+  EXPECT_EQ(p->second.usedPrivateVarsCount, 1);
+  EXPECT_EQ(p->second.parentPrivateVarsCount, 3);
+  ++p;
+  // int
+  EXPECT_EQ(p->second.usedPrivateVarsCount, 2);
+  EXPECT_EQ(p->second.parentPrivateVarsCount, 3);
 }
 
 TEST_F(TemplateFriendStats, ClassTemplate) {

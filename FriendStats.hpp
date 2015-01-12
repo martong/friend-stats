@@ -547,7 +547,8 @@ private:
       for (FunctionDecl *spec : FTD->specializations()) {
         handleFuncD(spec);
       }
-      handleFuncD(FTD->getTemplatedDecl());
+      // We want to handle only the instantiatiions!
+      //handleFuncD(FTD->getTemplatedDecl());
     }
   }
 };
