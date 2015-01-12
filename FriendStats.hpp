@@ -16,12 +16,23 @@ inline llvm::raw_ostream &debug_stream() {
 using namespace clang;
 using namespace clang::ast_matchers;
 
+// Holds the number of private or protected variables, methods, types
+// in a class.
+struct ClassCounts {
+  int privateVarsCount = 0;
+  int privateMethodsCount = 0;
+  int privateTypesCount = 0;
+};
+
 struct Result {
   int friendClassCount = 0;
   int friendFuncCount = 0;
   std::map<FullSourceLoc, int> ClassResults;
   struct FuncResult {
+
     std::string locationStr;
+
+    // Below the static variables and static methods are counted in as well.
     // The number of used variables in this (friend) function
     int usedPrivateVarsCount = 0;
     // The number of priv/protected variables
@@ -41,7 +52,13 @@ struct Result {
       int parentPrivateCount = 0;
     } types;
   };
+  // struct FuncResultsKey {
+  // SourceLocation friendDeclLoc; // The location of the friend declaration
+  // SourceLocation defLoc; // The location of the definition of the friend
+  // decl.
+  //};
   std::map<FullSourceLoc, FuncResult> FuncResults;
+  // const SourceManager *SrcMgr;
 };
 
 template <typename T> bool privOrProt(const T *x) {
@@ -317,6 +334,22 @@ public:
   }
 };
 
+ClassCounts getClassCounts(const CXXRecordDecl *RD) {
+  ClassCounts classCounts;
+
+  // TODO This could be done with decls_begin, since CXXRecordDecl is a
+  // DeclContext. That might be more efficient, since that way we would
+  // not traverse the full tree of RD.
+  PrivTypeCounter privTypeCounter;
+  privTypeCounter.TraverseCXXRecordDecl(const_cast<CXXRecordDecl *>(RD));
+  classCounts.privateTypesCount = privTypeCounter.getResult();
+
+  classCounts.privateVarsCount = numberOfPrivOrProtFields(RD);
+  classCounts.privateMethodsCount = numberOfPrivOrProtMethods(RD);
+
+  return classCounts;
+}
+
 auto FriendMatcher =
     friendDecl(hasParent(recordDecl().bind("class"))).bind("friend");
 
@@ -367,22 +400,14 @@ public:
       return;
     }
 
-    // TODO This could be done with decls_begin, sinec CXXRecordDecl is a
-    // DeclContext. That might be more efficient, since that way we would
-    // not traverse the full tree of RD.
-    PrivTypeCounter privTypeCounter;
-    privTypeCounter.TraverseCXXRecordDecl(const_cast<CXXRecordDecl *>(RD));
+    ClassCounts classCounts = getClassCounts(RD);
 
     auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
 
     if (FD->getFriendType()) { // friend class
       handleFriendClass(RD, FD, srcLoc, Result);
     } else { // friend function
-      handleFriendFunction(RD, FD, srcLoc, Result);
-      auto &funcRes = result.FuncResults.at(srcLoc);
-      funcRes.parentPrivateVarsCount = numberOfPrivOrProtFields(RD);
-      funcRes.parentPrivateMethodsCount = numberOfPrivOrProtMethods(RD);
-      funcRes.types.parentPrivateCount = privTypeCounter.getResult();
+      handleFriendFunction(RD, FD, srcLoc, classCounts, Result);
     }
   }
   const Result &getResult() const { return result; }
@@ -402,6 +427,7 @@ private:
 
   void handleFriendFunction(const CXXRecordDecl *RD, const FriendDecl *FD,
                             const FullSourceLoc &srcLoc,
+                            const ClassCounts &classCounts,
                             const MatchFinder::MatchResult &Result) {
     auto it = result.FuncResults.find(srcLoc);
     if (it != std::end(result.FuncResults)) {
@@ -428,6 +454,9 @@ private:
       }
       assert(RD);
 
+      if (!FuncDefinition) {
+        return;
+      }
       // TODO implementd these visitors in one visitor,
       // so we would traverse the tree only once!
       // TODO eliminate copy-paste code below
@@ -470,6 +499,21 @@ private:
       funcRes.usedPrivateMethodsCount += operatorCallVisitor.getResult();
       funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
       funcRes.types.usedPrivateCount = Visitor.getResult();
+
+      funcRes.parentPrivateVarsCount = classCounts.privateVarsCount;
+      funcRes.parentPrivateMethodsCount = classCounts.privateMethodsCount;
+      funcRes.types.parentPrivateCount = classCounts.privateTypesCount;
+      //if (result.FuncResults.count(srcLoc)) {
+        //llvm::outs() << "Duplicate"
+                     //<< "\n";
+        //llvm::outs() << "friend loc: "
+                     //<< srcLoc.printToString(*Result.SourceManager) << "\n";
+        //llvm::outs() << "def loc 1: " << result.FuncResults.at(srcLoc).locationStr << "\n";
+        //llvm::outs() << "def loc 2: "
+                     //<< FuncDefinition->getLocation().printToString(
+                            //*Result.SourceManager) << "\n";
+      //}
+      result.FuncResults.insert({srcLoc, funcRes});
     };
 
     if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
@@ -483,7 +527,6 @@ private:
       }
       handleFuncD(FTD->getTemplatedDecl());
     }
-    result.FuncResults.insert({srcLoc, funcRes});
   }
 };
 
