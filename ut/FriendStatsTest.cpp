@@ -80,7 +80,7 @@ void func(A &a) {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
@@ -121,7 +121,7 @@ class A {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
@@ -142,7 +142,7 @@ class A {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
   EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
 }
@@ -168,7 +168,7 @@ void foo() { XXX<int>::A x; bool b = x == x; }
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
   EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
 }
@@ -192,7 +192,7 @@ void func(A &a) {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
 }
 
@@ -210,7 +210,7 @@ class A {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateMethodsCount, 1);
   EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
 }
@@ -235,7 +235,7 @@ void func(A &a) {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
   EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
   EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
@@ -259,7 +259,7 @@ int A::b = 0;
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateVarsCount, 2);
   EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
   EXPECT_EQ(p.second.parentPrivateMethodsCount, 0);
@@ -281,7 +281,7 @@ class A {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateVarsCount, 0);
   EXPECT_EQ(p.second.usedPrivateVarsCount, 0);
   EXPECT_EQ(p.second.parentPrivateMethodsCount, 2);
@@ -304,7 +304,7 @@ class A {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateVarsCount, 0);
   EXPECT_EQ(p.second.usedPrivateVarsCount, 0);
   EXPECT_EQ(p.second.parentPrivateMethodsCount, 1);
@@ -329,7 +329,7 @@ public:
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateVarsCount, 0);
   EXPECT_EQ(p.second.usedPrivateVarsCount, 0);
   EXPECT_EQ(p.second.parentPrivateMethodsCount, 1);
@@ -354,7 +354,7 @@ void func() {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.types.usedPrivateCount, 1);
 }
 
@@ -375,7 +375,7 @@ public:
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.types.parentPrivateCount, 0);
   EXPECT_EQ(p.second.types.usedPrivateCount, 0);
   EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
@@ -398,7 +398,7 @@ void func() {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.types.usedPrivateCount, 1);
 }
 
@@ -419,7 +419,7 @@ void func() {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.types.usedPrivateCount, 2);
 }
 
@@ -442,7 +442,7 @@ void func() {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.types.usedPrivateCount, 2);
 }
 
@@ -462,7 +462,7 @@ A::Double func(A::Int) {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.types.usedPrivateCount, 2);
 }
 
@@ -479,7 +479,7 @@ A::Int func(A::Int) { return 0; }
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.types.usedPrivateCount, 1);
 }
 
@@ -500,7 +500,7 @@ void func() {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.types.usedPrivateCount, 1);
 }
 
@@ -529,7 +529,7 @@ void func() {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.types.usedPrivateCount, 1);
   EXPECT_EQ(p.second.types.parentPrivateCount, 2);
 }
@@ -578,36 +578,35 @@ void g() {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 2);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{2});
-  auto p = res.FuncResults.begin();
+  auto p = res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p->second.types.usedPrivateCount, 1);
   EXPECT_EQ(p->second.types.parentPrivateCount, 2);
-  ++p;
+  p = (++res.FuncResults.begin())->second.begin();
   EXPECT_EQ(p->second.types.usedPrivateCount, 1);
   EXPECT_EQ(p->second.types.parentPrivateCount, 3);
 }
 
-TEST_F(FriendStatsForTypes, NumberOfUsedPrivateOrProtectedTypesInFriendFunc) {
-  Tool->mapVirtualFile(FileA,
-                       R"phi(
-class A {
-  using Int = int;
-  friend void func(Int);
-};
-void func(A::Int) {
-  struct X {
-	A::Int i;
-	void foo(A::Int);
-  };
-  using MyInt = A::Int;
-  A::Int i = 0;
-};
-    )phi");
-  Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Handler.getResult();
-  ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
-}
+//TEST_F(FriendStatsForTypes, NumberOfUsedPrivateOrProtectedTypesInFriendFunc) {
+  //Tool->mapVirtualFile(FileA,
+                       //R"phi(
+//class A {
+  //using Int = int;
+  //friend void func(Int);
+//};
+//void func(A::Int) {
+  //struct X {
+	//A::Int i;
+	//void foo(A::Int);
+  //};
+  //using MyInt = A::Int;
+  //A::Int i = 0;
+//};
+    //)phi");
+  //Tool->run(newFrontendActionFactory(&Finder).get());
+  //auto res = Handler.getResult();
+  //ASSERT_EQ(res.friendFuncCount, 1);
+  //ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+//}
 
 // ===================== Friend function uses template members ================
 
@@ -626,7 +625,7 @@ class A {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateMethodsCount, 1);
   EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
 }
@@ -646,7 +645,7 @@ class A {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateMethodsCount, 1);
   EXPECT_EQ(p.second.usedPrivateMethodsCount, 1);
 }
@@ -666,7 +665,7 @@ class A {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.parentPrivateVarsCount, 1);
   EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
 }
@@ -706,7 +705,7 @@ class A {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
@@ -732,7 +731,7 @@ void func(T, A& a) {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
@@ -755,7 +754,7 @@ void f() { A<int> aint; func(aint); }
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
@@ -779,7 +778,7 @@ void f() { A<int> aint; func(1, aint); }
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto p = *res.FuncResults.begin();
+  auto p = *res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
   EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
 }
@@ -804,15 +803,16 @@ void f() { A<int> aint; func(1, aint); func2(aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
+  // TODO
   ASSERT_EQ(res.friendFuncCount, 2);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{2});
-  auto it = res.FuncResults.begin();
+  auto it = res.FuncResults.begin()->second.begin();
   {
     auto p = *it;
     EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
     EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
   }
-  ++it;
+  it = (++res.FuncResults.begin())->second.begin();
   {
     auto p = *it;
     EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
@@ -837,7 +837,7 @@ void f() { A<int> aint; func2(aint); }
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto it = res.FuncResults.begin();
+  auto it = res.FuncResults.begin()->second.begin();
   {
     auto p = *it;
     EXPECT_EQ(p.second.types.usedPrivateCount, 1);
@@ -865,7 +865,7 @@ void f() { A<int*> aint; func2(aint); }
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto it = res.FuncResults.begin();
+  auto it = res.FuncResults.begin()->second.begin();
   {
     auto p = *it;
     EXPECT_EQ(p.second.types.usedPrivateCount, 1);
@@ -893,7 +893,7 @@ void f() { A<int> aint; func(1, aint); }
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto it = res.FuncResults.begin();
+  auto it = res.FuncResults.begin()->second.begin();
   {
     auto p = *it;
     EXPECT_EQ(p.second.types.usedPrivateCount, 2);
@@ -929,7 +929,7 @@ template void func(A<int>& a);
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  auto it = res.FuncResults.begin();
+  auto it = res.FuncResults.begin()->second.begin();
   //{
   // auto p = *it;
   // EXPECT_EQ(p.second.usedPrivateVarsCount, 2);

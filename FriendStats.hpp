@@ -31,6 +31,8 @@ struct Result {
   struct FuncResult {
 
     std::string locationStr;
+    SourceLocation friendDeclLoc; // The location of the friend declaration
+    SourceLocation defLoc; // The location of the definition of the friend
 
     // Below the static variables and static methods are counted in as well.
     // The number of used variables in this (friend) function
@@ -52,12 +54,21 @@ struct Result {
       int parentPrivateCount = 0;
     } types;
   };
+
   // struct FuncResultsKey {
   // SourceLocation friendDeclLoc; // The location of the friend declaration
   // SourceLocation defLoc; // The location of the definition of the friend
   // decl.
   //};
-  std::map<FullSourceLoc, FuncResult> FuncResults;
+
+  // Each friend funciton declaration might have it's connected function
+  // definition.
+  // We collect statistics only on friend functions and friend function
+  // templates with body (i.e if they have the definition provided).
+  // Each friend function template could have different specializations with
+  // their own definition.
+  std::map<FullSourceLoc, std::map<const FunctionDecl *, FuncResult>> FuncResults;
+
   // const SourceManager *SrcMgr;
 };
 
@@ -454,9 +465,12 @@ private:
       }
       assert(RD);
 
+      // We are counting stats only for functions which have definitions
+      // provided.
       if (!FuncDefinition) {
         return;
       }
+
       // TODO implementd these visitors in one visitor,
       // so we would traverse the tree only once!
       // TODO eliminate copy-paste code below
@@ -497,23 +511,31 @@ private:
       funcRes = memberHandlerVisitor.getResult();
       funcRes.usedPrivateVarsCount += staticVarsVisitor.getResult();
       funcRes.usedPrivateMethodsCount += operatorCallVisitor.getResult();
-      funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
       funcRes.types.usedPrivateCount = Visitor.getResult();
+
+      funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
+      funcRes.friendDeclLoc = srcLoc;
+      funcRes.defLoc = FuncDefinition->getLocation();
 
       funcRes.parentPrivateVarsCount = classCounts.privateVarsCount;
       funcRes.parentPrivateMethodsCount = classCounts.privateMethodsCount;
       funcRes.types.parentPrivateCount = classCounts.privateTypesCount;
-      //if (result.FuncResults.count(srcLoc)) {
-        //llvm::outs() << "Duplicate"
-                     //<< "\n";
-        //llvm::outs() << "friend loc: "
-                     //<< srcLoc.printToString(*Result.SourceManager) << "\n";
-        //llvm::outs() << "def loc 1: " << result.FuncResults.at(srcLoc).locationStr << "\n";
-        //llvm::outs() << "def loc 2: "
-                     //<< FuncDefinition->getLocation().printToString(
-                            //*Result.SourceManager) << "\n";
-      //}
-      result.FuncResults.insert({srcLoc, funcRes});
+
+      if (result.FuncResults.count(srcLoc)) {
+        llvm::outs() << "Duplicate"
+                     << "\n";
+        llvm::outs() << "friend loc: "
+                     << srcLoc.printToString(*Result.SourceManager) << "\n";
+        llvm::outs() << "def loc: "
+                     << funcRes.defLoc.printToString(*Result.SourceManager)
+                     << "\n";
+        llvm::outs() << "function def: " << FuncDefinition << "\n";
+      }
+
+      auto& funcResultsPerSrcLoc = result.FuncResults[srcLoc];
+
+      funcResultsPerSrcLoc.insert({FuncDefinition, funcRes});
+      //result.FuncResults.insert({srcLoc, {{FuncDefinition, funcRes}}});
     };
 
     if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
@@ -522,7 +544,7 @@ private:
       // int numOfFuncSpecs = std::distance(FTD->specializations().begin(),
       // FTD->specializations().end());
       // debug_stream() << "FTD specs: " << numOfFuncSpecs << "\n";
-      for (const auto &spec : FTD->specializations()) {
+      for (FunctionDecl *spec : FTD->specializations()) {
         handleFuncD(spec);
       }
       handleFuncD(FTD->getTemplatedDecl());
