@@ -546,16 +546,27 @@ private:
       // FTD->specializations().end());
       // debug_stream() << "FTD specs: " << numOfFuncSpecs << "\n";
       for (FunctionDecl *spec : FTD->specializations()) {
-        // The same FunctionTemplateSpecializationInfo* refers to both the
-        // explicit
-        // specialization and the explicit/implicit instantiations.
 
+        // Note,
+        // Internally clang uses the same class to represent a function template
+        // explicit specialization and a function template instantiation.
+        // An explicit specialization is generated, no matter what.
+        // An instantiation is generated only if it is requested explicitly
+        // (explicit instantiation),
+        // or only if the given expression requires it (implicit instantiation).
+        // If once an explicit specialization is provided and later an
+        // instantiation is
+        // requested, then both are represented by the same
+        // FunctionTemplateSpecializationInfo*.
+
+        // Because of the above this code is not needed:
         // auto tsk_kind = spec->getTemplateSpecializationKind();
         // if (tsk_kind == TSK_ImplicitInstantiation ||
         // tsk_kind == TSK_ExplicitInstantiationDefinition ||
         // tsk_kind == TSK_ExplicitInstantiationDeclaration) {
         // handleFuncD(spec);
         //}
+
         handleFuncD(spec);
       }
     }
