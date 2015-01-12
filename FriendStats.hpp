@@ -7,7 +7,7 @@
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
-const bool debug = true;
+const bool debug = false;
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
@@ -362,18 +362,14 @@ public:
     }
     debug_stream() << "CXXRecordDecl with friend: " << RD << "\n";
 
-    // debug_stream() << "Babocico: " << RD->getMemberSpecializationInfo() <<
-    // "\n";
-    // debug_stream() << "Babocico2: " << RD->getInstantiatedFromMemberClass()
-    // << "\n";
-    // debug_stream() << "Babocico3: " << RD->getTemplateInstantiationPattern()
-    // << "\n";
-
     const FriendDecl *FD = Result.Nodes.getNodeAs<clang::FriendDecl>("friend");
     if (!FD) {
       return;
     }
 
+    // TODO This could be done with decls_begin, sinec CXXRecordDecl is a
+    // DeclContext. That might be more efficient, since that way we would
+    // not traverse the full tree of RD.
     PrivTypeCounter privTypeCounter;
     privTypeCounter.TraverseCXXRecordDecl(const_cast<CXXRecordDecl *>(RD));
 
@@ -432,7 +428,7 @@ private:
       }
       assert(RD);
 
-      // TODO implementd the 3 visitor in one visitor,
+      // TODO implementd these visitors in one visitor,
       // so we would traverse the tree only once!
       // TODO eliminate copy-paste code below
       MemberHandlerVisitor memberHandlerVisitor{RD};
