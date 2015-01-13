@@ -550,7 +550,8 @@ private:
         // Note,
         // Internally clang uses the same class to represent a function template
         // explicit specialization and a function template instantiation.
-        // An explicit specialization is generated, no matter what.
+        // An explicit specialization is generated, no matter what, so we
+        // include that in the statistics.
         // An instantiation is generated only if it is requested explicitly
         // (explicit instantiation),
         // or only if the given expression requires it (implicit instantiation).
