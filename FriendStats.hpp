@@ -474,38 +474,17 @@ private:
 
       // TODO implementd these visitors in one visitor,
       // so we would traverse the tree only once!
-      // TODO eliminate copy-paste code below
       MemberHandlerVisitor memberHandlerVisitor{RD};
-      // Traverse the function header and body
-      // or just the header if body is not existent.
-      FuncDefinition
-          ? memberHandlerVisitor.TraverseFunctionDecl(
-                const_cast<FunctionDecl *>(FuncDefinition))
-          : memberHandlerVisitor.TraverseFunctionDecl(FuncD);
-
+      memberHandlerVisitor.TraverseFunctionDecl(
+          const_cast<FunctionDecl *>(FuncDefinition));
       StaticVarsVisitor staticVarsVisitor{RD};
-      // Traverse the function header and body
-      // or just the header if body is not existent.
-      FuncDefinition
-          ? staticVarsVisitor.TraverseFunctionDecl(
-                const_cast<FunctionDecl *>(FuncDefinition))
-          : staticVarsVisitor.TraverseFunctionDecl(FuncD);
-
+      staticVarsVisitor.TraverseFunctionDecl(
+          const_cast<FunctionDecl *>(FuncDefinition));
       OperatorCallVisitor operatorCallVisitor{RD};
-      // Traverse the function header and body
-      // or just the header if body is not existent.
-      FuncDefinition
-          ? operatorCallVisitor.TraverseFunctionDecl(
-                const_cast<FunctionDecl *>(FuncDefinition))
-          : operatorCallVisitor.TraverseFunctionDecl(FuncD);
-
+      operatorCallVisitor.TraverseFunctionDecl(
+          const_cast<FunctionDecl *>(FuncDefinition));
       TypeHandlerVisitor Visitor{RD};
-      // Traverse the function header and body
-      // or just the header if body is not existent.
-      FuncDefinition
-          ? Visitor.TraverseFunctionDecl(
-                const_cast<FunctionDecl *>(FuncDefinition))
-          : Visitor.TraverseFunctionDecl(FuncD);
+      Visitor.TraverseFunctionDecl(const_cast<FunctionDecl *>(FuncDefinition));
 
       // This is location dependent
       // TODO funcRes.members = ...
