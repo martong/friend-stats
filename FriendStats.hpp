@@ -63,7 +63,6 @@ struct Result {
   // their own definition.
   std::map<FullSourceLoc, std::map<const FunctionDecl *, FuncResult>>
       FuncResults;
-
 };
 
 template <typename T> bool privOrProt(const T *x) {
@@ -87,7 +86,7 @@ int numberOfPrivOrProtFields(const RecordDecl *RD) {
   auto var_decl_end = var_decl_it{RD->decls_end()};
   auto var_decls = var_decl_range{var_decl_begin, var_decl_end};
   for (const VarDecl *VD : var_decls) {
-    debug_stream() << "VarDecl: " << VD << "\n";
+    (void)VD;
     ++res;
   }
 
@@ -114,7 +113,7 @@ int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
   auto func_templates = func_templ_range{func_templ_begin, func_templ_end};
   for (const FunctionTemplateDecl *FTD : func_templates) {
     for (const auto *Spec : FTD->specializations()) {
-      debug_stream() << "Func Spec: " << Spec << "\n";
+      (void)Spec;
       ++res;
     }
   }
@@ -141,8 +140,7 @@ public:
   }
 };
 
-// TODO rename to CallExprVisitor
-// It handles static methods as well.
+// It handles static methods and operator call expressions as well.
 class CallExprVisitor : public RecursiveASTVisitor<CallExprVisitor> {
   const CXXRecordDecl *Class;
   std::set<Decl *> countedDecls;
@@ -150,13 +148,7 @@ class CallExprVisitor : public RecursiveASTVisitor<CallExprVisitor> {
 public:
   std::size_t getResult() const { return countedDecls.size(); }
   CallExprVisitor(const CXXRecordDecl *Class) : Class(Class) {}
-  // bool VisitCXXOperatorCallExpr(CXXOperatorCallExpr *OCE) {
-  // debug_stream() << "OCE: " << OCE << "\n";
-  // return true;
-  //}
   bool VisitDeclRefExpr(DeclRefExpr *DRef) {
-    debug_stream() << "Dref: " << DRef << "\n";
-    debug_stream() << "Dref Decl: " << DRef->getDecl() << "\n";
     if (CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(DRef->getDecl())) {
       if (Class == MD->getDeclContext() && privOrProt(MD)) {
         countedDecls.insert(MD);
@@ -173,10 +165,6 @@ class StaticVarsVisitor : public RecursiveASTVisitor<StaticVarsVisitor> {
 public:
   std::size_t getResult() const { return countedDecls.size(); }
   StaticVarsVisitor(const CXXRecordDecl *Class) : Class(Class) {}
-  // bool VisitCXXOperatorCallExpr(CXXOperatorCallExpr *OCE) {
-  // debug_stream() << "OCE: " << OCE << "\n";
-  // return true;
-  //}
   bool VisitDeclRefExpr(DeclRefExpr *DRef) {
     if (VarDecl *D = dyn_cast<VarDecl>(DRef->getDecl())) {
       if (Class == D->getDeclContext() && privOrProt(D)) {
@@ -204,7 +192,6 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
       const Type *T2 = SingleStepDesugar.getTypePtr();
       if (SingleStepDesugar == QualType(T, 0))
         break;
-      // if (debug) { T2->dump };
       if (const TypedefType *TT = dyn_cast<TypedefType>(T2)) {
         return TT->getDecl();
       }
@@ -219,12 +206,8 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
       return;
     }
 
-    debug_stream() << "Decl: " << TND << "\n";
-    debug_stream() << "DeclContext: " << TND->getDeclContext() << "\n";
     CXXRecordDecl *DeclContextRD =
         dyn_cast<CXXRecordDecl>(TND->getDeclContext());
-    debug_stream() << "DeclContext RD: " << DeclContextRD << "\n";
-    debug_stream() << "Class: " << Class << "\n";
 
     auto insert = [&](QualType QT) {
       if (privOrProt(TND))
@@ -265,23 +248,14 @@ public:
   std::size_t getResult() const { return countedTypes.size(); }
 
   bool VisitValueDecl(ValueDecl *D) {
-    debug_stream() << "ValueDecl: " << D << "\n";
     QualType QT = D->getType();
     if (debug)
       QT->dump();
 
     const Type *T = QT.getTypePtr();
     if (const FunctionProtoType *FP = T->getAs<FunctionProtoType>()) {
-      // if (T->isFunctionProtoType()) {
-      // debug_stream() << "FunctionProtoType: "
-      //<< "\n";
       QualType RetType = FP->getReturnType();
       HandleType(RetType);
-      // for (const auto &x : FP->getParamTypes()) {
-      // debug_stream() << "Param Type   ";
-      // if (debug) x->dump();
-      // HandleType(x);
-      //}
       return true;
     }
 
@@ -382,13 +356,13 @@ public:
     if (RD->getDescribedClassTemplate()) {
       return;
     }
+
     // We have to investigate all the parent CXXRecordDecls up in the tree
     // and ensure that they are not template declarations.
     // Again, we want to collect stats only on instantiation/specializations.
     const DeclContext *iRD = dyn_cast<DeclContext>(RD);
     while (iRD->getParent()) {
       if (auto *CRD = dyn_cast<CXXRecordDecl>(iRD->getParent())) {
-        debug_stream() << "Babocico parent: " << CRD << "\n";
         if (CRD->getDescribedClassTemplate()) {
           return;
         }
@@ -422,7 +396,6 @@ private:
     if (it != std::end(result.ClassResults)) {
       return;
     }
-    // debug_stream() << "Class/Struct\n";
     ++result.friendClassCount;
     result.ClassResults.insert({srcLoc, 0});
   }
@@ -435,7 +408,6 @@ private:
     if (it != std::end(result.FuncResults)) {
       return;
     }
-    // debug_stream() << "Function\n";
     ++result.friendFuncCount;
     Result::FuncResult funcRes;
     NamedDecl *ND = FD->getFriendDecl();
@@ -491,17 +463,6 @@ private:
       funcRes.parentPrivateMethodsCount = classCounts.privateMethodsCount;
       funcRes.types.parentPrivateCount = classCounts.privateTypesCount;
 
-      if (debug && result.FuncResults.count(srcLoc)) {
-        debug_stream() << "Duplicate"
-                     << "\n";
-        debug_stream() << "friend loc: "
-                     << srcLoc.printToString(*Result.SourceManager) << "\n";
-        debug_stream() << "def loc: "
-                     << funcRes.defLoc.printToString(*Result.SourceManager)
-                     << "\n";
-        debug_stream() << "function def: " << FuncDefinition << "\n";
-      }
-
       auto &funcResultsPerSrcLoc = result.FuncResults[srcLoc];
       funcResultsPerSrcLoc.insert({FuncDefinition, funcRes});
     };
@@ -535,7 +496,8 @@ private:
         handleFuncD(spec);
       }
     }
-    // We want to handle only the instantiatiions!
+    // We want to handle only the instantiatiions! Therefore we do not
+    // investigate the primary template.
     // handleFuncD(FTD->getTemplatedDecl());
   }
 };
