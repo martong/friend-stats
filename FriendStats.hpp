@@ -55,12 +55,6 @@ struct Result {
     } types;
   };
 
-  // struct FuncResultsKey {
-  // SourceLocation friendDeclLoc; // The location of the friend declaration
-  // SourceLocation defLoc; // The location of the definition of the friend
-  // decl.
-  //};
-
   // Each friend funciton declaration might have it's connected function
   // definition.
   // We collect statistics only on friend functions and friend function
@@ -70,7 +64,6 @@ struct Result {
   std::map<FullSourceLoc, std::map<const FunctionDecl *, FuncResult>>
       FuncResults;
 
-  // const SourceManager *SrcMgr;
 };
 
 template <typename T> bool privOrProt(const T *x) {
@@ -150,13 +143,13 @@ public:
 
 // TODO rename to CallExprVisitor
 // It handles static methods as well.
-class OperatorCallVisitor : public RecursiveASTVisitor<OperatorCallVisitor> {
+class CallExprVisitor : public RecursiveASTVisitor<CallExprVisitor> {
   const CXXRecordDecl *Class;
   std::set<Decl *> countedDecls;
 
 public:
   std::size_t getResult() const { return countedDecls.size(); }
-  OperatorCallVisitor(const CXXRecordDecl *Class) : Class(Class) {}
+  CallExprVisitor(const CXXRecordDecl *Class) : Class(Class) {}
   // bool VisitCXXOperatorCallExpr(CXXOperatorCallExpr *OCE) {
   // debug_stream() << "OCE: " << OCE << "\n";
   // return true;
@@ -319,12 +312,9 @@ public:
   MemberHandlerVisitor(const CXXRecordDecl *Class) : Class(Class) {}
 
   bool VisitMemberExpr(MemberExpr *ME) {
-    debug_stream() << "MemberExpr: " << ME << "\n";
     if (const FieldDecl *FD =
             dyn_cast_or_null<const FieldDecl>(ME->getMemberDecl())) {
-      debug_stream() << "FieldDecl: " << FD << "\n";
       const RecordDecl *Parent = FD->getParent();
-      debug_stream() << "Parent: " << Parent << "\n";
       if (Parent == Class && privOrProt(FD)) {
         fields.insert(FD);
       }
@@ -480,8 +470,8 @@ private:
       StaticVarsVisitor staticVarsVisitor{RD};
       staticVarsVisitor.TraverseFunctionDecl(
           const_cast<FunctionDecl *>(FuncDefinition));
-      OperatorCallVisitor operatorCallVisitor{RD};
-      operatorCallVisitor.TraverseFunctionDecl(
+      CallExprVisitor callExprVisitor{RD};
+      callExprVisitor.TraverseFunctionDecl(
           const_cast<FunctionDecl *>(FuncDefinition));
       TypeHandlerVisitor Visitor{RD};
       Visitor.TraverseFunctionDecl(const_cast<FunctionDecl *>(FuncDefinition));
@@ -490,7 +480,7 @@ private:
       // TODO funcRes.members = ...
       funcRes = memberHandlerVisitor.getResult();
       funcRes.usedPrivateVarsCount += staticVarsVisitor.getResult();
-      funcRes.usedPrivateMethodsCount += operatorCallVisitor.getResult();
+      funcRes.usedPrivateMethodsCount += callExprVisitor.getResult();
       funcRes.types.usedPrivateCount = Visitor.getResult();
 
       funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
@@ -501,29 +491,24 @@ private:
       funcRes.parentPrivateMethodsCount = classCounts.privateMethodsCount;
       funcRes.types.parentPrivateCount = classCounts.privateTypesCount;
 
-      if (result.FuncResults.count(srcLoc)) {
-        llvm::outs() << "Duplicate"
+      if (debug && result.FuncResults.count(srcLoc)) {
+        debug_stream() << "Duplicate"
                      << "\n";
-        llvm::outs() << "friend loc: "
+        debug_stream() << "friend loc: "
                      << srcLoc.printToString(*Result.SourceManager) << "\n";
-        llvm::outs() << "def loc: "
+        debug_stream() << "def loc: "
                      << funcRes.defLoc.printToString(*Result.SourceManager)
                      << "\n";
-        llvm::outs() << "function def: " << FuncDefinition << "\n";
+        debug_stream() << "function def: " << FuncDefinition << "\n";
       }
 
       auto &funcResultsPerSrcLoc = result.FuncResults[srcLoc];
-
       funcResultsPerSrcLoc.insert({FuncDefinition, funcRes});
-      // result.FuncResults.insert({srcLoc, {{FuncDefinition, funcRes}}});
     };
 
     if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
       handleFuncD(FuncD);
     } else if (FunctionTemplateDecl *FTD = dyn_cast<FunctionTemplateDecl>(ND)) {
-      // int numOfFuncSpecs = std::distance(FTD->specializations().begin(),
-      // FTD->specializations().end());
-      // debug_stream() << "FTD specs: " << numOfFuncSpecs << "\n";
       for (FunctionDecl *spec : FTD->specializations()) {
 
         // Note,
