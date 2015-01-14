@@ -218,8 +218,28 @@ class A {
   EXPECT_EQ(fr.usedPrivateMethodsCount, 1);
 }
 
-// TODO test only the methods and write separate composite test
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedMethodsInFriendFunc) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  void privFunc() {}
+  void privFunc(int) {}
+  friend void func(A &);
+};
+void func(A &a) {
+  a.privFunc();
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto fr = getFirstFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateMethodsCount, 1);
+  EXPECT_EQ(fr.parentPrivateMethodsCount, 2);
+}
+
+TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedMethodsAndVarsInFriendFunc) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
 class A {
@@ -858,7 +878,6 @@ void f() { A<int> aint; func(1, aint); func2(aint); }
     )phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
-  // TODO
   ASSERT_EQ(res.friendFuncCount, 2);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{2});
   auto it = res.FuncResults.begin()->second.begin();
