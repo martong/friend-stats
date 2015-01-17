@@ -1,3 +1,5 @@
+#pragma once
+
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/AST/RecursiveASTVisitor.h"
@@ -69,7 +71,7 @@ template <typename T> bool privOrProt(const T *x) {
   return x->getAccess() == AS_private || x->getAccess() == AS_protected;
 }
 
-int numberOfPrivOrProtFields(const RecordDecl *RD) {
+inline int numberOfPrivOrProtFields(const RecordDecl *RD) {
   int res = 0;
   for (const auto &x : RD->fields()) {
     if (privOrProt(x)) {
@@ -93,7 +95,7 @@ int numberOfPrivOrProtFields(const RecordDecl *RD) {
   return res;
 }
 
-int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
+inline int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
   int res = 0;
 
   for (const auto &x : RD->methods()) {
@@ -310,7 +312,7 @@ public:
   }
 };
 
-ClassCounts getClassCounts(const CXXRecordDecl *RD) {
+inline ClassCounts getClassCounts(const CXXRecordDecl *RD) {
   ClassCounts classCounts;
 
   // TODO This could be done with decls_begin, since CXXRecordDecl is a
@@ -326,7 +328,7 @@ ClassCounts getClassCounts(const CXXRecordDecl *RD) {
   return classCounts;
 }
 
-auto FriendMatcher =
+auto const FriendMatcher =
     friendDecl(hasParent(recordDecl().bind("class"))).bind("friend");
 
 class FriendHandler : public MatchFinder::MatchCallback {

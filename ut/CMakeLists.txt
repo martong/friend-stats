@@ -7,6 +7,7 @@ endfunction()
 
 add_friend_stats_unittest(FriendStatsSimpleTests
   FriendStatsTest.cpp
+  FriendClassesTest.cpp
   )
 
 target_link_libraries(FriendStatsSimpleTests
