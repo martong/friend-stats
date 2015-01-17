@@ -42,5 +42,10 @@ struct FriendStats : ::testing::Test {
   Result::FuncResult getFirstFuncResult(const Result &res) {
     return (*res.FuncResults.begin()->second.begin()).second;
   }
+  Result::FuncResult getFirstMemberFuncResult(const Result &res) {
+    return res.ClassResults.begin()
+        ->second.memberFuncResults.front()
+        .funcResult;
+  }
 };
 

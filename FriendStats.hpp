@@ -29,7 +29,7 @@ struct ClassCounts {
 struct Result {
   int friendClassCount = 0;
   int friendFuncCount = 0;
-  std::map<FullSourceLoc, int> ClassResults;
+
   struct FuncResult {
 
     std::string locationStr;
@@ -63,8 +63,19 @@ struct Result {
   // templates with body (i.e if they have the definition provided).
   // Each friend function template could have different specializations with
   // their own definition.
+  // TODO second map is not needed?
   std::map<FullSourceLoc, std::map<const FunctionDecl *, FuncResult>>
       FuncResults;
+
+  struct ClassResult {
+    struct MemberFuncResult {
+      FullSourceLoc memberFuncLoc;
+      const FunctionDecl *functionDecl;
+      FuncResult funcResult;
+    };
+    std::vector<MemberFuncResult> memberFuncResults;
+  };
+  std::map<FullSourceLoc, ClassResult> ClassResults;
 };
 
 template <typename T> bool privOrProt(const T *x) {
@@ -399,7 +410,7 @@ private:
       return;
     }
     ++result.friendClassCount;
-    result.ClassResults.insert({srcLoc, 0});
+    result.ClassResults.insert({srcLoc, Result::ClassResult{}});
   }
 
   void handleFriendFunction(const CXXRecordDecl *RD, const FriendDecl *FD,
