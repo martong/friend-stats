@@ -63,8 +63,9 @@ struct Result {
   // templates with body (i.e if they have the definition provided).
   // Each friend function template could have different specializations with
   // their own definition.
-  // TODO second map is not needed?
-  std::map<FullSourceLoc, std::map<const FunctionDecl *, FuncResult>>
+  // TODO Use a struct with named members instead of pair.
+  std::map<FullSourceLoc,
+           std::vector<std::pair<const FunctionDecl *, FuncResult>>>
       FuncResults;
 
   struct ClassResult {
@@ -477,7 +478,7 @@ private:
       funcRes.types.parentPrivateCount = classCounts.privateTypesCount;
 
       auto &funcResultsPerSrcLoc = result.FuncResults[srcLoc];
-      funcResultsPerSrcLoc.insert({FuncDefinition, funcRes});
+      funcResultsPerSrcLoc.push_back({FuncDefinition, funcRes});
     };
 
     if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
