@@ -426,26 +426,28 @@ private:
     return nullptr;
   }
 
-  enum class StatsResult { USEFUL, USELESS };
-  StatsResult getFuncStatistics(const CXXRecordDecl *hostRD,
-                                const FunctionDecl *FuncD,
-                                const FullSourceLoc srcLoc,
-                                const ClassCounts &classCounts,
-                                Result::FuncResult &funcRes) {
+  // Here FuncD is the declaration of the function, which may or may not
+  // has a body.
+  // Returns the declaration of the body if there is one.
+  const FunctionDecl *getFuncStatistics(const CXXRecordDecl *hostRD,
+                                        const FunctionDecl *FuncD,
+                                        const FullSourceLoc srcLoc,
+                                        const ClassCounts &classCounts,
+                                        Result::FuncResult &funcRes) {
     // Get the Body and the function declaration which contains it,
     // i.e. that \cDecl is the function definition itself.
     const FunctionDecl *FuncDefinition =
         nullptr; // This will be set to the decl with the body
     Stmt *Body = FuncD->getBody(FuncDefinition);
     if (!Body) {
-      return StatsResult::USELESS;
+      return nullptr;
     }
     assert(hostRD);
 
     // We are counting stats only for functions which have definitions
     // provided.
     if (!FuncDefinition) {
-      return StatsResult::USELESS;
+      return nullptr;
     }
 
     // TODO implement these visitors in one visitor,
@@ -477,7 +479,7 @@ private:
     funcRes.parentPrivateMethodsCount = classCounts.privateMethodsCount;
     funcRes.types.parentPrivateCount = classCounts.privateTypesCount;
 
-    return StatsResult::USEFUL;
+    return FuncDefinition;
   }
 
   void handleFriendClass(const CXXRecordDecl *hostRD, const FriendDecl *FD,
@@ -508,12 +510,12 @@ private:
     for (const auto &method : friendCXXRD->methods()) {
       debug_stream() << "method: " << method << "\n";
       Result::ClassResult::MemberFuncResult memberFuncRes;
-      StatsResult res = getFuncStatistics(
+      auto res = getFuncStatistics(
           hostRD, method,
           // TODO use SourceLocation instead of FullSourceLoc
           FullSourceLoc{method->getLocation(), *Result.SourceManager},
           classCounts, memberFuncRes.funcResult);
-      if (res == StatsResult::USEFUL) {
+      if (res) {
         classResult.memberFuncResults.push_back(std::move(memberFuncRes));
       }
     }
@@ -534,56 +536,13 @@ private:
       return;
     }
 
-    // Here FuncD is the declaration of the function, which may or may not
-    // has a body.
     auto handleFuncD = [&](FunctionDecl *FuncD) {
-      // Get the Body and the function declaration which contains it,
-      // i.e. that \cDecl is the function definition itself.
-      const FunctionDecl *FuncDefinition =
-          nullptr; // This will be set to the decl with the body
-      Stmt *Body = FuncD->getBody(FuncDefinition);
-      if (!Body) {
-        return;
+      auto FuncDefinition =
+          getFuncStatistics(hostRD, FuncD, srcLoc, classCounts, funcRes);
+      if (FuncDefinition) {
+        auto &funcResultsPerSrcLoc = result.FuncResults[srcLoc];
+        funcResultsPerSrcLoc.push_back({FuncDefinition, funcRes});
       }
-      assert(hostRD);
-
-      // We are counting stats only for functions which have definitions
-      // provided.
-      if (!FuncDefinition) {
-        return;
-      }
-
-      // TODO implement these visitors in one visitor,
-      // so we would traverse the tree only once!
-      MemberHandlerVisitor memberHandlerVisitor{hostRD};
-      memberHandlerVisitor.TraverseFunctionDecl(
-          const_cast<FunctionDecl *>(FuncDefinition));
-      StaticVarsVisitor staticVarsVisitor{hostRD};
-      staticVarsVisitor.TraverseFunctionDecl(
-          const_cast<FunctionDecl *>(FuncDefinition));
-      CallExprVisitor callExprVisitor{hostRD};
-      callExprVisitor.TraverseFunctionDecl(
-          const_cast<FunctionDecl *>(FuncDefinition));
-      TypeHandlerVisitor Visitor{hostRD};
-      Visitor.TraverseFunctionDecl(const_cast<FunctionDecl *>(FuncDefinition));
-
-      // This is location dependent
-      // TODO funcRes.members = ...
-      funcRes = memberHandlerVisitor.getResult();
-      funcRes.usedPrivateVarsCount += staticVarsVisitor.getResult();
-      funcRes.usedPrivateMethodsCount += callExprVisitor.getResult();
-      funcRes.types.usedPrivateCount = Visitor.getResult();
-
-      funcRes.locationStr = srcLoc.printToString(*Result.SourceManager);
-      funcRes.friendDeclLoc = srcLoc;
-      funcRes.defLoc = FuncDefinition->getLocation();
-
-      funcRes.parentPrivateVarsCount = classCounts.privateVarsCount;
-      funcRes.parentPrivateMethodsCount = classCounts.privateMethodsCount;
-      funcRes.types.parentPrivateCount = classCounts.privateTypesCount;
-
-      auto &funcResultsPerSrcLoc = result.FuncResults[srcLoc];
-      funcResultsPerSrcLoc.push_back({FuncDefinition, funcRes});
     };
 
     if (FunctionDecl *FuncD = dyn_cast<FunctionDecl>(ND)) {
