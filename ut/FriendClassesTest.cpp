@@ -27,7 +27,8 @@ class B {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  ASSERT_EQ(res.ClassResults.begin()->second.memberFuncResults.size(),
+  ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
             std::size_t{1});
   auto fr = getFirstMemberFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
@@ -57,12 +58,14 @@ class B {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  ASSERT_EQ(res.ClassResults.begin()->second.memberFuncResults.size(),
+  ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
             std::size_t{2});
   auto fr = getFirstMemberFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
-  fr = res.ClassResults.begin()->second.memberFuncResults.at(1).funcResult;
+  fr =
+      res.ClassResults.begin()->second.at(0).memberFuncResults.at(1).funcResult;
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
@@ -94,7 +97,7 @@ class C {
   ASSERT_EQ(res.friendClassCount, 2);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{2});
 
-  ASSERT_EQ(res.ClassResults.begin()->second.memberFuncResults.size(),
+  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
             std::size_t{1});
   auto fr = getFirstMemberFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
@@ -102,7 +105,7 @@ class C {
 
   // 2nd memberFuncResult
   const auto &memberFuncResults =
-      (++res.ClassResults.begin())->second.memberFuncResults;
+      (++res.ClassResults.begin())->second.at(0).memberFuncResults;
   ASSERT_EQ(memberFuncResults.size(), std::size_t{1});
   fr = memberFuncResults.at(0).funcResult;
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
@@ -130,7 +133,7 @@ class B {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  ASSERT_EQ(res.ClassResults.begin()->second.memberFuncResults.size(),
+  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
             std::size_t{1});
   auto fr = getFirstMemberFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
@@ -160,7 +163,7 @@ template class B<int>;
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  ASSERT_EQ(res.ClassResults.begin()->second.memberFuncResults.size(),
+  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
             std::size_t{1});
   auto fr = getFirstMemberFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);

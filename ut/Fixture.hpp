@@ -44,7 +44,7 @@ struct FriendStats : ::testing::Test {
   }
   Result::FuncResult getFirstMemberFuncResult(const Result &res) {
     return res.ClassResults.begin()
-        ->second.memberFuncResults.front()
+        ->second.at(0).memberFuncResults.front()
         .funcResult;
   }
 };

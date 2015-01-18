@@ -9,7 +9,7 @@
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
-const bool debug = false;
+const bool debug = true;
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
@@ -77,7 +77,7 @@ struct Result {
     };
     std::vector<MemberFuncResult> memberFuncResults;
   };
-  std::map<SourceLocation, ClassResult> ClassResults;
+  std::map<SourceLocation, std::vector<ClassResult>> ClassResults;
 };
 
 template <typename T> bool privOrProt(const T *x) {
@@ -398,6 +398,18 @@ public:
 
     ClassCounts classCounts = getClassCounts(hostRD);
 
+    if (NamedDecl *ND = FD->getFriendDecl()) {
+      if (ClassTemplateDecl *CTD = dyn_cast<ClassTemplateDecl>(ND)) {
+        debug_stream() << "CTD: " << CTD << "\n";
+        for (const ClassTemplateSpecializationDecl *CTSD :
+             CTD->specializations()) {
+          debug_stream() << "CTSD: " << CTSD << "\n";
+          const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(CTSD);
+          debug_stream() << "CXXRD: " << CXXRD << "\n";
+        }
+      }
+    }
+
     auto srcLoc = FD->getLocation();
 
     if (FD->getFriendType()) { // friend class
@@ -514,7 +526,10 @@ private:
     if (!friendCXXRD) {
       return;
     }
-    Result::ClassResult &classResult = result.ClassResults[friendDeclLoc];
+    std::vector<Result::ClassResult> &classResultsForAllInstantiation =
+        result.ClassResults[friendDeclLoc];
+    classResultsForAllInstantiation.push_back({});
+    Result::ClassResult &classResult = classResultsForAllInstantiation.front();
     for (const auto &method : friendCXXRD->methods()) {
       debug_stream() << "method: " << method << "\n";
       Result::ClassResult::MemberFuncResult memberFuncRes;
