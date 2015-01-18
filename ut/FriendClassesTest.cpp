@@ -34,3 +34,77 @@ class B {
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
+TEST_F(FriendClassesStats, SeveralMemberFunctions) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  friend class B;
+};
+class B {
+  void func(A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+  void func2(A &a) {
+    a.a = 1;
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.begin()->second.memberFuncResults.size(),
+            std::size_t{2});
+  auto fr = getFirstMemberFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  fr = res.ClassResults.begin()->second.memberFuncResults.at(1).funcResult;
+  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
+TEST_F(FriendClassesStats, SeveralFriendClasses) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  friend class B;
+  friend class C;
+};
+class B {
+  void func(A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+};
+class C {
+  void func(A &a) {
+    a.a = 1;
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassCount, 2);
+  ASSERT_EQ(res.ClassResults.size(), std::size_t{2});
+
+  ASSERT_EQ(res.ClassResults.begin()->second.memberFuncResults.size(),
+            std::size_t{1});
+  auto fr = getFirstMemberFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+
+  // 2nd memberFuncResult
+  const auto &memberFuncResults =
+      (++res.ClassResults.begin())->second.memberFuncResults;
+  ASSERT_EQ(memberFuncResults.size(), std::size_t{1});
+  fr = memberFuncResults.at(0).funcResult;
+  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
