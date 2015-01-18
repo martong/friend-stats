@@ -394,6 +394,7 @@ public:
 
     ClassCounts classCounts = getClassCounts(hostRD);
 
+    // TODO use SourceLocation instead of FullSourceLoc !!!
     auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
 
     if (FD->getFriendType()) { // friend class
@@ -431,7 +432,7 @@ private:
   // Returns the declaration of the body if there is one.
   const FunctionDecl *getFuncStatistics(const CXXRecordDecl *hostRD,
                                         const FunctionDecl *FuncD,
-                                        const FullSourceLoc srcLoc,
+                                        const FullSourceLoc friendDeclLoc,
                                         const ClassCounts &classCounts,
                                         Result::FuncResult &funcRes) {
     // Get the Body and the function declaration which contains it,
@@ -471,8 +472,9 @@ private:
     funcRes.usedPrivateMethodsCount += callExprVisitor.getResult();
     funcRes.types.usedPrivateCount = Visitor.getResult();
 
-    funcRes.locationStr = srcLoc.printToString(srcLoc.getManager());
-    funcRes.friendDeclLoc = srcLoc;
+    funcRes.locationStr =
+        friendDeclLoc.printToString(friendDeclLoc.getManager());
+    funcRes.friendDeclLoc = friendDeclLoc;
     funcRes.defLoc = FuncDefinition->getLocation();
 
     funcRes.parentPrivateVarsCount = classCounts.privateVarsCount;
@@ -483,13 +485,13 @@ private:
   }
 
   void handleFriendClass(const CXXRecordDecl *hostRD, const FriendDecl *FD,
-                         const FullSourceLoc &srcLoc,
+                         const FullSourceLoc &friendDeclLoc,
                          const ClassCounts &classCounts,
                          const MatchFinder::MatchResult &Result) {
     debug_stream() << "handleFriendClass"
                    << "\n";
 
-    auto it = result.ClassResults.find(srcLoc);
+    auto it = result.ClassResults.find(friendDeclLoc);
     if (it != std::end(result.ClassResults)) {
       return;
     }
@@ -506,14 +508,13 @@ private:
     if (!friendCXXRD) {
       return;
     }
-    Result::ClassResult &classResult = result.ClassResults[srcLoc];
+    Result::ClassResult &classResult = result.ClassResults[friendDeclLoc];
     for (const auto &method : friendCXXRD->methods()) {
       debug_stream() << "method: " << method << "\n";
       Result::ClassResult::MemberFuncResult memberFuncRes;
       auto res = getFuncStatistics(
           hostRD, method,
-          // TODO use SourceLocation instead of FullSourceLoc
-          FullSourceLoc{method->getLocation(), *Result.SourceManager},
+          friendDeclLoc,
           classCounts, memberFuncRes.funcResult);
       if (res) {
         classResult.memberFuncResults.push_back(std::move(memberFuncRes));
@@ -522,10 +523,10 @@ private:
   }
 
   void handleFriendFunction(const CXXRecordDecl *hostRD, const FriendDecl *FD,
-                            const FullSourceLoc &srcLoc,
+                            const FullSourceLoc &friendDeclLoc,
                             const ClassCounts &classCounts,
                             const MatchFinder::MatchResult &Result) {
-    auto it = result.FuncResults.find(srcLoc);
+    auto it = result.FuncResults.find(friendDeclLoc);
     if (it != std::end(result.FuncResults)) {
       return;
     }
@@ -538,9 +539,9 @@ private:
 
     auto handleFuncD = [&](FunctionDecl *FuncD) {
       auto FuncDefinition =
-          getFuncStatistics(hostRD, FuncD, srcLoc, classCounts, funcRes);
+          getFuncStatistics(hostRD, FuncD, friendDeclLoc, classCounts, funcRes);
       if (FuncDefinition) {
-        auto &funcResultsPerSrcLoc = result.FuncResults[srcLoc];
+        auto &funcResultsPerSrcLoc = result.FuncResults[friendDeclLoc];
         funcResultsPerSrcLoc.push_back({FuncDefinition, funcRes});
       }
     };
