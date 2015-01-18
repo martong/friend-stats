@@ -65,6 +65,7 @@ struct Result {
   // Each friend function template could have different specializations with
   // their own definition.
   // TODO Use a struct with named members instead of pair.
+  // or just use vector<FuncResult>
   std::map<SourceLocation,
            std::vector<std::pair<const FunctionDecl *, FuncResult>>>
       FuncResults;
@@ -77,6 +78,7 @@ struct Result {
     };
     std::vector<MemberFuncResult> memberFuncResults;
   };
+  // TODO comment about instantiaions like with function templates
   std::map<SourceLocation, std::vector<ClassResult>> ClassResults;
 };
 
