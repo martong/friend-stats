@@ -9,7 +9,7 @@
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
-const bool debug = true;
+const bool debug = false;
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
@@ -32,9 +32,10 @@ struct Result {
 
   struct FuncResult {
 
-    std::string locationStr;
     SourceLocation friendDeclLoc; // The location of the friend declaration
+    std::string friendDeclLocStr;
     SourceLocation defLoc; // The location of the definition of the friend
+    std::string defLocStr;
 
     // Below the static variables and static methods are counted in as well.
     // The number of used variables in this (friend) function
@@ -64,19 +65,19 @@ struct Result {
   // Each friend function template could have different specializations with
   // their own definition.
   // TODO Use a struct with named members instead of pair.
-  std::map<FullSourceLoc,
+  std::map<SourceLocation,
            std::vector<std::pair<const FunctionDecl *, FuncResult>>>
       FuncResults;
 
   struct ClassResult {
     struct MemberFuncResult {
-      FullSourceLoc memberFuncLoc;
+      SourceLocation memberFuncLoc;
       const FunctionDecl *functionDecl;
       FuncResult funcResult;
     };
     std::vector<MemberFuncResult> memberFuncResults;
   };
-  std::map<FullSourceLoc, ClassResult> ClassResults;
+  std::map<SourceLocation, ClassResult> ClassResults;
 };
 
 template <typename T> bool privOrProt(const T *x) {
@@ -345,6 +346,7 @@ auto const FriendMatcher =
 
 class FriendHandler : public MatchFinder::MatchCallback {
   Result result;
+  SourceManager *sourceManager = nullptr;
 
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
@@ -356,6 +358,8 @@ public:
     };
     const static int x = tuPrinter();
     (void)x;
+
+    sourceManager = Result.SourceManager;
 
     // The class which hosts the friend declaration.
     // This is a DeclContext.
@@ -394,8 +398,7 @@ public:
 
     ClassCounts classCounts = getClassCounts(hostRD);
 
-    // TODO use SourceLocation instead of FullSourceLoc !!!
-    auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
+    auto srcLoc = FD->getLocation();
 
     if (FD->getFriendType()) { // friend class
       handleFriendClass(hostRD, FD, srcLoc, classCounts, Result);
@@ -432,7 +435,7 @@ private:
   // Returns the declaration of the body if there is one.
   const FunctionDecl *getFuncStatistics(const CXXRecordDecl *hostRD,
                                         const FunctionDecl *FuncD,
-                                        const FullSourceLoc friendDeclLoc,
+                                        const SourceLocation friendDeclLoc,
                                         const ClassCounts &classCounts,
                                         Result::FuncResult &funcRes) {
     // Get the Body and the function declaration which contains it,
@@ -472,10 +475,11 @@ private:
     funcRes.usedPrivateMethodsCount += callExprVisitor.getResult();
     funcRes.types.usedPrivateCount = Visitor.getResult();
 
-    funcRes.locationStr =
-        friendDeclLoc.printToString(friendDeclLoc.getManager());
+    assert(sourceManager);
     funcRes.friendDeclLoc = friendDeclLoc;
+    funcRes.friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
     funcRes.defLoc = FuncDefinition->getLocation();
+    funcRes.defLocStr = funcRes.defLoc.printToString(*sourceManager);
 
     funcRes.parentPrivateVarsCount = classCounts.privateVarsCount;
     funcRes.parentPrivateMethodsCount = classCounts.privateMethodsCount;
@@ -485,7 +489,7 @@ private:
   }
 
   void handleFriendClass(const CXXRecordDecl *hostRD, const FriendDecl *FD,
-                         const FullSourceLoc &friendDeclLoc,
+                         const SourceLocation &friendDeclLoc,
                          const ClassCounts &classCounts,
                          const MatchFinder::MatchResult &Result) {
     debug_stream() << "handleFriendClass"
@@ -500,7 +504,9 @@ private:
 
     TypeSourceInfo *TInfo = FD->getFriendType();
     QualType QT = TInfo->getType();
-    QT->dump();
+    if (debug) {
+      QT->dump();
+    }
     RecordDecl *friendRD = getRecordDecl(QT);
     debug_stream() << "friendRD: " << friendRD << "\n";
 
@@ -512,10 +518,8 @@ private:
     for (const auto &method : friendCXXRD->methods()) {
       debug_stream() << "method: " << method << "\n";
       Result::ClassResult::MemberFuncResult memberFuncRes;
-      auto res = getFuncStatistics(
-          hostRD, method,
-          friendDeclLoc,
-          classCounts, memberFuncRes.funcResult);
+      auto res = getFuncStatistics(hostRD, method, friendDeclLoc, classCounts,
+                                   memberFuncRes.funcResult);
       if (res) {
         classResult.memberFuncResults.push_back(std::move(memberFuncRes));
       }
@@ -523,7 +527,7 @@ private:
   }
 
   void handleFriendFunction(const CXXRecordDecl *hostRD, const FriendDecl *FD,
-                            const FullSourceLoc &friendDeclLoc,
+                            const SourceLocation &friendDeclLoc,
                             const ClassCounts &classCounts,
                             const MatchFinder::MatchResult &Result) {
     auto it = result.FuncResults.find(friendDeclLoc);

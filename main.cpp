@@ -42,6 +42,7 @@ int main(int argc, const char **argv) {
   int num = 0;
   int numZeroDenom = 0;
   for (const auto &v : Handler.getResult().FuncResults) {
+    // llvm::outs() << v.first.printToString(v.first.getManager()) << "\n";
     for (const auto vv : v.second) {
       const auto &funcRes = vv.second;
       int numerator = funcRes.usedPrivateVarsCount +
@@ -64,7 +65,8 @@ int main(int argc, const char **argv) {
                      << "\n";
         ++numZeroDenom;
       }
-      llvm::outs() << "loc: " << funcRes.locationStr << "\n";
+      llvm::outs() << "friendDeclLoc: " << funcRes.friendDeclLocStr << "\n";
+      llvm::outs() << "defLoc: " << funcRes.defLocStr << "\n";
       llvm::outs() << "usedPrivateVarsCount: " << funcRes.usedPrivateVarsCount
                    << "\n";
       llvm::outs() << "parentPrivateVarsCount: "
@@ -90,12 +92,13 @@ int main(int argc, const char **argv) {
   // Self Diagnostics:
   for (const auto &v : Handler.getResult().FuncResults) {
     for (const auto vv : v.second) {
-    const auto &funcRes = vv.second;
-    if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
-        funcRes.usedPrivateMethodsCount > funcRes.parentPrivateMethodsCount ||
-        funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
-      llvm::errs() << "WRONG MEASURE here: \n" << funcRes.locationStr << "\n";
-    }
+      const auto &funcRes = vv.second;
+      if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
+          funcRes.usedPrivateMethodsCount > funcRes.parentPrivateMethodsCount ||
+          funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
+        llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
+                     << "\n";
+      }
     }
   }
 
