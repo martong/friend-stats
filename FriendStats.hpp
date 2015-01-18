@@ -357,9 +357,11 @@ public:
     const static int x = tuPrinter();
     (void)x;
 
-    const CXXRecordDecl *RD =
+    // The class which hosts the friend declaration.
+    // This is a DeclContext.
+    const CXXRecordDecl *hostRD =
         Result.Nodes.getNodeAs<clang::CXXRecordDecl>("class");
-    if (!RD) {
+    if (!hostRD) {
       return;
     }
 
@@ -367,14 +369,14 @@ public:
     // i.e. this is not a template instantiation/specialization.
     // We want to collect statistics only on instantiations/specializations.
     // We are not interested in not used templates.
-    if (RD->getDescribedClassTemplate()) {
+    if (hostRD->getDescribedClassTemplate()) {
       return;
     }
 
     // We have to investigate all the parent CXXRecordDecls up in the tree
     // and ensure that they are not template declarations.
     // Again, we want to collect stats only on instantiation/specializations.
-    const DeclContext *iRD = dyn_cast<DeclContext>(RD);
+    const DeclContext *iRD = dyn_cast<DeclContext>(hostRD);
     while (iRD->getParent()) {
       if (auto *CRD = dyn_cast<CXXRecordDecl>(iRD->getParent())) {
         if (CRD->getDescribedClassTemplate()) {
@@ -383,27 +385,27 @@ public:
       }
       iRD = iRD->getParent();
     }
-    debug_stream() << "CXXRecordDecl with friend: " << RD << "\n";
+    debug_stream() << "CXXRecordDecl with friend: " << hostRD << "\n";
 
     const FriendDecl *FD = Result.Nodes.getNodeAs<clang::FriendDecl>("friend");
     if (!FD) {
       return;
     }
 
-    ClassCounts classCounts = getClassCounts(RD);
+    ClassCounts classCounts = getClassCounts(hostRD);
 
     auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
 
     if (FD->getFriendType()) { // friend class
-      handleFriendClass(RD, FD, srcLoc, Result);
+      handleFriendClass(hostRD, FD, srcLoc, Result);
     } else { // friend function
-      handleFriendFunction(RD, FD, srcLoc, classCounts, Result);
+      handleFriendFunction(hostRD, FD, srcLoc, classCounts, Result);
     }
   }
   const Result &getResult() const { return result; }
 
 private:
-  void handleFriendClass(const CXXRecordDecl *RD, const FriendDecl *FD,
+  void handleFriendClass(const CXXRecordDecl *hostRD, const FriendDecl *FD,
                          const FullSourceLoc &srcLoc,
                          const MatchFinder::MatchResult &Result) {
     auto it = result.ClassResults.find(srcLoc);
@@ -414,7 +416,7 @@ private:
     result.ClassResults.insert({srcLoc, Result::ClassResult{}});
   }
 
-  void handleFriendFunction(const CXXRecordDecl *RD, const FriendDecl *FD,
+  void handleFriendFunction(const CXXRecordDecl *hostRD, const FriendDecl *FD,
                             const FullSourceLoc &srcLoc,
                             const ClassCounts &classCounts,
                             const MatchFinder::MatchResult &Result) {
@@ -440,7 +442,7 @@ private:
       if (!Body) {
         return;
       }
-      assert(RD);
+      assert(hostRD);
 
       // We are counting stats only for functions which have definitions
       // provided.
@@ -448,18 +450,18 @@ private:
         return;
       }
 
-      // TODO implementd these visitors in one visitor,
+      // TODO implement these visitors in one visitor,
       // so we would traverse the tree only once!
-      MemberHandlerVisitor memberHandlerVisitor{RD};
+      MemberHandlerVisitor memberHandlerVisitor{hostRD};
       memberHandlerVisitor.TraverseFunctionDecl(
           const_cast<FunctionDecl *>(FuncDefinition));
-      StaticVarsVisitor staticVarsVisitor{RD};
+      StaticVarsVisitor staticVarsVisitor{hostRD};
       staticVarsVisitor.TraverseFunctionDecl(
           const_cast<FunctionDecl *>(FuncDefinition));
-      CallExprVisitor callExprVisitor{RD};
+      CallExprVisitor callExprVisitor{hostRD};
       callExprVisitor.TraverseFunctionDecl(
           const_cast<FunctionDecl *>(FuncDefinition));
-      TypeHandlerVisitor Visitor{RD};
+      TypeHandlerVisitor Visitor{hostRD};
       Visitor.TraverseFunctionDecl(const_cast<FunctionDecl *>(FuncDefinition));
 
       // This is location dependent
