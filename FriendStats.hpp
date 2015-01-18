@@ -9,7 +9,7 @@
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
-const bool debug = false;
+const bool debug = true;
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
@@ -397,7 +397,7 @@ public:
     auto srcLoc = FullSourceLoc{FD->getLocation(), *Result.SourceManager};
 
     if (FD->getFriendType()) { // friend class
-      handleFriendClass(hostRD, FD, srcLoc, Result);
+      handleFriendClass(hostRD, FD, srcLoc, classCounts, Result);
     } else { // friend function
       handleFriendFunction(hostRD, FD, srcLoc, classCounts, Result);
     }
@@ -405,15 +405,118 @@ public:
   const Result &getResult() const { return result; }
 
 private:
+  // TODO Make it templated on RecordDecl/TypedefNameDecl
+  // See TypeHandlerVisitor::GetTypeAliasDecl
+  RecordDecl *getRecordDecl(QualType QT) {
+    const Type *T = QT.getTypePtr();
+    if (const RecordType *TT = dyn_cast<RecordType>(T)) {
+      return TT->getDecl();
+    }
+    while (true) {
+      QualType SingleStepDesugar =
+          T->getLocallyUnqualifiedSingleStepDesugaredType();
+      const Type *T2 = SingleStepDesugar.getTypePtr();
+      if (SingleStepDesugar == QualType(T, 0))
+        break;
+      if (const RecordType *TT = dyn_cast<RecordType>(T2)) {
+        return TT->getDecl();
+      }
+      T = T2;
+    }
+    return nullptr;
+  }
+
+  enum class StatsResult { USEFUL, USELESS };
+  StatsResult getFuncStatistics(const CXXRecordDecl *hostRD,
+                                const FunctionDecl *FuncD,
+                                const FullSourceLoc srcLoc,
+                                const ClassCounts &classCounts,
+                                Result::FuncResult &funcRes) {
+    // Get the Body and the function declaration which contains it,
+    // i.e. that \cDecl is the function definition itself.
+    const FunctionDecl *FuncDefinition =
+        nullptr; // This will be set to the decl with the body
+    Stmt *Body = FuncD->getBody(FuncDefinition);
+    if (!Body) {
+      return StatsResult::USELESS;
+    }
+    assert(hostRD);
+
+    // We are counting stats only for functions which have definitions
+    // provided.
+    if (!FuncDefinition) {
+      return StatsResult::USELESS;
+    }
+
+    // TODO implement these visitors in one visitor,
+    // so we would traverse the tree only once!
+    MemberHandlerVisitor memberHandlerVisitor{hostRD};
+    memberHandlerVisitor.TraverseFunctionDecl(
+        const_cast<FunctionDecl *>(FuncDefinition));
+    StaticVarsVisitor staticVarsVisitor{hostRD};
+    staticVarsVisitor.TraverseFunctionDecl(
+        const_cast<FunctionDecl *>(FuncDefinition));
+    CallExprVisitor callExprVisitor{hostRD};
+    callExprVisitor.TraverseFunctionDecl(
+        const_cast<FunctionDecl *>(FuncDefinition));
+    TypeHandlerVisitor Visitor{hostRD};
+    Visitor.TraverseFunctionDecl(const_cast<FunctionDecl *>(FuncDefinition));
+
+    // This is location dependent
+    // TODO funcRes.members = ...
+    funcRes = memberHandlerVisitor.getResult();
+    funcRes.usedPrivateVarsCount += staticVarsVisitor.getResult();
+    funcRes.usedPrivateMethodsCount += callExprVisitor.getResult();
+    funcRes.types.usedPrivateCount = Visitor.getResult();
+
+    funcRes.locationStr = srcLoc.printToString(srcLoc.getManager());
+    funcRes.friendDeclLoc = srcLoc;
+    funcRes.defLoc = FuncDefinition->getLocation();
+
+    funcRes.parentPrivateVarsCount = classCounts.privateVarsCount;
+    funcRes.parentPrivateMethodsCount = classCounts.privateMethodsCount;
+    funcRes.types.parentPrivateCount = classCounts.privateTypesCount;
+
+    return StatsResult::USEFUL;
+  }
+
   void handleFriendClass(const CXXRecordDecl *hostRD, const FriendDecl *FD,
                          const FullSourceLoc &srcLoc,
+                         const ClassCounts &classCounts,
                          const MatchFinder::MatchResult &Result) {
+    debug_stream() << "handleFriendClass"
+                   << "\n";
+
     auto it = result.ClassResults.find(srcLoc);
     if (it != std::end(result.ClassResults)) {
       return;
     }
+
     ++result.friendClassCount;
-    result.ClassResults.insert({srcLoc, Result::ClassResult{}});
+
+    TypeSourceInfo *TInfo = FD->getFriendType();
+    QualType QT = TInfo->getType();
+    QT->dump();
+    RecordDecl *friendRD = getRecordDecl(QT);
+    debug_stream() << "friendRD: " << friendRD << "\n";
+
+    CXXRecordDecl *friendCXXRD = dyn_cast<CXXRecordDecl>(friendRD);
+    if (!friendCXXRD) {
+      return;
+    }
+    Result::ClassResult &classResult = result.ClassResults[srcLoc];
+    for (const auto &method : friendCXXRD->methods()) {
+      debug_stream() << "method: " << method << "\n";
+      Result::ClassResult::MemberFuncResult memberFuncRes;
+      StatsResult res = getFuncStatistics(
+          hostRD, method,
+          // TODO use SourceLocation instead of FullSourceLoc
+          FullSourceLoc{method->getLocation(), *Result.SourceManager},
+          classCounts, memberFuncRes.funcResult);
+      if (res == StatsResult::USEFUL) {
+        classResult.memberFuncResults.push_back(std::move(memberFuncRes));
+      }
+    }
   }
 
   void handleFriendFunction(const CXXRecordDecl *hostRD, const FriendDecl *FD,
