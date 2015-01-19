@@ -111,6 +111,15 @@ inline int numberOfPrivOrProtFields(const RecordDecl *RD) {
   return res;
 }
 
+using func_templ_it = DeclContext::specific_decl_iterator<FunctionTemplateDecl>;
+using func_templ_range = llvm::iterator_range<func_templ_it>;
+inline func_templ_range getFunctionTemplateRange(const CXXRecordDecl *RD) {
+  auto func_templ_begin = func_templ_it{RD->decls_begin()};
+  auto func_templ_end = func_templ_it{RD->decls_end()};
+  auto func_templates = func_templ_range{func_templ_begin, func_templ_end};
+  return func_templates;
+}
+
 inline int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
   int res = 0;
 
@@ -123,13 +132,7 @@ inline int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
   // Go over all the member function templates (methods templates).
   // Unfortunately this is not exposed in CXXRecordDecl as it is done with
   // non-template methods.
-  using func_templ_it =
-      DeclContext::specific_decl_iterator<FunctionTemplateDecl>;
-  using func_templ_range = llvm::iterator_range<func_templ_it>;
-  auto func_templ_begin = func_templ_it{RD->decls_begin()};
-  auto func_templ_end = func_templ_it{RD->decls_end()};
-  auto func_templates = func_templ_range{func_templ_begin, func_templ_end};
-  for (const FunctionTemplateDecl *FTD : func_templates) {
+  for (const FunctionTemplateDecl *FTD : getFunctionTemplateRange(RD)) {
     for (const auto *Spec : FTD->specializations()) {
       (void)Spec;
       ++res;
@@ -516,13 +519,8 @@ private:
     // Go over all the member function templates (methods templates).
     // Unfortunately this is not exposed in CXXRecordDecl as it is done with
     // non-template methods.
-    using func_templ_it =
-        DeclContext::specific_decl_iterator<FunctionTemplateDecl>;
-    using func_templ_range = llvm::iterator_range<func_templ_it>;
-    auto func_templ_begin = func_templ_it{friendCXXRD->decls_begin()};
-    auto func_templ_end = func_templ_it{friendCXXRD->decls_end()};
-    auto func_templates = func_templ_range{func_templ_begin, func_templ_end};
-    for (const FunctionTemplateDecl *FTD : func_templates) {
+    for (const FunctionTemplateDecl *FTD :
+         getFunctionTemplateRange(friendCXXRD)) {
       for (const auto &Spec : FTD->specializations()) {
         Result::ClassResult::MemberFuncResult memberFuncRes;
         auto res = getFuncStatistics(hostRD, Spec, friendDeclLoc, classCounts,
