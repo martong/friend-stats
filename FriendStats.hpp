@@ -449,13 +449,20 @@ private:
       if (CXXRD == friendCXXRD) {
         return true;
       }
-      if (!isConcreteClass(CXXRD)) {
-        return true;
-      }
+
       debug_stream() << "NestedClassVisitor/CXXRD :" << CXXRD << "\n";
-      Result::ClassResult classResult = getClassInstantiationStats(
-          hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
-      classResultsForOneFriendDecl.push_back(std::move(classResult));
+
+      if (const ClassTemplateDecl *CTD =
+              friendCXXRD->getDescribedClassTemplate()) {
+        for (const auto *spec : CTD->specializations()) {
+          classResultsForOneFriendDecl.push_back(getClassInstantiationStats(
+              hostRD, spec, friendDeclLoc, classCounts, sourceManager));
+        }
+      } else {
+        Result::ClassResult classResult = getClassInstantiationStats(
+            hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
+        classResultsForOneFriendDecl.push_back(std::move(classResult));
+      }
       return true;
     }
 
