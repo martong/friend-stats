@@ -400,23 +400,27 @@ public:
 
     ClassCounts classCounts = getClassCounts(hostRD);
 
+    const ClassTemplateDecl *CTD = nullptr;
     if (NamedDecl *ND = FD->getFriendDecl()) {
-      if (ClassTemplateDecl *CTD = dyn_cast<ClassTemplateDecl>(ND)) {
-        debug_stream() << "CTD: " << CTD << "\n";
-        for (const ClassTemplateSpecializationDecl *CTSD :
-             CTD->specializations()) {
-          debug_stream() << "CTSD: " << CTSD << "\n";
-          const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(CTSD);
-          debug_stream() << "CXXRD: " << CXXRD << "\n";
-        }
-      }
+      CTD = dyn_cast<ClassTemplateDecl>(ND);
+      //if (CTD) {
+        //debug_stream() << "CTD: " << CTD << "\n";
+        //for (const ClassTemplateSpecializationDecl *CTSD :
+             //CTD->specializations()) {
+          //debug_stream() << "CTSD: " << CTSD << "\n";
+          //const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(CTSD);
+          //debug_stream() << "CXXRD: " << CXXRD << "\n";
+        //}
+      //}
     }
 
     auto srcLoc = FD->getLocation();
 
-    if (FD->getFriendType()) { // friend class
+    if (FD->getFriendType()) { // friend decl is class
       handleFriendClass(hostRD, FD, srcLoc, classCounts, Result);
-    } else { // friend function
+    } else if (CTD) { // friend decl is class template
+      handleFriendClassTemplate(hostRD, CTD, srcLoc, classCounts);
+    } else { // friend decl is function or function template
       handleFriendFunction(hostRD, FD, srcLoc, classCounts, Result);
     }
   }
@@ -517,6 +521,24 @@ private:
       }
     }
     return classResult;
+  }
+
+  void handleFriendClassTemplate(const CXXRecordDecl *hostRD,
+                                 const ClassTemplateDecl *CTD,
+                                 const SourceLocation &friendDeclLoc,
+                                 const ClassCounts &classCounts) {
+    // TODO
+    ++result.friendClassCount;
+    std::vector<Result::ClassResult> &classResultsForAllInstantiation =
+        result.ClassResults[friendDeclLoc];
+    for (const ClassTemplateSpecializationDecl *CTSD : CTD->specializations()) {
+      debug_stream() << "CTSD: " << CTSD << "\n";
+      const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(CTSD);
+      debug_stream() << "CXXRD: " << CXXRD << "\n";
+      Result::ClassResult classResult =
+          getClassInstantiationStats(hostRD, CXXRD, friendDeclLoc, classCounts);
+      classResultsForAllInstantiation.push_back(std::move(classResult));
+    }
   }
 
   void handleFriendClass(const CXXRecordDecl *hostRD, const FriendDecl *FD,
