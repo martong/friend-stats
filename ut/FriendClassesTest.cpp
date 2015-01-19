@@ -303,3 +303,45 @@ template void B<int>::func<char>(A &a);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
+TEST_F(FriendClassesStats, TemplateFriendClassWithTemplateFunctionSpecs) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  template <class T>
+  friend class B;
+};
+template <class T>
+class B {
+  template <class U>
+  void func(A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+};
+// explicit instantiation of class B
+template class B<int>;
+// explicit instantiations of func
+template void B<int>::func<char>(A &a);
+template void B<int>::func<float>(A &a);
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+      (res.ClassResults.begin())->second;
+  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
+  ASSERT_EQ(firstFriendDeclClassResults.front().memberFuncResults.size(),
+            std::size_t{2});
+
+  auto fr = getFirstMemberFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+
+  fr = firstFriendDeclClassResults.front().memberFuncResults.at(1).funcResult;
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
