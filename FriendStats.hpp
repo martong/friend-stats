@@ -502,6 +502,23 @@ private:
     return FuncDefinition;
   }
 
+  Result::ClassResult getClassInstantiationStats(
+      const CXXRecordDecl *hostRD, const CXXRecordDecl *friendCXXRD,
+      const SourceLocation &friendDeclLoc, const ClassCounts &classCounts) {
+
+    Result::ClassResult classResult;
+    for (const auto &method : friendCXXRD->methods()) {
+      debug_stream() << "method: " << method << "\n";
+      Result::ClassResult::MemberFuncResult memberFuncRes;
+      auto res = getFuncStatistics(hostRD, method, friendDeclLoc, classCounts,
+                                   memberFuncRes.funcResult);
+      if (res) {
+        classResult.memberFuncResults.push_back(std::move(memberFuncRes));
+      }
+    }
+    return classResult;
+  }
+
   void handleFriendClass(const CXXRecordDecl *hostRD, const FriendDecl *FD,
                          const SourceLocation &friendDeclLoc,
                          const ClassCounts &classCounts,
@@ -528,19 +545,11 @@ private:
     if (!friendCXXRD) {
       return;
     }
+    Result::ClassResult classResult = getClassInstantiationStats(
+        hostRD, friendCXXRD, friendDeclLoc, classCounts);
     std::vector<Result::ClassResult> &classResultsForAllInstantiation =
         result.ClassResults[friendDeclLoc];
-    classResultsForAllInstantiation.push_back({});
-    Result::ClassResult &classResult = classResultsForAllInstantiation.front();
-    for (const auto &method : friendCXXRD->methods()) {
-      debug_stream() << "method: " << method << "\n";
-      Result::ClassResult::MemberFuncResult memberFuncRes;
-      auto res = getFuncStatistics(hostRD, method, friendDeclLoc, classCounts,
-                                   memberFuncRes.funcResult);
-      if (res) {
-        classResult.memberFuncResults.push_back(std::move(memberFuncRes));
-      }
-    }
+    classResultsForAllInstantiation.push_back(std::move(classResult));
   }
 
   void handleFriendFunction(const CXXRecordDecl *hostRD, const FriendDecl *FD,
