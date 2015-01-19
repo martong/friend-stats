@@ -453,7 +453,8 @@ private:
       debug_stream() << "NestedClassVisitor/CXXRD :" << CXXRD << "\n";
 
       if (const ClassTemplateDecl *CTD =
-              friendCXXRD->getDescribedClassTemplate()) {
+              CXXRD->getDescribedClassTemplate()) {
+        debug_stream() << "NestedClassVisitor/CTD :" << CTD << "\n";
         for (const auto *spec : CTD->specializations()) {
           classResultsForOneFriendDecl.push_back(getClassInstantiationStats(
               hostRD, spec, friendDeclLoc, classCounts, sourceManager));
@@ -603,6 +604,11 @@ private:
       Result::ClassResult classResult = getClassInstantiationStats(
           hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
       classResultsForOneFriendDecl.push_back(std::move(classResult));
+      NestedClassVisitor nestedClassVisitor{
+          hostRD,      CXXRD,         friendDeclLoc,
+          classCounts, sourceManager, classResultsForOneFriendDecl};
+      nestedClassVisitor.TraverseCXXRecordDecl(
+          const_cast<CXXRecordDecl *>(CXXRD));
     }
   }
 

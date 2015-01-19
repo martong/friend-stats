@@ -386,7 +386,7 @@ class B {
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
-TEST_F(FriendClassesStats, NestedTemplateClassOfFriendClass) {
+TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClass) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
 class A {
@@ -423,3 +423,44 @@ template class B::C<int>;
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
+TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClassTemplate) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  template <typename T>
+  friend class B;
+};
+template <typename T>
+class B {
+  template <typename U>
+  class C {
+    void func(A &a) {
+      a.a = 1;
+      a.b = 2;
+    }
+  };
+};
+template class B<int>;
+template class B<int>::C<int>;
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+
+  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+      (res.ClassResults.begin())->second;
+  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{2});
+  EXPECT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
+            std::size_t{0});
+  EXPECT_EQ(firstFriendDeclClassResults.at(1).memberFuncResults.size(),
+            std::size_t{1});
+
+  auto fr =
+      firstFriendDeclClassResults.at(1).memberFuncResults.at(0).funcResult;
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
