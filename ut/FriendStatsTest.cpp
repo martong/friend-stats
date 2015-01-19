@@ -53,6 +53,61 @@ void func(A &a) {
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
+TEST_F(FriendStats, LambdaInsideFriendFunction) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  friend void func(A &);
+};
+void func(A &a) {
+  auto l = [](A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+  l(a);
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto fr = getFirstFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
+// C++ standard does not allow local classes to be templates,
+// or to have templates defined inside. (I am so lucky)
+TEST_F(FriendStats, LocalClassInFriendFunction) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  friend void func(A &);
+};
+void func(A &a) {
+  struct X {
+    void foo(A &a) {
+      a.a = 1;
+      a.b = 2;
+    }
+  };
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto fr = getFirstFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
 TEST_F(FriendStats, NumberOfUsedNestedPrivateOrProtectedVariablesInFriendFunc) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
@@ -1022,4 +1077,5 @@ TEST_F(FriendStatsHeader, NoDuplicateCountOnFunctions) {
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncCount, 1);
 }
+
 
