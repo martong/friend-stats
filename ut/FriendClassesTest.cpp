@@ -220,3 +220,49 @@ template class C<int>;
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
+TEST_F(FriendClassesStats, TemplateFriendClassSpecializations) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  template <class T>
+  friend class B;
+};
+template <class T>
+class B {
+  void func(A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+};
+template <>
+class B<char> {
+  void foo(A &a) {
+    a.a = 1;
+  }
+};
+template class B<int>;
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+          (res.ClassResults.begin())->second;
+  ASSERT_EQ(firstFriendDeclClassResults.size(),
+            std::size_t{2});
+
+  // specialization with char
+  auto fr = getFirstMemberFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+
+  // The 1st member function of the 2nd specialization of template class B
+  // instantiation with int
+  fr = firstFriendDeclClassResults.at(1).memberFuncResults.at(0).funcResult;
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
