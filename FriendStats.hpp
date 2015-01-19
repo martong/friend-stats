@@ -512,6 +512,27 @@ private:
         classResult.memberFuncResults.push_back(std::move(memberFuncRes));
       }
     }
+
+    // Go over all the member function templates (methods templates).
+    // Unfortunately this is not exposed in CXXRecordDecl as it is done with
+    // non-template methods.
+    using func_templ_it =
+        DeclContext::specific_decl_iterator<FunctionTemplateDecl>;
+    using func_templ_range = llvm::iterator_range<func_templ_it>;
+    auto func_templ_begin = func_templ_it{friendCXXRD->decls_begin()};
+    auto func_templ_end = func_templ_it{friendCXXRD->decls_end()};
+    auto func_templates = func_templ_range{func_templ_begin, func_templ_end};
+    for (const FunctionTemplateDecl *FTD : func_templates) {
+      for (const auto &Spec : FTD->specializations()) {
+        Result::ClassResult::MemberFuncResult memberFuncRes;
+        auto res = getFuncStatistics(hostRD, Spec, friendDeclLoc, classCounts,
+                                     memberFuncRes.funcResult);
+        if (res) {
+          classResult.memberFuncResults.push_back(std::move(memberFuncRes));
+        }
+      }
+    }
+
     return classResult;
   }
 

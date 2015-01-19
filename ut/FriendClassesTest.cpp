@@ -250,9 +250,8 @@ template class B<int>;
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
   const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
-          (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(),
-            std::size_t{2});
+      (res.ClassResults.begin())->second;
+  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{2});
 
   // specialization with char
   auto fr = getFirstMemberFuncResult(res);
@@ -262,6 +261,44 @@ template class B<int>;
   // The 1st member function of the 2nd specialization of template class B
   // instantiation with int
   fr = firstFriendDeclClassResults.at(1).memberFuncResults.at(0).funcResult;
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
+TEST_F(FriendClassesStats, TemplateFriendClassWithTemplateFunction) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  template <class T>
+  friend class B;
+};
+template <class T>
+class B {
+  template <class U>
+  void func(A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+};
+// explicit instantiation of class B
+template class B<int>;
+// explicit instantiation of func<char> of B<int>
+template void B<int>::func<char>(A &a);
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+      (res.ClassResults.begin())->second;
+  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
+  ASSERT_EQ(firstFriendDeclClassResults.front().memberFuncResults.size(),
+            std::size_t{1});
+
+  auto fr = getFirstMemberFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
