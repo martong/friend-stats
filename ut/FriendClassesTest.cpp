@@ -40,6 +40,67 @@ class B {
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
+TEST_F(FriendClassesStats, Constructor) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  friend class B;
+};
+class B {
+  B(A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+
+  //ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
+  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+      (res.ClassResults.begin())->second;
+  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
+
+  ASSERT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
+            std::size_t{1});
+  auto fr = getFirstMemberFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
+TEST_F(FriendClassesStats, DefaultConstructor) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  struct X{};
+  friend class B;
+};
+class B {
+  A::X x;
+};
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+
+  //ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
+  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+      (res.ClassResults.begin())->second;
+  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
+
+  ASSERT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
+            std::size_t{1});
+  auto fr = getFirstMemberFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
 TEST_F(FriendClassesStats, SeveralMemberFunctions) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
@@ -506,3 +567,5 @@ class B {
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
+
+
