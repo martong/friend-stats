@@ -79,7 +79,8 @@ struct Result {
     std::vector<MemberFuncResult> memberFuncResults;
   };
   // TODO comment about instantiaions like with function templates
-  std::map<SourceLocation, std::vector<ClassResult>> ClassResults;
+  using ClassResultsForOneFriendDecl = std::vector<ClassResult>;
+  std::map<SourceLocation, ClassResultsForOneFriendDecl> ClassResults;
 };
 
 template <typename T> bool privOrProt(const T *x) {
@@ -403,15 +404,6 @@ public:
     const ClassTemplateDecl *CTD = nullptr;
     if (NamedDecl *ND = FD->getFriendDecl()) {
       CTD = dyn_cast<ClassTemplateDecl>(ND);
-      //if (CTD) {
-        //debug_stream() << "CTD: " << CTD << "\n";
-        //for (const ClassTemplateSpecializationDecl *CTSD :
-             //CTD->specializations()) {
-          //debug_stream() << "CTSD: " << CTSD << "\n";
-          //const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(CTSD);
-          //debug_stream() << "CXXRD: " << CXXRD << "\n";
-        //}
-      //}
     }
 
     auto srcLoc = FD->getLocation();
