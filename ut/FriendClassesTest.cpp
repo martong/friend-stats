@@ -27,8 +27,13 @@ class B {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
-  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
+
+  //ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
+  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+      (res.ClassResults.begin())->second;
+  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
+
+  ASSERT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
             std::size_t{1});
   auto fr = getFirstMemberFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);

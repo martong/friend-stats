@@ -434,17 +434,25 @@ public:
 private:
   struct NestedClassVisitor : RecursiveASTVisitor<NestedClassVisitor> {
     NestedClassVisitor(
-        const CXXRecordDecl *hostRD, const SourceLocation friendDeclLoc,
-        const ClassCounts &classCounts, const SourceManager *sourceManager,
+        const CXXRecordDecl *hostRD, const CXXRecordDecl *friendCXXRD,
+        const SourceLocation friendDeclLoc, const ClassCounts &classCounts,
+        const SourceManager *sourceManager,
         Result::ClassResultsForOneFriendDecl &classResultsForOneFriendDecl)
-        : hostRD(hostRD), friendDeclLoc(friendDeclLoc),
-          classCounts(classCounts), sourceManager(sourceManager),
+        : hostRD(hostRD), friendCXXRD(friendCXXRD),
+          friendDeclLoc(friendDeclLoc), classCounts(classCounts),
+          sourceManager(sourceManager),
           classResultsForOneFriendDecl(classResultsForOneFriendDecl) {}
 
     bool VisitCXXRecordDecl(CXXRecordDecl *CXXRD) {
+      // Do not visit the parent friend class.
+      // We want to visit only the nested classes.
+      if (CXXRD == friendCXXRD) {
+        return true;
+      }
       if (!isConcreteClass(CXXRD)) {
         return true;
       }
+      debug_stream() << "NestedClassVisitor/CXXRD :" << CXXRD << "\n";
       Result::ClassResult classResult = getClassInstantiationStats(
           hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
       classResultsForOneFriendDecl.push_back(std::move(classResult));
@@ -453,6 +461,7 @@ private:
 
   private:
     const CXXRecordDecl *hostRD = nullptr;
+    const CXXRecordDecl *friendCXXRD = nullptr;
     const SourceLocation friendDeclLoc;
     const ClassCounts &classCounts;
     const SourceManager *sourceManager = nullptr;
@@ -622,7 +631,10 @@ private:
         result.ClassResults[friendDeclLoc];
     classResultsForOneFriendDecl.push_back(std::move(classResult));
 
-    // NestedClassVisitor
+    NestedClassVisitor nestedClassVisitor{
+        hostRD,      friendCXXRD,   friendDeclLoc,
+        classCounts, sourceManager, classResultsForOneFriendDecl};
+    nestedClassVisitor.TraverseCXXRecordDecl(friendCXXRD);
   }
 
   void handleFriendFunction(const CXXRecordDecl *hostRD, const FriendDecl *FD,
