@@ -66,7 +66,7 @@ void func(A &a) {
   auto l = [](A &a) {
     a.a = 1;
     a.b = 2;
-  }
+  };
   l(a);
 };
     )phi");
