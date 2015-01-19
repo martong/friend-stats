@@ -120,6 +120,26 @@ inline func_templ_range getFunctionTemplateRange(const CXXRecordDecl *RD) {
   return func_templates;
 }
 
+// False if the given cxx record is belonging to a template declaration.
+// True if it is an instantiation/specialization or a non-template class.
+inline bool isConcreteClass(const CXXRecordDecl *RD) {
+  if (RD->getDescribedClassTemplate()) {
+    return false;
+  }
+  // We have to investigate all the parent CXXRecordDecls up in the tree
+  // and ensure that they are not template declarations.
+  const DeclContext *iRD = dyn_cast<DeclContext>(RD);
+  while (iRD->getParent()) {
+    if (auto *CRD = dyn_cast<CXXRecordDecl>(iRD->getParent())) {
+      if (CRD->getDescribedClassTemplate()) {
+        return false;
+      }
+    }
+    iRD = iRD->getParent();
+  }
+  return true;
+}
+
 inline int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
   int res = 0;
 
@@ -375,26 +395,16 @@ public:
       return;
     }
 
-    // This CXXRecordDecl is the child of a ClassTemplateDecl
-    // i.e. this is not a template instantiation/specialization.
+    // This CXXRecordDecl is the child (or grand child, ...) of a
+    // ClassTemplateDecl.
+    // I.e. this is not a template instantiation/specialization or a
+    // non-template class.
     // We want to collect statistics only on instantiations/specializations.
     // We are not interested in not used templates.
-    if (hostRD->getDescribedClassTemplate()) {
+    if (!isConcreteClass(hostRD)) {
       return;
     }
 
-    // We have to investigate all the parent CXXRecordDecls up in the tree
-    // and ensure that they are not template declarations.
-    // Again, we want to collect stats only on instantiation/specializations.
-    const DeclContext *iRD = dyn_cast<DeclContext>(hostRD);
-    while (iRD->getParent()) {
-      if (auto *CRD = dyn_cast<CXXRecordDecl>(iRD->getParent())) {
-        if (CRD->getDescribedClassTemplate()) {
-          return;
-        }
-      }
-      iRD = iRD->getParent();
-    }
     debug_stream() << "CXXRecordDecl with friend: " << hostRD << "\n";
 
     const FriendDecl *FD = Result.Nodes.getNodeAs<clang::FriendDecl>("friend");
@@ -422,6 +432,33 @@ public:
   const Result &getResult() const { return result; }
 
 private:
+  struct NestedClassVisitor : RecursiveASTVisitor<NestedClassVisitor> {
+    NestedClassVisitor(
+        const CXXRecordDecl *hostRD, const SourceLocation friendDeclLoc,
+        const ClassCounts &classCounts, const SourceManager *sourceManager,
+        Result::ClassResultsForOneFriendDecl &classResultsForOneFriendDecl)
+        : hostRD(hostRD), friendDeclLoc(friendDeclLoc),
+          classCounts(classCounts), sourceManager(sourceManager),
+          classResultsForOneFriendDecl(classResultsForOneFriendDecl) {}
+
+    bool VisitCXXRecordDecl(CXXRecordDecl *CXXRD) {
+      if (!isConcreteClass(CXXRD)) {
+        return true;
+      }
+      Result::ClassResult classResult = getClassInstantiationStats(
+          hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
+      classResultsForOneFriendDecl.push_back(std::move(classResult));
+      return true;
+    }
+
+  private:
+    const CXXRecordDecl *hostRD = nullptr;
+    const SourceLocation friendDeclLoc;
+    const ClassCounts &classCounts;
+    const SourceManager *sourceManager = nullptr;
+    Result::ClassResultsForOneFriendDecl &classResultsForOneFriendDecl;
+  };
+
   // TODO Make it templated on RecordDecl/TypedefNameDecl
   // See TypeHandlerVisitor::GetTypeAliasDecl
   RecordDecl *getRecordDecl(QualType QT) {
@@ -446,11 +483,11 @@ private:
   // Here FuncD is the declaration of the function, which may or may not
   // has a body.
   // Returns the declaration of the body if there is one.
-  const FunctionDecl *getFuncStatistics(const CXXRecordDecl *hostRD,
-                                        const FunctionDecl *FuncD,
-                                        const SourceLocation friendDeclLoc,
-                                        const ClassCounts &classCounts,
-                                        Result::FuncResult &funcRes) {
+  // funcRes will contain valid statistics only if there is a body.
+  static const FunctionDecl *getFuncStatistics(
+      const CXXRecordDecl *hostRD, const FunctionDecl *FuncD,
+      const SourceLocation friendDeclLoc, const ClassCounts &classCounts,
+      const SourceManager *sourceManager, Result::FuncResult &funcRes) {
     // Get the Body and the function declaration which contains it,
     // i.e. that \cDecl is the function definition itself.
     const FunctionDecl *FuncDefinition =
@@ -501,16 +538,17 @@ private:
     return FuncDefinition;
   }
 
-  Result::ClassResult getClassInstantiationStats(
+  static Result::ClassResult getClassInstantiationStats(
       const CXXRecordDecl *hostRD, const CXXRecordDecl *friendCXXRD,
-      const SourceLocation &friendDeclLoc, const ClassCounts &classCounts) {
+      const SourceLocation &friendDeclLoc, const ClassCounts &classCounts,
+      const SourceManager *sourceManager) {
 
     Result::ClassResult classResult;
     for (const auto &method : friendCXXRD->methods()) {
       debug_stream() << "method: " << method << "\n";
       Result::ClassResult::MemberFuncResult memberFuncRes;
       auto res = getFuncStatistics(hostRD, method, friendDeclLoc, classCounts,
-                                   memberFuncRes.funcResult);
+                                   sourceManager, memberFuncRes.funcResult);
       if (res) {
         classResult.memberFuncResults.push_back(std::move(memberFuncRes));
       }
@@ -524,7 +562,7 @@ private:
       for (const auto &Spec : FTD->specializations()) {
         Result::ClassResult::MemberFuncResult memberFuncRes;
         auto res = getFuncStatistics(hostRD, Spec, friendDeclLoc, classCounts,
-                                     memberFuncRes.funcResult);
+                                     sourceManager, memberFuncRes.funcResult);
         if (res) {
           classResult.memberFuncResults.push_back(std::move(memberFuncRes));
         }
@@ -540,15 +578,15 @@ private:
                                  const ClassCounts &classCounts) {
     // TODO
     ++result.friendClassCount;
-    std::vector<Result::ClassResult> &classResultsForAllInstantiation =
+    Result::ClassResultsForOneFriendDecl &classResultsForOneFriendDecl =
         result.ClassResults[friendDeclLoc];
     for (const ClassTemplateSpecializationDecl *CTSD : CTD->specializations()) {
       debug_stream() << "CTSD: " << CTSD << "\n";
       const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(CTSD);
       debug_stream() << "CXXRD: " << CXXRD << "\n";
-      Result::ClassResult classResult =
-          getClassInstantiationStats(hostRD, CXXRD, friendDeclLoc, classCounts);
-      classResultsForAllInstantiation.push_back(std::move(classResult));
+      Result::ClassResult classResult = getClassInstantiationStats(
+          hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
+      classResultsForOneFriendDecl.push_back(std::move(classResult));
     }
   }
 
@@ -579,10 +617,12 @@ private:
       return;
     }
     Result::ClassResult classResult = getClassInstantiationStats(
-        hostRD, friendCXXRD, friendDeclLoc, classCounts);
-    std::vector<Result::ClassResult> &classResultsForAllInstantiation =
+        hostRD, friendCXXRD, friendDeclLoc, classCounts, sourceManager);
+    Result::ClassResultsForOneFriendDecl &classResultsForOneFriendDecl =
         result.ClassResults[friendDeclLoc];
-    classResultsForAllInstantiation.push_back(std::move(classResult));
+    classResultsForOneFriendDecl.push_back(std::move(classResult));
+
+    // NestedClassVisitor
   }
 
   void handleFriendFunction(const CXXRecordDecl *hostRD, const FriendDecl *FD,
@@ -601,8 +641,8 @@ private:
     }
 
     auto handleFuncD = [&](FunctionDecl *FuncD) {
-      auto FuncDefinition =
-          getFuncStatistics(hostRD, FuncD, friendDeclLoc, classCounts, funcRes);
+      auto FuncDefinition = getFuncStatistics(
+          hostRD, FuncD, friendDeclLoc, classCounts, sourceManager, funcRes);
       if (FuncDefinition) {
         auto &funcResultsPerSrcLoc = result.FuncResults[friendDeclLoc];
         funcResultsPerSrcLoc.push_back({FuncDefinition, funcRes});
