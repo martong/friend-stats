@@ -66,7 +66,7 @@ struct Result {
   // their own definition.
   // TODO Use a struct with named members instead of pair.
   // or just use vector<FuncResult>
-  std::map<SourceLocation,
+  std::map<std::string,
            std::vector<std::pair<const FunctionDecl *, FuncResult>>>
       FuncResults;
 
@@ -161,6 +161,34 @@ inline int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
 
   return res;
 }
+
+//void foo(const FunctionTemplateDecl *FTD) {
+  //for (const FunctionDecl *FD : FTD->specializations()) {
+    //if (const TemplateArgumentList *args =
+            //FD->getTemplateSpecializationArgs()) {
+      //args->asArray();
+    //}
+  //}
+//}
+
+//// This might be dangerous,
+//// might be better to copy llvm::ArrayRef::equals impl into
+//// equalSpecializations.
+//namespace clang {
+//bool inline operator==(const TemplateArgument &lhs,
+                       //const TemplateArgument &rhs) {
+  //return lhs.structurallyEquals(rhs);
+//}
+//} // namespace clang
+
+//bool inline equalSpecializations(const FunctionDecl *FD1,
+                                 //const FunctionDecl *FD2) {
+  //const TemplateArgumentList *args1 = FD1->getTemplateSpecializationArgs();
+  //const TemplateArgumentList *args2 = FD2->getTemplateSpecializationArgs();
+  //assert(args1);
+  //assert(args2);
+  //return args1->asArray().equals(args2->asArray());
+//}
 
 class PrivTypeCounter : public RecursiveASTVisitor<PrivTypeCounter> {
   int result = 0;
@@ -452,8 +480,7 @@ private:
 
       debug_stream() << "NestedClassVisitor/CXXRD :" << CXXRD << "\n";
 
-      if (const ClassTemplateDecl *CTD =
-              CXXRD->getDescribedClassTemplate()) {
+      if (const ClassTemplateDecl *CTD = CXXRD->getDescribedClassTemplate()) {
         debug_stream() << "NestedClassVisitor/CTD :" << CTD << "\n";
         for (const auto *spec : CTD->specializations()) {
           classResultsForOneFriendDecl.push_back(getClassInstantiationStats(
@@ -654,11 +681,29 @@ private:
                             const SourceLocation &friendDeclLoc,
                             const ClassCounts &classCounts,
                             const MatchFinder::MatchResult &Result) {
-    auto it = result.FuncResults.find(friendDeclLoc);
+    std::string friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
+    auto it = result.FuncResults.find(friendDeclLocStr);
+    //debug_stream() << "friendDeclLoc: "
+                   //<< friendDeclLoc.printToString(*sourceManager) << "\n";
+    //debug_stream() << "friendDeclLoc.raw: " << friendDeclLoc.getRawEncoding()
+                   //<< "\n";
+    //debug_stream() << "xxxx1: "
+                   //<< (sourceManager->getDecomposedExpansionLoc(friendDeclLoc))
+                          //.first.getHashValue() << "\n";
+    //debug_stream() << "xxxx2: "
+                   //<< (sourceManager->getDecomposedExpansionLoc(friendDeclLoc))
+                          //.second << "\n";
+    //debug_stream() << "sourceManager: " << sourceManager << "\n";
+    //debug_stream() << "result.FuncResults.size(): " << result.FuncResults.size()
+                   //<< "\n";
     if (it != std::end(result.FuncResults)) {
+      debug_stream() << "DUPLICATE"
+                     << "\n";
       return;
     }
+
     ++result.friendFuncCount;
+
     Result::FuncResult funcRes;
     NamedDecl *ND = FD->getFriendDecl();
     if (!ND) {
@@ -669,7 +714,7 @@ private:
       auto FuncDefinition = getFuncStatistics(
           hostRD, FuncD, friendDeclLoc, classCounts, sourceManager, funcRes);
       if (FuncDefinition) {
-        auto &funcResultsPerSrcLoc = result.FuncResults[friendDeclLoc];
+        auto &funcResultsPerSrcLoc = result.FuncResults[friendDeclLocStr];
         funcResultsPerSrcLoc.push_back({FuncDefinition, funcRes});
       }
     };

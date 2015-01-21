@@ -622,10 +622,10 @@ void g() {
   ASSERT_EQ(res.FuncResults.size(), std::size_t{2});
   auto p = res.FuncResults.begin()->second.begin();
   EXPECT_EQ(p->second.types.usedPrivateCount, 1);
-  EXPECT_EQ(p->second.types.parentPrivateCount, 2);
+  EXPECT_EQ(p->second.types.parentPrivateCount, 3);
   p = (++res.FuncResults.begin())->second.begin();
   EXPECT_EQ(p->second.types.usedPrivateCount, 1);
-  EXPECT_EQ(p->second.types.parentPrivateCount, 3);
+  EXPECT_EQ(p->second.types.parentPrivateCount, 2);
 }
 
 // TEST_F(FriendStatsForTypes, NumberOfUsedPrivateOrProtectedTypesInFriendFunc)
@@ -903,13 +903,13 @@ void f() { A<int> aint; func(1, aint); func2(aint); }
   auto it = res.FuncResults.begin()->second.begin();
   {
     auto p = *it;
-    EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
+    EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
     EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
   }
   it = (++res.FuncResults.begin())->second.begin();
   {
     auto p = *it;
-    EXPECT_EQ(p.second.usedPrivateVarsCount, 2);
+    EXPECT_EQ(p.second.usedPrivateVarsCount, 1);
     EXPECT_EQ(p.second.parentPrivateVarsCount, 3);
   }
 }
