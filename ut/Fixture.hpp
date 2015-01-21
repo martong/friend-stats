@@ -39,13 +39,15 @@ struct FriendStats : ::testing::Test {
 
     Finder.addMatcher(FriendMatcher, &Handler);
   }
-  Result::FuncResult getFirstFuncResult(const Result &res) {
-    return (*res.FuncResults.begin()->second.begin()).second;
-  }
-  Result::FuncResult getFirstMemberFuncResult(const Result &res) {
-    return res.ClassResults.begin()
-        ->second.at(0).memberFuncResults.front()
-        .funcResult;
-  }
 };
+
+inline Result::FuncResult getFirstFuncResult(const Result &res) {
+  return (*res.FuncResults.begin()->second.begin()).second;
+}
+inline Result::FuncResult getFirstMemberFuncResult(const Result &res) {
+  return res.ClassResults.begin()
+      ->second.at(0)
+      .memberFuncResults.front()
+      .funcResult;
+}
 

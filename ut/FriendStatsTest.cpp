@@ -1048,8 +1048,8 @@ struct FriendStatsHeader : ::testing::Test {
     FileB = CurrentDir;
     llvm::sys::path::append(FileB, "b.cc");
 
-    Compilations.reset(new tooling::FixedCompilationDatabase(
-        CurrentDir.str(), std::vector<std::string>()));
+    Compilations.reset(new tooling::FixedCompilationDatabase(CurrentDir.str(),
+                                                             {"-std=c++14"}));
     // Sources.push_back(HeaderA.str());
     Sources.push_back(FileA.str());
     Sources.push_back(FileB.str());
@@ -1084,4 +1084,42 @@ TEST_F(FriendStatsHeader, NoDuplicateCountOnFunctions) {
   EXPECT_EQ(res.friendFuncCount, 1);
 }
 
+TEST_F(
+    FriendStatsHeader,
+    DifferentFriendFunctionTemplateSpecializationsInDifferentTranslationUnits) {
+  Tool->mapVirtualFile(HeaderA,
+      R"(
+template <typename T> class A;
 
+template <typename T> void func(A<T> &a);
+
+template <typename T> class A {
+  int a = 0;
+  int b;
+  int c;
+
+  // refers to a full specialization for this particular T
+  friend void func<T>(A &a);
+};
+
+template <typename T>
+void func(A<T>& a) {
+  a.a = 1;
+}
+    )");
+  Tool->mapVirtualFile(FileA, R"phi(
+#include "a.h"
+template void func(A<int>& a);
+)phi");
+  Tool->mapVirtualFile(FileB, R"phi(
+#include "a.h"
+template void func(A<char>& a);
+)phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  EXPECT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{2});
+  auto fr = getFirstFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
