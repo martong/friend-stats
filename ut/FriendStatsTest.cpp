@@ -1071,7 +1071,13 @@ TEST_F(FriendStatsHeader, NoDuplicateCountOnClasses) {
 TEST_F(FriendStatsHeader, NoDuplicateCountOnFunctions) {
   Tool->mapVirtualFile(HeaderA,
                        "class A { friend void func(); }; void func(){};");
-  Tool->mapVirtualFile(FileA, R"phi(#include "a.h")phi");
+  Tool->mapVirtualFile(FileA, R"phi(
+// Blank lines are left here intentionally, to make the spelling location
+// different.
+
+
+#include "a.h"
+    )phi");
   Tool->mapVirtualFile(FileB, R"phi(#include "a.h")phi");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
