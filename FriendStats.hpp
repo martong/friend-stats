@@ -9,7 +9,7 @@
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
-const bool debug = false;
+const bool debug = true;
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
@@ -66,9 +66,11 @@ struct Result {
   // their own definition.
   // TODO Use a struct with named members instead of pair.
   // or just use vector<FuncResult>
-  std::map<std::string,
-           std::vector<std::pair<const FunctionDecl *, FuncResult>>>
-      FuncResults;
+  using FriendDeclId = std::string;
+  using FunctionTemplateInstantiationId = std::string;
+  using ResultsForFriendDecl =
+      std::map<FunctionTemplateInstantiationId, FuncResult>;
+  std::map<FriendDeclId, ResultsForFriendDecl> FuncResults;
 
   struct ClassResult {
     struct MemberFuncResult {
@@ -162,33 +164,6 @@ inline int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
   return res;
 }
 
-//void foo(const FunctionTemplateDecl *FTD) {
-  //for (const FunctionDecl *FD : FTD->specializations()) {
-    //if (const TemplateArgumentList *args =
-            //FD->getTemplateSpecializationArgs()) {
-      //args->asArray();
-    //}
-  //}
-//}
-
-//// This might be dangerous,
-//// might be better to copy llvm::ArrayRef::equals impl into
-//// equalSpecializations.
-//namespace clang {
-//bool inline operator==(const TemplateArgument &lhs,
-                       //const TemplateArgument &rhs) {
-  //return lhs.structurallyEquals(rhs);
-//}
-//} // namespace clang
-
-//bool inline equalSpecializations(const FunctionDecl *FD1,
-                                 //const FunctionDecl *FD2) {
-  //const TemplateArgumentList *args1 = FD1->getTemplateSpecializationArgs();
-  //const TemplateArgumentList *args2 = FD2->getTemplateSpecializationArgs();
-  //assert(args1);
-  //assert(args2);
-  //return args1->asArray().equals(args2->asArray());
-//}
 
 class PrivTypeCounter : public RecursiveASTVisitor<PrivTypeCounter> {
   int result = 0;
@@ -690,39 +665,47 @@ private:
                             const MatchFinder::MatchResult &Result) {
     std::string friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
     auto it = result.FuncResults.find(friendDeclLocStr);
-    //debug_stream() << "friendDeclLoc: "
-                   //<< friendDeclLoc.printToString(*sourceManager) << "\n";
-    //debug_stream() << "friendDeclLoc.raw: " << friendDeclLoc.getRawEncoding()
-                   //<< "\n";
-    //debug_stream() << "xxxx1: "
-                   //<< (sourceManager->getDecomposedExpansionLoc(friendDeclLoc))
-                          //.first.getHashValue() << "\n";
-    //debug_stream() << "xxxx2: "
-                   //<< (sourceManager->getDecomposedExpansionLoc(friendDeclLoc))
-                          //.second << "\n";
-    //debug_stream() << "sourceManager: " << sourceManager << "\n";
-    //debug_stream() << "result.FuncResults.size(): " << result.FuncResults.size()
-                   //<< "\n";
-    if (it != std::end(result.FuncResults)) {
-      debug_stream() << "DUPLICATE"
-                     << "\n";
-      return;
+    if (it == std::end(result.FuncResults)) {
+      ++result.friendFuncCount;
     }
 
-    ++result.friendFuncCount;
-
-    Result::FuncResult funcRes;
     NamedDecl *ND = FD->getFriendDecl();
     if (!ND) {
       return;
     }
 
+    auto getDiagName = [](const FunctionDecl *FD) {
+      static LangOptions LO;
+      static PrintingPolicy PP{LO};
+      std::string s;
+      llvm::raw_string_ostream ss{s};
+      FD->getNameForDiagnostic(ss, PP, true);
+      return ss.str();
+    };
+
+    auto isDuplicate = [&](const FunctionDecl *FD) {
+      auto diagName = getDiagName(FD);
+      if (it != std::end(result.FuncResults)) {
+        debug_stream() << "diagName: " << diagName << "\n";
+        auto &funcResultsPerSrcLoc = it->second;
+        if (funcResultsPerSrcLoc.count(diagName) > 0) {
+          debug_stream() << "DUPLICATE: " << diagName << "\n";
+          return true;
+        }
+      }
+      return false;
+    };
+
+    Result::FuncResult funcRes;
     auto handleFuncD = [&](FunctionDecl *FuncD) {
+      if (isDuplicate(FuncD))
+        return;
       auto FuncDefinition = getFuncStatistics(
           hostRD, FuncD, friendDeclLoc, classCounts, sourceManager, funcRes);
       if (FuncDefinition) {
+        auto diagName = getDiagName(FuncD);
         auto &funcResultsPerSrcLoc = result.FuncResults[friendDeclLocStr];
-        funcResultsPerSrcLoc.push_back({FuncDefinition, funcRes});
+        funcResultsPerSrcLoc.insert({diagName, funcRes});
       }
     };
 
@@ -751,7 +734,6 @@ private:
         // tsk_kind == TSK_ExplicitInstantiationDeclaration) {
         // handleFuncD(spec);
         //}
-
         handleFuncD(spec);
       }
     }
