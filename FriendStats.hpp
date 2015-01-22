@@ -395,6 +395,21 @@ inline ClassCounts getClassCounts(const CXXRecordDecl *RD) {
   return classCounts;
 }
 
+auto const TuMatcher = decl().bind("decl");
+struct TuHandler : public MatchFinder::MatchCallback {
+  virtual void run(const MatchFinder::MatchResult &Result) {
+    if (!debug)
+      return;
+    if (const Decl *D = Result.Nodes.getNodeAs<Decl>("decl")) {
+      if (const TranslationUnitDecl *TUD = dyn_cast<TranslationUnitDecl>(D)) {
+        TUD->dump();
+        debug_stream() << "==========================================="
+                       << "\n";
+      }
+    }
+  }
+};
+
 auto const FriendMatcher =
     friendDecl(hasParent(recordDecl().bind("class"))).bind("friend");
 
@@ -404,14 +419,6 @@ class FriendHandler : public MatchFinder::MatchCallback {
 
 public:
   virtual void run(const MatchFinder::MatchResult &Result) {
-
-    auto tuPrinter = [&Result]() {
-      if (debug)
-        Result.Context->getTranslationUnitDecl()->dump();
-      return 0;
-    };
-    const static int x = tuPrinter();
-    (void)x;
 
     sourceManager = Result.SourceManager;
 

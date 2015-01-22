@@ -18,6 +18,7 @@ struct FriendStats : ::testing::Test {
   std::unique_ptr<tooling::ClangTool> Tool;
   std::vector<std::string> Sources;
   FriendHandler Handler;
+  TuHandler tuHandler;
   MatchFinder Finder;
   FriendStats() {
     // The directory used is not important since the path gets mapped to a
@@ -38,6 +39,8 @@ struct FriendStats : ::testing::Test {
     Tool.reset(new tooling::ClangTool(*Compilations, Sources));
 
     Finder.addMatcher(FriendMatcher, &Handler);
+    // Dump the whole ast of the translation unit if debug is on
+    Finder.addMatcher(TuMatcher, &tuHandler);
   }
 };
 
