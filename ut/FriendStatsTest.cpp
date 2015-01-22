@@ -1014,6 +1014,7 @@ template void func(A<int>& a);
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(getResultsFor1stFriendDecl(res).size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -1091,7 +1092,7 @@ TEST_F(
     FriendStatsHeader,
     DifferentFriendFunctionTemplateSpecializationsInDifferentTranslationUnits) {
   Tool->mapVirtualFile(HeaderA,
-      R"(
+                       R"(
 template <typename T> class A;
 
 template <typename T> void func(A<T> &a);
@@ -1121,8 +1122,101 @@ template void func(A<char>& a);
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{2});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+
+  ASSERT_EQ(getResultsFor1stFriendDecl(res).size(), 2u);
+  fr = get2ndFuncResult(getResultsFor1stFriendDecl(res));
+  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
+TEST_F(FriendStatsHeader,
+       SameFriendFunctionTemplateSpecializationsInDifferentTranslationUnits) {
+  Tool->mapVirtualFile(HeaderA,
+                       R"(
+template <typename T> class A;
+
+template <typename T> void func(A<T> &a);
+
+template <typename T> class A {
+  int a = 0;
+  int b;
+  int c;
+
+  // refers to a full specialization for this particular T
+  friend void func<T>(A &a);
+};
+
+template <typename T>
+void func(A<T>& a) {
+  a.a = 1;
+}
+    )");
+  Tool->mapVirtualFile(FileA, R"phi(
+#include "a.h"
+template void func(A<int>& a);
+)phi");
+  Tool->mapVirtualFile(FileB, R"phi(
+#include "a.h"
+template void func(A<int>& a);
+)phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  EXPECT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), 1u);
+  EXPECT_EQ(getResultsFor1stFriendDecl(res).size(), 1u);
+  auto fr = getFirstFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
+TEST_F(FriendStatsHeader, DifferentFriendFunctionTemplateSpecializations\
+WithTypeAliasInDifferentTranslationUnits) {
+  Tool->mapVirtualFile(HeaderA,
+                       R"(
+template <typename T> class A;
+
+template <typename T> void func(A<T> &a);
+
+template <typename T> class A {
+  int a = 0;
+  int b;
+  int c;
+
+  // refers to a full specialization for this particular T
+  friend void func<T>(A &a);
+};
+
+template <typename T>
+void func(A<T>& a) {
+  a.a = 1;
+}
+    )");
+  Tool->mapVirtualFile(FileA, R"phi(
+#include "a.h"
+template void func(A<int>& a);
+)phi");
+  Tool->mapVirtualFile(FileB, R"phi(
+#include "a.h"
+template <class T>
+struct Z { using type = char; };
+template <class T>
+using XXX = Z<T>;
+template void func(A<XXX<char>::type>& a);
+)phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  EXPECT_EQ(res.friendFuncCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  auto fr = getFirstFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+
+  ASSERT_EQ(getResultsFor1stFriendDecl(res).size(), 2u);
+  fr = get2ndFuncResult(getResultsFor1stFriendDecl(res));
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
