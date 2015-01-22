@@ -9,7 +9,7 @@
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
-const bool debug = true;
+const bool debug = false;
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
@@ -32,6 +32,7 @@ struct Result {
 
   struct FuncResult {
 
+    std::string diagName;
     SourceLocation friendDeclLoc; // The location of the friend declaration
     std::string friendDeclLocStr;
     SourceLocation defLoc; // The location of the definition of the friend
@@ -705,6 +706,8 @@ private:
       if (FuncDefinition) {
         auto diagName = getDiagName(FuncD);
         auto &funcResultsPerSrcLoc = result.FuncResults[friendDeclLocStr];
+        // TODO put it under getFuncStatistics
+        funcRes.diagName = diagName;
         funcResultsPerSrcLoc.insert({diagName, funcRes});
       }
     };
