@@ -44,10 +44,29 @@ struct FriendStats : ::testing::Test {
   }
 };
 
-inline Result::FuncResult getFirstFuncResult(const Result &res) {
+inline const Result::ResultsForFriendDecl &
+getResultsFor1stFriendDecl(const Result &res) {
+  return res.FuncResults.begin()->second;
+}
+inline const Result::ResultsForFriendDecl &
+getResultsFor2ndFriendDecl(const Result &res) {
+  assert(res.FuncResults.size() > 1);
+  return (++res.FuncResults.begin())->second;
+}
+inline const Result::FuncResult &
+get1stFuncResult(const Result::ResultsForFriendDecl &r) {
+  return r.begin()->second;
+}
+inline const Result::FuncResult &
+get2ndFuncResult(const Result::ResultsForFriendDecl &r) {
+  assert(r.size() > 1);
+  return (++r.begin())->second;
+}
+
+inline const Result::FuncResult &getFirstFuncResult(const Result &res) {
   return (*res.FuncResults.begin()->second.begin()).second;
 }
-inline Result::FuncResult getFirstMemberFuncResult(const Result &res) {
+inline const Result::FuncResult &getFirstMemberFuncResult(const Result &res) {
   return res.ClassResults.begin()
       ->second.at(0)
       .memberFuncResults.front()
