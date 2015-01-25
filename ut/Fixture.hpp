@@ -100,6 +100,10 @@ inline const Result::FuncResult &
 get2ndMemberFuncResult(const Result::ClassResult &r) {
   return r.memberFuncResults.at(1).funcResult;
 }
+inline const Result::FuncResult &
+getNthMemberFuncResult(const Result::ClassResult &r, std::size_t N) {
+  return r.memberFuncResults.at(N-1).funcResult;
+}
 inline const Result::FuncResult &getFirstMemberFuncResult(const Result &res) {
   return get1stMemberFuncResult(
       get1stClassResult(getClassResultsFor1stFriendDecl(res)));

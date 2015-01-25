@@ -132,6 +132,64 @@ class B {
   }
 }
 
+TEST_F(FriendClassesStats, MemberFunctionsAndMemberFunctionTemplates) {
+  Tool->mapVirtualFile(FileA,
+                       R"phi(
+class A {
+  int a = 0;
+  int b;
+  int c;
+  friend class B;
+};
+class B {
+  void func(A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+  void func2(A &a) {
+    a.a = 1;
+  }
+  template <class T>
+  void func3(A &a) {
+    a.a = 1;
+    a.b = 2;
+    a.c = 3;
+  }
+};
+template void B::func3<int>(A&);
+template void B::func3<char>(A&);
+    )phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassDeclCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), 1u);
+
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  const auto &cr = get1stClassResult(crs);
+  ASSERT_EQ(cr.memberFuncResults.size(), 4u);
+  {
+    const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
+  {
+    const Result::FuncResult &fr = get2ndMemberFuncResult(cr);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
+  {
+    const Result::FuncResult &fr = getNthMemberFuncResult(cr, 3);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 3);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
+  {
+    const Result::FuncResult &fr = getNthMemberFuncResult(cr, 4);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 3);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
+}
+
 TEST_F(FriendClassesStats, SeveralFriendClasses) {
   Tool->mapVirtualFile(FileA,
                        R"phi(
