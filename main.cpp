@@ -23,6 +23,24 @@ static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 // A help message for this specific tool can be added afterwards.
 static cl::extrahelp MoreHelp("\nMore help text...");
 
+void print(const Result::FuncResult &funcRes) {
+  llvm::outs() << "friendDeclLoc: " << funcRes.friendDeclLocStr << "\n";
+  llvm::outs() << "defLoc: " << funcRes.defLocStr << "\n";
+  llvm::outs() << "diagName: " << funcRes.diagName << "\n";
+  llvm::outs() << "usedPrivateVarsCount: " << funcRes.usedPrivateVarsCount
+               << "\n";
+  llvm::outs() << "parentPrivateVarsCount: " << funcRes.parentPrivateVarsCount
+               << "\n";
+  llvm::outs() << "usedPrivateMethodsCount: " << funcRes.usedPrivateMethodsCount
+               << "\n";
+  llvm::outs() << "parentPrivateMethodsCount: "
+               << funcRes.parentPrivateMethodsCount << "\n";
+  llvm::outs() << "types.usedPrivateCount: " << funcRes.types.usedPrivateCount
+               << "\n";
+  llvm::outs() << "types.parentPrivateCount: "
+               << funcRes.types.parentPrivateCount << "\n";
+}
+
 int main(int argc, const char **argv) {
   CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
   ClangTool Tool(OptionsParser.getCompilations(),
@@ -33,10 +51,10 @@ int main(int argc, const char **argv) {
   Finder.addMatcher(FriendMatcher, &Handler);
 
   auto ret = Tool.run(newFrontendActionFactory(&Finder).get());
-  llvm::outs() << "ClassDecls count: " << Handler.getResult().friendClassDeclCount
+  llvm::outs() << "ClassDecls count: "
+               << Handler.getResult().friendClassDeclCount << "\n";
+  llvm::outs() << "FuncDecls count: " << Handler.getResult().friendFuncDeclCount
                << "\n";
-  llvm::outs() << "FuncDecls count: "
-               << Handler.getResult().friendFuncDeclCount << "\n";
 
   double sum = 0.0;
   int num = 0;
@@ -65,20 +83,7 @@ int main(int argc, const char **argv) {
                      << "\n";
         ++numZeroDenom;
       }
-      llvm::outs() << "friendDeclLoc: " << funcRes.friendDeclLocStr << "\n";
-      llvm::outs() << "defLoc: " << funcRes.defLocStr << "\n";
-      llvm::outs() << "usedPrivateVarsCount: " << funcRes.usedPrivateVarsCount
-                   << "\n";
-      llvm::outs() << "parentPrivateVarsCount: "
-                   << funcRes.parentPrivateVarsCount << "\n";
-      llvm::outs() << "usedPrivateMethodsCount: "
-                   << funcRes.usedPrivateMethodsCount << "\n";
-      llvm::outs() << "parentPrivateMethodsCount: "
-                   << funcRes.parentPrivateMethodsCount << "\n";
-      llvm::outs() << "types.usedPrivateCount: "
-                   << funcRes.types.usedPrivateCount << "\n";
-      llvm::outs() << "types.parentPrivateCount: "
-                   << funcRes.types.parentPrivateCount << "\n";
+      print(funcRes);
     }
   }
   llvm::outs() << "Number of friend function declarations with zero priv "
@@ -89,6 +94,15 @@ int main(int argc, const char **argv) {
   llvm::outs() << "Avarage usage of priv entities (vars, funcs, types): " << sum
                << "\n";
 
+  for (const auto &friendDecls : Handler.getResult().ClassResults) {
+    for (const auto &classSpecs : friendDecls.second) {
+      for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
+        const auto &funcRes = funcResPair.second;
+        print(funcRes);
+      }
+    }
+  }
+
   // Self Diagnostics:
   for (const auto &v : Handler.getResult().FuncResults) {
     for (const auto vv : v.second) {
@@ -98,32 +112,25 @@ int main(int argc, const char **argv) {
           funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
         llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
                      << "\n";
+        print(funcRes);
       }
     }
   }
-
-  //for (const auto &friendDecls : Handler.getResult().ClassResults) {
-    //for (const auto &classSpecs : friendDecls.second) {
-      //for (const Result::ClassResult::MemberFuncResult &memFuncRes :
-           //classSpecs.memberFuncResults) {
-        //const auto &funcRes = memFuncRes.funcResult;
-        //llvm::outs() << "friendDeclLoc: " << funcRes.friendDeclLocStr << "\n";
-        //llvm::outs() << "defLoc: " << funcRes.defLocStr << "\n";
-        //llvm::outs() << "usedPrivateVarsCount: " << funcRes.usedPrivateVarsCount
-                     //<< "\n";
-        //llvm::outs() << "parentPrivateVarsCount: "
-                     //<< funcRes.parentPrivateVarsCount << "\n";
-        //llvm::outs() << "usedPrivateMethodsCount: "
-                     //<< funcRes.usedPrivateMethodsCount << "\n";
-        //llvm::outs() << "parentPrivateMethodsCount: "
-                     //<< funcRes.parentPrivateMethodsCount << "\n";
-        //llvm::outs() << "types.usedPrivateCount: "
-                     //<< funcRes.types.usedPrivateCount << "\n";
-        //llvm::outs() << "types.parentPrivateCount: "
-                     //<< funcRes.types.parentPrivateCount << "\n";
-      //}
-    //}
-  //}
+  for (const auto &friendDecls : Handler.getResult().ClassResults) {
+    for (const auto &classSpecs : friendDecls.second) {
+      for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
+        const auto &funcRes = funcResPair.second;
+        if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
+            funcRes.usedPrivateMethodsCount >
+                funcRes.parentPrivateMethodsCount ||
+            funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
+          llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
+                       << "\n";
+          print(funcRes);
+        }
+      }
+    }
+  }
 
   return ret;
 }
