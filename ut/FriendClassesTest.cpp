@@ -266,7 +266,7 @@ class B {
   const auto &crs = get1stClassResult(getClassResultsFor1stFriendDecl(res));
   ASSERT_EQ(crs.memberFuncResults.size(), 1u);
 
-  const auto& fr = get1stMemberFuncResult(crs);
+  const auto &fr = get1stMemberFuncResult(crs);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
@@ -298,7 +298,7 @@ template class B<int>;
   const auto &crs = get1stClassResult(getClassResultsFor1stFriendDecl(res));
   ASSERT_EQ(crs.memberFuncResults.size(), 1u);
 
-  const auto& fr = get1stMemberFuncResult(crs);
+  const auto &fr = get1stMemberFuncResult(crs);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
@@ -671,3 +671,239 @@ class B {
   }
 }
 
+// ============================================================================
+// Class duplicate tests
+TEST_F(FriendStats,
+       DifferentFriendClassTemplateSpecializationsInSameTranslationUnit) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+template <typename T>
+class B;
+
+class A {
+  int a = 0;
+  int b;
+  int c;
+
+  template <typename T>
+  friend class B;
+};
+
+template <>
+class B<int> {
+  void func(A& a) {
+    a.a = 1;
+  }
+};
+
+template <>
+class B<char> {
+  void func(A& a) {
+    a.a = 1;
+    a.b = 1;
+  }
+};
+)");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  EXPECT_EQ(res.friendClassDeclCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), 1u);
+
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 2u);
+  {
+    // spec with <char>
+    const auto &cr = get1stClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
+  {
+    // spec with <int>
+    const auto &cr = get2ndClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
+}
+
+TEST_F(FriendStatsHeader,
+       DifferentFriendClassTemplateSpecializationsInDifferentTranslationUnits) {
+  Tool->mapVirtualFile(HeaderA,
+                       R"(
+template <typename T>
+class B;
+
+class A {
+  int a = 0;
+  int b;
+  int c;
+
+  template <typename T>
+  friend class B;
+};
+    )");
+  Tool->mapVirtualFile(FileA, R"phi(
+#include "a.h"
+template <>
+class B<int> {
+  void func(A& a) {
+    a.a = 1;
+  }
+};
+)phi");
+  Tool->mapVirtualFile(FileB, R"phi(
+#include "a.h"
+template <>
+class B<char> {
+  void func(A& a) {
+    a.a = 1;
+    a.b = 1;
+  }
+};
+)phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  EXPECT_EQ(res.friendClassDeclCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), 1u);
+
+  // These are the same checks as before
+  // TODO put this in a common macro or function if possible.
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 2u);
+  {
+    // spec with <char>
+    const auto &cr = get1stClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
+  {
+    // spec with <int>
+    const auto &cr = get2ndClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
+}
+
+TEST_F(FriendStats, MemberFunctionTemplateSpecOfFriendClassTemplateSpecs\
+InSameTranslationUnits) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+class A {
+  int a = 0;
+  int b;
+  int c;
+
+  template <typename T>
+  friend class B;
+};
+
+template <typename T>
+class B {};
+
+template <>
+class B<int> {
+  template <typename U>
+  void func(A& a) {
+    a.a = 1;
+  }
+};
+template void B<int>::func<char>(A&);
+template void B<int>::func<int>(A&);
+)");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  EXPECT_EQ(res.friendClassDeclCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), 1u);
+
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  {
+    // B<int>
+    const auto &cr = get1stClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 2u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+    {
+      const Result::FuncResult &fr = get2ndMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
+}
+
+// This test demonstrates what happens if in two separate translation units
+// we define different member function template specializations of the same
+// friend class template specialization.
+TEST_F(FriendStatsHeader, MemberFunctionTemplateSpecOfFriendClassTemplateSpecs\
+InDifferentTranslationUnits) {
+  Tool->mapVirtualFile(HeaderA,
+                       R"(
+class A {
+  int a = 0;
+  int b;
+  int c;
+
+  template <typename T>
+  friend class B;
+};
+
+template <typename T>
+class B {};
+
+template <>
+class B<int> {
+  template <typename U>
+  void func(A& a) {
+    a.a = 1;
+  }
+};
+    )");
+  Tool->mapVirtualFile(FileA, R"phi(
+#include "a.h"
+template void B<int>::func<char>(A&);
+)phi");
+  Tool->mapVirtualFile(FileB, R"phi(
+#include "a.h"
+template void B<int>::func<int>(A&);
+)phi");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  EXPECT_EQ(res.friendClassDeclCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), 1u);
+
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  {
+    // B<int>
+    const auto &cr = get1stClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 2u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+    {
+      const Result::FuncResult &fr = get2ndMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
+}

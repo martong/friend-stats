@@ -44,6 +44,48 @@ struct FriendStats : ::testing::Test {
   }
 };
 
+struct FriendStatsHeader : ::testing::Test {
+  SmallString<128> CurrentDir;
+  SmallString<128> HeaderA;
+  SmallString<128> FileA;
+  SmallString<128> FileB;
+  std::unique_ptr<tooling::FixedCompilationDatabase> Compilations;
+  std::unique_ptr<tooling::ClangTool> Tool;
+  std::vector<std::string> Sources;
+  FriendHandler Handler;
+  TuHandler tuHandler;
+  MatchFinder Finder;
+  FriendStatsHeader() {
+    // The directory used is not important since the path gets mapped to a
+    // virtual
+    // file anyway. What is important is that we have an absolute path with
+    // which
+    // to use with mapVirtualFile().
+    std::error_code EC = llvm::sys::fs::current_path(CurrentDir);
+    assert(!EC);
+    (void)EC;
+
+    HeaderA = CurrentDir;
+    llvm::sys::path::append(HeaderA, "a.h");
+    FileA = CurrentDir;
+    llvm::sys::path::append(FileA, "a.cc");
+    FileB = CurrentDir;
+    llvm::sys::path::append(FileB, "b.cc");
+
+    Compilations.reset(new tooling::FixedCompilationDatabase(CurrentDir.str(),
+                                                             {"-std=c++14"}));
+    // Sources.push_back(HeaderA.str());
+    Sources.push_back(FileA.str());
+    Sources.push_back(FileB.str());
+    Tool.reset(new tooling::ClangTool(*Compilations, Sources));
+
+    Finder.addMatcher(FriendMatcher, &Handler);
+    // Dump the whole ast of the translation unit if debug is on
+    Finder.addMatcher(TuMatcher, &tuHandler);
+  }
+};
+
+
 inline const Result::FuncResult &getFirstFuncResult(const Result &res) {
   return (*res.FuncResults.begin()->second.begin()).second;
 }
