@@ -456,16 +456,16 @@ public:
 
 private:
   static void insertIntoClassResultsForFriendDecl(
-      const Result::ClassTemplateInstantiationId &key,
       Result::ClassResult classResult,
       Result::ClassResultsForFriendDecl &classResultsForFriendDecl) {
+
+    auto key = classResult.diagName;
 
     // This class spec has been investigated already.
     auto it = classResultsForFriendDecl.find(key);
     if (it != std::end(classResultsForFriendDecl)) { // do the merge
       Result::FuncResultsForFriendDecl &origRes = it->second.memberFuncResults;
-      Result::FuncResultsForFriendDecl &newRes =
-          classResult.memberFuncResults;
+      Result::FuncResultsForFriendDecl &newRes = classResult.memberFuncResults;
       // Add those function template specs which are not present yet.
       for (auto &x : newRes) {
         origRes.insert(std::move(x));
@@ -498,17 +498,15 @@ private:
       if (const ClassTemplateDecl *CTD = CXXRD->getDescribedClassTemplate()) {
         debug_stream() << "NestedClassVisitor/CTD :" << CTD << "\n";
         for (const auto *spec : CTD->specializations()) {
-          auto diagName = getDiagName(spec);
           insertIntoClassResultsForFriendDecl(
-              diagName, getClassInstantiationStats(hostRD, spec, friendDeclLoc,
-                                                   classCounts, sourceManager),
+              getClassInstantiationStats(hostRD, spec, friendDeclLoc,
+                                         classCounts, sourceManager),
               classResultsForFriendDecl);
         }
       } else {
         Result::ClassResult classResult = getClassInstantiationStats(
             hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
-        auto diagName = getDiagName(CXXRD);
-        insertIntoClassResultsForFriendDecl(diagName, std::move(classResult),
+        insertIntoClassResultsForFriendDecl(std::move(classResult),
                                             classResultsForFriendDecl);
       }
       return true;
@@ -618,8 +616,9 @@ private:
       auto res = getFuncStatistics(hostRD, method, friendDeclLoc, classCounts,
                                    sourceManager, memberFuncRes);
       if (res) {
+        auto funcDiagName = memberFuncRes.diagName;
         classResult.memberFuncResults.insert(
-            {getDiagName(method), std::move(memberFuncRes)});
+            {funcDiagName, std::move(memberFuncRes)});
       }
     }
 
@@ -633,8 +632,9 @@ private:
         auto res = getFuncStatistics(hostRD, Spec, friendDeclLoc, classCounts,
                                      sourceManager, memberFuncRes);
         if (res) {
+          auto funcDiagName = memberFuncRes.diagName;
           classResult.memberFuncResults.insert(
-              {getDiagName(Spec), std::move(memberFuncRes)});
+              {funcDiagName, std::move(memberFuncRes)});
         }
       }
     }
@@ -656,12 +656,11 @@ private:
         result.ClassResults[friendDeclLocStr];
     for (const ClassTemplateSpecializationDecl *CTSD : CTD->specializations()) {
       debug_stream() << "CTSD: " << CTSD << "\n";
-      auto diagName = getDiagName(CTSD);
       const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(CTSD);
       debug_stream() << "CXXRD: " << CXXRD << "\n";
       Result::ClassResult classResult = getClassInstantiationStats(
           hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
-      insertIntoClassResultsForFriendDecl(diagName, std::move(classResult),
+      insertIntoClassResultsForFriendDecl(std::move(classResult),
                                           classResultsForFriendDecl);
       NestedClassVisitor nestedClassVisitor{
           hostRD,      CXXRD,         friendDeclLoc,
@@ -702,8 +701,7 @@ private:
         hostRD, friendCXXRD, friendDeclLoc, classCounts, sourceManager);
     Result::ClassResultsForFriendDecl &classResultsForFriendDecl =
         result.ClassResults[friendDeclLocStr];
-    insertIntoClassResultsForFriendDecl(getDiagName(friendCXXRD),
-                                        std::move(classResult),
+    insertIntoClassResultsForFriendDecl(std::move(classResult),
                                         classResultsForFriendDecl);
 
     NestedClassVisitor nestedClassVisitor{
