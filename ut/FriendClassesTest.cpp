@@ -28,8 +28,8 @@ class B {
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  //ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
-  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+  // ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
+  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
       (res.ClassResults.begin())->second;
   ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
 
@@ -61,8 +61,8 @@ class B {
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  //ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
-  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+  // ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
+  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
       (res.ClassResults.begin())->second;
   ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
 
@@ -89,8 +89,8 @@ class B {
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  //ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
-  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+  // ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
+  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
       (res.ClassResults.begin())->second;
   ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
 
@@ -275,7 +275,7 @@ template class C<int>;
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 
-  const Result::ClassResultsForOneFriendDecl &secondFriendDeclClassResults =
+  const Result::ClassResultsForFriendDecl &secondFriendDeclClassResults =
       (++res.ClassResults.begin())->second;
   ASSERT_EQ(secondFriendDeclClassResults.size(), std::size_t{1});
   // 2nd memberFuncResult
@@ -315,7 +315,7 @@ template class B<int>;
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
       (res.ClassResults.begin())->second;
   ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{2});
 
@@ -358,7 +358,7 @@ template void B<int>::func<char>(A &a);
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
       (res.ClassResults.begin())->second;
   ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
   ASSERT_EQ(firstFriendDeclClassResults.front().memberFuncResults.size(),
@@ -397,7 +397,7 @@ template void B<int>::func<float>(A &a);
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
       (res.ClassResults.begin())->second;
   ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
   ASSERT_EQ(firstFriendDeclClassResults.front().memberFuncResults.size(),
@@ -435,7 +435,7 @@ class B {
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
       (res.ClassResults.begin())->second;
   ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{2});
   ASSERT_EQ(firstFriendDeclClassResults.at(1).memberFuncResults.size(),
@@ -472,7 +472,7 @@ template class B::C<int>;
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
       (res.ClassResults.begin())->second;
   ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{2});
   ASSERT_EQ(firstFriendDeclClassResults.at(1).memberFuncResults.size(),
@@ -512,7 +512,7 @@ template class B<int>::C<int>;
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
       (res.ClassResults.begin())->second;
   ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{2});
   EXPECT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
@@ -525,7 +525,6 @@ template class B<int>::C<int>;
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
-
 
 TEST_F(FriendClassesStats, DeeplyNestedClass) {
   Tool->mapVirtualFile(FileA,
@@ -552,7 +551,7 @@ class B {
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  const Result::ClassResultsForOneFriendDecl &firstFriendDeclClassResults =
+  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
       (res.ClassResults.begin())->second;
   ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{3});
   EXPECT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
@@ -567,5 +566,4 @@ class B {
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
-
 

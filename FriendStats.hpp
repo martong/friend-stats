@@ -82,8 +82,8 @@ struct Result {
     std::vector<MemberFuncResult> memberFuncResults;
   };
   // TODO comment about instantiaions like with function templates
-  using ClassResultsForOneFriendDecl = std::vector<ClassResult>;
-  std::map<SourceLocation, ClassResultsForOneFriendDecl> ClassResults;
+  using ClassResultsForFriendDecl = std::vector<ClassResult>;
+  std::map<SourceLocation, ClassResultsForFriendDecl> ClassResults;
 };
 
 template <typename T> bool privOrProt(const T *x) {
@@ -164,7 +164,6 @@ inline int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
 
   return res;
 }
-
 
 class PrivTypeCounter : public RecursiveASTVisitor<PrivTypeCounter> {
   int result = 0;
@@ -448,11 +447,11 @@ private:
         const CXXRecordDecl *hostRD, const CXXRecordDecl *friendCXXRD,
         const SourceLocation friendDeclLoc, const ClassCounts &classCounts,
         const SourceManager *sourceManager,
-        Result::ClassResultsForOneFriendDecl &classResultsForOneFriendDecl)
+        Result::ClassResultsForFriendDecl &classResultsForFriendDecl)
         : hostRD(hostRD), friendCXXRD(friendCXXRD),
           friendDeclLoc(friendDeclLoc), classCounts(classCounts),
           sourceManager(sourceManager),
-          classResultsForOneFriendDecl(classResultsForOneFriendDecl) {}
+          classResultsForFriendDecl(classResultsForFriendDecl) {}
 
     bool VisitCXXRecordDecl(CXXRecordDecl *CXXRD) {
       // Do not visit the parent friend class.
@@ -466,13 +465,13 @@ private:
       if (const ClassTemplateDecl *CTD = CXXRD->getDescribedClassTemplate()) {
         debug_stream() << "NestedClassVisitor/CTD :" << CTD << "\n";
         for (const auto *spec : CTD->specializations()) {
-          classResultsForOneFriendDecl.push_back(getClassInstantiationStats(
+          classResultsForFriendDecl.push_back(getClassInstantiationStats(
               hostRD, spec, friendDeclLoc, classCounts, sourceManager));
         }
       } else {
         Result::ClassResult classResult = getClassInstantiationStats(
             hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
-        classResultsForOneFriendDecl.push_back(std::move(classResult));
+        classResultsForFriendDecl.push_back(std::move(classResult));
       }
       return true;
     }
@@ -483,7 +482,7 @@ private:
     const SourceLocation friendDeclLoc;
     const ClassCounts &classCounts;
     const SourceManager *sourceManager = nullptr;
-    Result::ClassResultsForOneFriendDecl &classResultsForOneFriendDecl;
+    Result::ClassResultsForFriendDecl &classResultsForFriendDecl;
   };
 
   // TODO Make it templated on RecordDecl/TypedefNameDecl
@@ -605,7 +604,7 @@ private:
                                  const ClassCounts &classCounts) {
     // TODO
     ++result.friendClassCount;
-    Result::ClassResultsForOneFriendDecl &classResultsForOneFriendDecl =
+    Result::ClassResultsForFriendDecl &classResultsForFriendDecl =
         result.ClassResults[friendDeclLoc];
     for (const ClassTemplateSpecializationDecl *CTSD : CTD->specializations()) {
       debug_stream() << "CTSD: " << CTSD << "\n";
@@ -613,10 +612,10 @@ private:
       debug_stream() << "CXXRD: " << CXXRD << "\n";
       Result::ClassResult classResult = getClassInstantiationStats(
           hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
-      classResultsForOneFriendDecl.push_back(std::move(classResult));
+      classResultsForFriendDecl.push_back(std::move(classResult));
       NestedClassVisitor nestedClassVisitor{
           hostRD,      CXXRD,         friendDeclLoc,
-          classCounts, sourceManager, classResultsForOneFriendDecl};
+          classCounts, sourceManager, classResultsForFriendDecl};
       nestedClassVisitor.TraverseCXXRecordDecl(
           const_cast<CXXRecordDecl *>(CXXRD));
     }
@@ -650,13 +649,13 @@ private:
     }
     Result::ClassResult classResult = getClassInstantiationStats(
         hostRD, friendCXXRD, friendDeclLoc, classCounts, sourceManager);
-    Result::ClassResultsForOneFriendDecl &classResultsForOneFriendDecl =
+    Result::ClassResultsForFriendDecl &classResultsForFriendDecl =
         result.ClassResults[friendDeclLoc];
-    classResultsForOneFriendDecl.push_back(std::move(classResult));
+    classResultsForFriendDecl.push_back(std::move(classResult));
 
     NestedClassVisitor nestedClassVisitor{
         hostRD,      friendCXXRD,   friendDeclLoc,
-        classCounts, sourceManager, classResultsForOneFriendDecl};
+        classCounts, sourceManager, classResultsForFriendDecl};
     nestedClassVisitor.TraverseCXXRecordDecl(friendCXXRD);
   }
 
