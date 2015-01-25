@@ -102,28 +102,28 @@ int main(int argc, const char **argv) {
     }
   }
 
-  for (const auto &friendDecls : Handler.getResult().ClassResults) {
-    for (const auto &classSpecs : friendDecls.second) {
-      for (const Result::ClassResult::MemberFuncResult &memFuncRes :
-           classSpecs.memberFuncResults) {
-        const auto &funcRes = memFuncRes.funcResult;
-        llvm::outs() << "friendDeclLoc: " << funcRes.friendDeclLocStr << "\n";
-        llvm::outs() << "defLoc: " << funcRes.defLocStr << "\n";
-        llvm::outs() << "usedPrivateVarsCount: " << funcRes.usedPrivateVarsCount
-                     << "\n";
-        llvm::outs() << "parentPrivateVarsCount: "
-                     << funcRes.parentPrivateVarsCount << "\n";
-        llvm::outs() << "usedPrivateMethodsCount: "
-                     << funcRes.usedPrivateMethodsCount << "\n";
-        llvm::outs() << "parentPrivateMethodsCount: "
-                     << funcRes.parentPrivateMethodsCount << "\n";
-        llvm::outs() << "types.usedPrivateCount: "
-                     << funcRes.types.usedPrivateCount << "\n";
-        llvm::outs() << "types.parentPrivateCount: "
-                     << funcRes.types.parentPrivateCount << "\n";
-      }
-    }
-  }
+  //for (const auto &friendDecls : Handler.getResult().ClassResults) {
+    //for (const auto &classSpecs : friendDecls.second) {
+      //for (const Result::ClassResult::MemberFuncResult &memFuncRes :
+           //classSpecs.memberFuncResults) {
+        //const auto &funcRes = memFuncRes.funcResult;
+        //llvm::outs() << "friendDeclLoc: " << funcRes.friendDeclLocStr << "\n";
+        //llvm::outs() << "defLoc: " << funcRes.defLocStr << "\n";
+        //llvm::outs() << "usedPrivateVarsCount: " << funcRes.usedPrivateVarsCount
+                     //<< "\n";
+        //llvm::outs() << "parentPrivateVarsCount: "
+                     //<< funcRes.parentPrivateVarsCount << "\n";
+        //llvm::outs() << "usedPrivateMethodsCount: "
+                     //<< funcRes.usedPrivateMethodsCount << "\n";
+        //llvm::outs() << "parentPrivateMethodsCount: "
+                     //<< funcRes.parentPrivateMethodsCount << "\n";
+        //llvm::outs() << "types.usedPrivateCount: "
+                     //<< funcRes.types.usedPrivateCount << "\n";
+        //llvm::outs() << "types.parentPrivateCount: "
+                     //<< funcRes.types.parentPrivateCount << "\n";
+      //}
+    //}
+  //}
 
   return ret;
 }

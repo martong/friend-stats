@@ -68,8 +68,6 @@ struct Result {
   // templates with body (i.e if they have the definition provided).
   // Each friend function template could have different specializations with
   // their own definition.
-  // TODO Use a struct with named members instead of pair.
-  // or just use vector<FuncResult>
   using FriendDeclId = std::string;
   using FunctionTemplateInstantiationId = std::string;
   using FuncResultsForFriendDecl =
@@ -77,6 +75,7 @@ struct Result {
   std::map<FriendDeclId, FuncResultsForFriendDecl> FuncResults;
 
   struct ClassResult {
+    std::string diagName;
     struct MemberFuncResult {
       SourceLocation memberFuncLoc;
       const FunctionDecl *functionDecl;
@@ -85,8 +84,10 @@ struct Result {
     std::vector<MemberFuncResult> memberFuncResults;
   };
   // TODO comment about instantiaions like with function templates
-  using ClassResultsForFriendDecl = std::vector<ClassResult>;
-  std::map<SourceLocation, ClassResultsForFriendDecl> ClassResults;
+  using ClassTemplateInstantiationId = std::string;
+  using ClassResultsForFriendDecl =
+      std::map<ClassTemplateInstantiationId, ClassResult>;
+  std::map<FriendDeclId, ClassResultsForFriendDecl> ClassResults;
 };
 
 template <typename T> bool privOrProt(const T *x) {
@@ -166,6 +167,16 @@ inline int numberOfPrivOrProtMethods(const CXXRecordDecl *RD) {
   }
 
   return res;
+}
+
+// Get the diagnostic name of a declaration.
+template <typename T> std::string getDiagName(const T *D) {
+  static LangOptions LO;
+  static PrintingPolicy PP{LO};
+  std::string s;
+  llvm::raw_string_ostream ss{s};
+  D->getNameForDiagnostic(ss, PP, true);
+  return ss.str();
 }
 
 class PrivTypeCounter : public RecursiveASTVisitor<PrivTypeCounter> {
@@ -468,13 +479,17 @@ private:
       if (const ClassTemplateDecl *CTD = CXXRD->getDescribedClassTemplate()) {
         debug_stream() << "NestedClassVisitor/CTD :" << CTD << "\n";
         for (const auto *spec : CTD->specializations()) {
-          classResultsForFriendDecl.push_back(getClassInstantiationStats(
-              hostRD, spec, friendDeclLoc, classCounts, sourceManager));
+          auto diagName = getDiagName(spec);
+          classResultsForFriendDecl.insert(
+              {diagName,
+               getClassInstantiationStats(hostRD, spec, friendDeclLoc,
+                                          classCounts, sourceManager)});
         }
       } else {
         Result::ClassResult classResult = getClassInstantiationStats(
             hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
-        classResultsForFriendDecl.push_back(std::move(classResult));
+        auto diagName = getDiagName(CXXRD);
+        classResultsForFriendDecl.insert({diagName, std::move(classResult)});
       }
       return true;
     }
@@ -573,6 +588,8 @@ private:
       const SourceManager *sourceManager) {
 
     Result::ClassResult classResult;
+    classResult.diagName = getDiagName(friendCXXRD);
+
     for (const auto &method : friendCXXRD->methods()) {
       debug_stream() << "method: " << method << "\n";
       Result::ClassResult::MemberFuncResult memberFuncRes;
@@ -605,17 +622,22 @@ private:
                                  const ClassTemplateDecl *CTD,
                                  const SourceLocation &friendDeclLoc,
                                  const ClassCounts &classCounts) {
-    // TODO
-    ++result.friendClassDeclCount;
+    std::string friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
+    auto it = result.ClassResults.find(friendDeclLocStr);
+    if (it == std::end(result.ClassResults)) {
+      ++result.friendClassDeclCount;
+    }
+
     Result::ClassResultsForFriendDecl &classResultsForFriendDecl =
-        result.ClassResults[friendDeclLoc];
+        result.ClassResults[friendDeclLocStr];
     for (const ClassTemplateSpecializationDecl *CTSD : CTD->specializations()) {
       debug_stream() << "CTSD: " << CTSD << "\n";
+      auto diagName = getDiagName(CTSD);
       const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(CTSD);
       debug_stream() << "CXXRD: " << CXXRD << "\n";
       Result::ClassResult classResult = getClassInstantiationStats(
           hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
-      classResultsForFriendDecl.push_back(std::move(classResult));
+      classResultsForFriendDecl.insert({diagName, std::move(classResult)});
       NestedClassVisitor nestedClassVisitor{
           hostRD,      CXXRD,         friendDeclLoc,
           classCounts, sourceManager, classResultsForFriendDecl};
@@ -630,8 +652,8 @@ private:
                          const MatchFinder::MatchResult &Result) {
     debug_stream() << "handleFriendClass"
                    << "\n";
-
-    auto it = result.ClassResults.find(friendDeclLoc);
+    std::string friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
+    auto it = result.ClassResults.find(friendDeclLocStr);
     if (it != std::end(result.ClassResults)) {
       return;
     }
@@ -650,11 +672,13 @@ private:
     if (!friendCXXRD) {
       return;
     }
+
     Result::ClassResult classResult = getClassInstantiationStats(
         hostRD, friendCXXRD, friendDeclLoc, classCounts, sourceManager);
     Result::ClassResultsForFriendDecl &classResultsForFriendDecl =
-        result.ClassResults[friendDeclLoc];
-    classResultsForFriendDecl.push_back(std::move(classResult));
+        result.ClassResults[friendDeclLocStr];
+    classResultsForFriendDecl.insert(
+        {getDiagName(friendCXXRD), std::move(classResult)});
 
     NestedClassVisitor nestedClassVisitor{
         hostRD,      friendCXXRD,   friendDeclLoc,

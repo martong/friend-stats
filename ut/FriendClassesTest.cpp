@@ -208,7 +208,7 @@ class B {
   const auto &crs = get1stClassResult(getClassResultsFor1stFriendDecl(res));
   ASSERT_EQ(crs.memberFuncResults.size(), 1u);
 
-  auto fr = getFirstMemberFuncResult(res);
+  const auto& fr = get1stMemberFuncResult(crs);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
@@ -240,7 +240,7 @@ template class B<int>;
   const auto &crs = get1stClassResult(getClassResultsFor1stFriendDecl(res));
   ASSERT_EQ(crs.memberFuncResults.size(), 1u);
 
-  auto fr = getFirstMemberFuncResult(res);
+  const auto& fr = get1stMemberFuncResult(crs);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }

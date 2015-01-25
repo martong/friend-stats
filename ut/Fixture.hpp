@@ -67,12 +67,6 @@ get2ndFuncResult(const Result::FuncResultsForFriendDecl &r) {
 }
 
 // Class specific result getters
-inline const Result::FuncResult &getFirstMemberFuncResult(const Result &res) {
-  return res.ClassResults.begin()
-      ->second.at(0)
-      .memberFuncResults.front()
-      .funcResult;
-}
 inline const Result::ClassResultsForFriendDecl &
 getClassResultsFor1stFriendDecl(const Result &res) {
   return res.ClassResults.begin()->second;
@@ -83,12 +77,12 @@ getClassResultsFor2ndFriendDecl(const Result &res) {
 }
 inline const Result::ClassResult &
 get1stClassResult(const Result::ClassResultsForFriendDecl &r) {
-  return *(r.begin());
+  return r.begin()->second;
 }
 inline const Result::ClassResult &
 get2ndClassResult(const Result::ClassResultsForFriendDecl &r) {
   assert(r.size() > 1);
-  return *(++r.begin());
+  return (++r.begin())->second;
 }
 inline const Result::ClassResult &
 get3rdClassResult(const Result::ClassResultsForFriendDecl &r) {
@@ -96,7 +90,7 @@ get3rdClassResult(const Result::ClassResultsForFriendDecl &r) {
   auto it = r.begin();
   ++it;
   ++it;
-  return *it;
+  return it->second;
 }
 inline const Result::FuncResult &
 get1stMemberFuncResult(const Result::ClassResult &r) {
@@ -106,8 +100,8 @@ inline const Result::FuncResult &
 get2ndMemberFuncResult(const Result::ClassResult &r) {
   return r.memberFuncResults.at(1).funcResult;
 }
-// inline const Result::FuncResult &
-// getFirstMemberFuncResult(const Result::ClassResultsForFriendDecl &r) {
-// return r.at(0).memberFuncResults.front().funcResult;
-//}
+inline const Result::FuncResult &getFirstMemberFuncResult(const Result &res) {
+  return get1stMemberFuncResult(
+      get1stClassResult(getClassResultsFor1stFriendDecl(res)));
+}
 
