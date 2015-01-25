@@ -456,6 +456,20 @@ public:
   const Result &getResult() const { return result; }
 
 private:
+  static void insertIntoClassResultsForFriendDecl(
+      const Result::ClassTemplateInstantiationId &key,
+      Result::ClassResult classResult,
+      Result::ClassResultsForFriendDecl &classResultsForFriendDecl) {
+
+    // This spec has been investigated already, and because of ODR
+    // all must be the same in all translation units.
+    if (classResultsForFriendDecl.count(key)) {
+      return;
+    }
+
+    classResultsForFriendDecl.insert({key, std::move(classResult)});
+  }
+
   struct NestedClassVisitor : RecursiveASTVisitor<NestedClassVisitor> {
     NestedClassVisitor(
         const CXXRecordDecl *hostRD, const CXXRecordDecl *friendCXXRD,
@@ -480,16 +494,17 @@ private:
         debug_stream() << "NestedClassVisitor/CTD :" << CTD << "\n";
         for (const auto *spec : CTD->specializations()) {
           auto diagName = getDiagName(spec);
-          classResultsForFriendDecl.insert(
-              {diagName,
-               getClassInstantiationStats(hostRD, spec, friendDeclLoc,
-                                          classCounts, sourceManager)});
+          insertIntoClassResultsForFriendDecl(
+              diagName, getClassInstantiationStats(hostRD, spec, friendDeclLoc,
+                                                   classCounts, sourceManager),
+              classResultsForFriendDecl);
         }
       } else {
         Result::ClassResult classResult = getClassInstantiationStats(
             hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
         auto diagName = getDiagName(CXXRD);
-        classResultsForFriendDecl.insert({diagName, std::move(classResult)});
+        insertIntoClassResultsForFriendDecl(diagName, std::move(classResult),
+                                            classResultsForFriendDecl);
       }
       return true;
     }
@@ -637,7 +652,8 @@ private:
       debug_stream() << "CXXRD: " << CXXRD << "\n";
       Result::ClassResult classResult = getClassInstantiationStats(
           hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
-      classResultsForFriendDecl.insert({diagName, std::move(classResult)});
+      insertIntoClassResultsForFriendDecl(diagName, std::move(classResult),
+                                          classResultsForFriendDecl);
       NestedClassVisitor nestedClassVisitor{
           hostRD,      CXXRD,         friendDeclLoc,
           classCounts, sourceManager, classResultsForFriendDecl};
@@ -677,8 +693,9 @@ private:
         hostRD, friendCXXRD, friendDeclLoc, classCounts, sourceManager);
     Result::ClassResultsForFriendDecl &classResultsForFriendDecl =
         result.ClassResults[friendDeclLocStr];
-    classResultsForFriendDecl.insert(
-        {getDiagName(friendCXXRD), std::move(classResult)});
+    insertIntoClassResultsForFriendDecl(getDiagName(friendCXXRD),
+                                        std::move(classResult),
+                                        classResultsForFriendDecl);
 
     NestedClassVisitor nestedClassVisitor{
         hostRD,      friendCXXRD,   friendDeclLoc,
