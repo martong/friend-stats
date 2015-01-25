@@ -33,10 +33,10 @@ int main(int argc, const char **argv) {
   Finder.addMatcher(FriendMatcher, &Handler);
 
   auto ret = Tool.run(newFrontendActionFactory(&Finder).get());
-  llvm::outs() << "MyResult.Class: " << Handler.getResult().friendClassCount
+  llvm::outs() << "ClassDecls count: " << Handler.getResult().friendClassDeclCount
                << "\n";
-  llvm::outs() << "MyResult.Func: " << Handler.getResult().friendFuncCount
-               << "\n";
+  llvm::outs() << "FuncDecls count: "
+               << Handler.getResult().friendFuncDeclCount << "\n";
 
   double sum = 0.0;
   int num = 0;

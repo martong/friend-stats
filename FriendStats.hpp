@@ -27,8 +27,11 @@ struct ClassCounts {
 };
 
 struct Result {
-  int friendClassCount = 0;
-  int friendFuncCount = 0;
+
+  // Number of friend decls which refer to a class or class template
+  int friendClassDeclCount = 0;
+  // Number of friend decls which refer to a function or function template
+  int friendFuncDeclCount = 0;
 
   struct FuncResult {
 
@@ -603,7 +606,7 @@ private:
                                  const SourceLocation &friendDeclLoc,
                                  const ClassCounts &classCounts) {
     // TODO
-    ++result.friendClassCount;
+    ++result.friendClassDeclCount;
     Result::ClassResultsForFriendDecl &classResultsForFriendDecl =
         result.ClassResults[friendDeclLoc];
     for (const ClassTemplateSpecializationDecl *CTSD : CTD->specializations()) {
@@ -633,7 +636,7 @@ private:
       return;
     }
 
-    ++result.friendClassCount;
+    ++result.friendClassDeclCount;
 
     TypeSourceInfo *TInfo = FD->getFriendType();
     QualType QT = TInfo->getType();
@@ -666,7 +669,7 @@ private:
     std::string friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
     auto it = result.FuncResults.find(friendDeclLocStr);
     if (it == std::end(result.FuncResults)) {
-      ++result.friendFuncCount;
+      ++result.friendFuncDeclCount;
     }
 
     NamedDecl *ND = FD->getFriendDecl();
