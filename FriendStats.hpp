@@ -69,9 +69,9 @@ struct Result {
   // or just use vector<FuncResult>
   using FriendDeclId = std::string;
   using FunctionTemplateInstantiationId = std::string;
-  using ResultsForFriendDecl =
+  using FuncResultsForFriendDecl =
       std::map<FunctionTemplateInstantiationId, FuncResult>;
-  std::map<FriendDeclId, ResultsForFriendDecl> FuncResults;
+  std::map<FriendDeclId, FuncResultsForFriendDecl> FuncResults;
 
   struct ClassResult {
     struct MemberFuncResult {

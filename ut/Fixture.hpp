@@ -44,21 +44,21 @@ struct FriendStats : ::testing::Test {
   }
 };
 
-inline const Result::ResultsForFriendDecl &
+inline const Result::FuncResultsForFriendDecl &
 getResultsFor1stFriendDecl(const Result &res) {
   return res.FuncResults.begin()->second;
 }
-inline const Result::ResultsForFriendDecl &
+inline const Result::FuncResultsForFriendDecl &
 getResultsFor2ndFriendDecl(const Result &res) {
   assert(res.FuncResults.size() > 1);
   return (++res.FuncResults.begin())->second;
 }
 inline const Result::FuncResult &
-get1stFuncResult(const Result::ResultsForFriendDecl &r) {
+get1stFuncResult(const Result::FuncResultsForFriendDecl &r) {
   return r.begin()->second;
 }
 inline const Result::FuncResult &
-get2ndFuncResult(const Result::ResultsForFriendDecl &r) {
+get2ndFuncResult(const Result::FuncResultsForFriendDecl &r) {
   assert(r.size() > 1);
   return (++r.begin())->second;
 }
