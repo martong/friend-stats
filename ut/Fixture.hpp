@@ -44,6 +44,9 @@ struct FriendStats : ::testing::Test {
   }
 };
 
+inline const Result::FuncResult &getFirstFuncResult(const Result &res) {
+  return (*res.FuncResults.begin()->second.begin()).second;
+}
 inline const Result::FuncResultsForFriendDecl &
 getResultsFor1stFriendDecl(const Result &res) {
   return res.FuncResults.begin()->second;
@@ -63,13 +66,47 @@ get2ndFuncResult(const Result::FuncResultsForFriendDecl &r) {
   return (++r.begin())->second;
 }
 
-inline const Result::FuncResult &getFirstFuncResult(const Result &res) {
-  return (*res.FuncResults.begin()->second.begin()).second;
-}
 inline const Result::FuncResult &getFirstMemberFuncResult(const Result &res) {
   return res.ClassResults.begin()
       ->second.at(0)
       .memberFuncResults.front()
       .funcResult;
 }
+inline const Result::ClassResultsForFriendDecl &
+getClassResultsFor1stFriendDecl(const Result &res) {
+  return res.ClassResults.begin()->second;
+}
+inline const Result::ClassResultsForFriendDecl &
+getClassResultsFor2ndFriendDecl(const Result &res) {
+  return (++res.ClassResults.begin())->second;
+}
+inline const Result::ClassResult &
+get1stClassResult(const Result::ClassResultsForFriendDecl &r) {
+  return *(r.begin());
+}
+inline const Result::ClassResult &
+get2ndClassResult(const Result::ClassResultsForFriendDecl &r) {
+  assert(r.size() > 1);
+  return *(++r.begin());
+}
+inline const Result::ClassResult &
+get3rdClassResult(const Result::ClassResultsForFriendDecl &r) {
+  assert(r.size() > 2);
+  auto it = r.begin();
+  ++it;
+  ++it;
+  return *it;
+}
+inline const Result::FuncResult &
+get1stMemberFuncResult(const Result::ClassResult &r) {
+  return r.memberFuncResults.at(0).funcResult;
+}
+inline const Result::FuncResult &
+get2ndMemberFuncResult(const Result::ClassResult &r) {
+  return r.memberFuncResults.at(1).funcResult;
+}
+// inline const Result::FuncResult &
+// getFirstMemberFuncResult(const Result::ClassResultsForFriendDecl &r) {
+// return r.at(0).memberFuncResults.front().funcResult;
+//}
 

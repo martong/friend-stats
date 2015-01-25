@@ -28,14 +28,11 @@ class B {
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  // ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
-  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
-      (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
-
-  ASSERT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
-            std::size_t{1});
-  auto fr = getFirstMemberFuncResult(res);
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  const auto &cr = get1stClassResult(crs);
+  ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+  const Result::FuncResult &fr = get1stMemberFuncResult(cr);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
@@ -61,14 +58,11 @@ class B {
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  // ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
-  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
-      (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
-
-  ASSERT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
-            std::size_t{1});
-  auto fr = getFirstMemberFuncResult(res);
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  const auto &cr = get1stClassResult(crs);
+  ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+  const Result::FuncResult &fr = get1stMemberFuncResult(cr);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
@@ -89,14 +83,11 @@ class B {
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  // ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
-  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
-      (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
-
-  ASSERT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
-            std::size_t{1});
-  auto fr = getFirstMemberFuncResult(res);
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  const auto &cr = get1stClassResult(crs);
+  ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+  const Result::FuncResult &fr = get1stMemberFuncResult(cr);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
@@ -124,16 +115,21 @@ class B {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  ASSERT_EQ(res.ClassResults.begin()->second.size(), std::size_t{1});
-  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
-            std::size_t{2});
-  auto fr = getFirstMemberFuncResult(res);
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
-  fr =
-      res.ClassResults.begin()->second.at(0).memberFuncResults.at(1).funcResult;
-  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  const auto &cr = get1stClassResult(crs);
+  ASSERT_EQ(cr.memberFuncResults.size(), 2u);
+  {
+    const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
+  {
+    const Result::FuncResult &fr = get2ndMemberFuncResult(cr);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
 }
 
 TEST_F(FriendClassesStats, SeveralFriendClasses) {
@@ -163,19 +159,28 @@ class C {
   ASSERT_EQ(res.friendClassCount, 2);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{2});
 
-  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
-            std::size_t{1});
-  auto fr = getFirstMemberFuncResult(res);
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
-
-  // 2nd memberFuncResult
-  const auto &memberFuncResults =
-      (++res.ClassResults.begin())->second.at(0).memberFuncResults;
-  ASSERT_EQ(memberFuncResults.size(), std::size_t{1});
-  fr = memberFuncResults.at(0).funcResult;
-  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  {
+    const auto &crs = getClassResultsFor1stFriendDecl(res);
+    ASSERT_EQ(crs.size(), 1u);
+    const auto &cr = get1stClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
+  {
+    const auto &crs = getClassResultsFor2ndFriendDecl(res);
+    ASSERT_EQ(crs.size(), 1u);
+    const auto &cr = get1stClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
 }
 
 TEST_F(FriendClassesStats, TemplateHostClass) {
@@ -199,8 +204,10 @@ class B {
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
-            std::size_t{1});
+
+  const auto &crs = get1stClassResult(getClassResultsFor1stFriendDecl(res));
+  ASSERT_EQ(crs.memberFuncResults.size(), 1u);
+
   auto fr = getFirstMemberFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -229,8 +236,10 @@ template class B<int>;
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
-            std::size_t{1});
+
+  const auto &crs = get1stClassResult(getClassResultsFor1stFriendDecl(res));
+  ASSERT_EQ(crs.memberFuncResults.size(), 1u);
+
   auto fr = getFirstMemberFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -269,21 +278,28 @@ template class C<int>;
   ASSERT_EQ(res.friendClassCount, 2);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{2});
 
-  ASSERT_EQ(res.ClassResults.begin()->second.at(0).memberFuncResults.size(),
-            std::size_t{1});
-  auto fr = getFirstMemberFuncResult(res);
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
-
-  const Result::ClassResultsForFriendDecl &secondFriendDeclClassResults =
-      (++res.ClassResults.begin())->second;
-  ASSERT_EQ(secondFriendDeclClassResults.size(), std::size_t{1});
-  // 2nd memberFuncResult
-  const auto &memberFuncResults =
-      secondFriendDeclClassResults.at(0).memberFuncResults;
-  fr = memberFuncResults.at(0).funcResult;
-  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  {
+    const auto &crs = getClassResultsFor1stFriendDecl(res);
+    ASSERT_EQ(crs.size(), 1u);
+    const auto &cr = get1stClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
+  {
+    const auto &crs = getClassResultsFor2ndFriendDecl(res);
+    ASSERT_EQ(crs.size(), 1u);
+    const auto &cr = get1stClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
 }
 
 TEST_F(FriendClassesStats, TemplateFriendClassSpecializations) {
@@ -315,20 +331,29 @@ template class B<int>;
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
-      (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{2});
 
-  // specialization with char
-  auto fr = getFirstMemberFuncResult(res);
-  EXPECT_EQ(fr.usedPrivateVarsCount, 1);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
-
-  // The 1st member function of the 2nd specialization of template class B
-  // instantiation with int
-  fr = firstFriendDeclClassResults.at(1).memberFuncResults.at(0).funcResult;
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 2u);
+  {
+    // specialization with char
+    const auto &cr = get1stClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
+  {
+    // specialization with int
+    const auto &cr = get2ndClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
 }
 
 TEST_F(FriendClassesStats, TemplateFriendClassWithTemplateFunction) {
@@ -358,15 +383,16 @@ template void B<int>::func<char>(A &a);
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
-      (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
-  ASSERT_EQ(firstFriendDeclClassResults.front().memberFuncResults.size(),
-            std::size_t{1});
 
-  auto fr = getFirstMemberFuncResult(res);
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  const auto &cr = get1stClassResult(crs);
+  ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+  {
+    const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
 }
 
 TEST_F(FriendClassesStats, TemplateFriendClassWithTemplateFunctionSpecs) {
@@ -397,19 +423,21 @@ template void B<int>::func<float>(A &a);
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
-  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
-      (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{1});
-  ASSERT_EQ(firstFriendDeclClassResults.front().memberFuncResults.size(),
-            std::size_t{2});
 
-  auto fr = getFirstMemberFuncResult(res);
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
-
-  fr = firstFriendDeclClassResults.front().memberFuncResults.at(1).funcResult;
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  const auto &cr = get1stClassResult(crs);
+  ASSERT_EQ(cr.memberFuncResults.size(), 2u);
+  {
+    const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
+  {
+    const Result::FuncResult &fr = get2ndMemberFuncResult(cr);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
 }
 
 TEST_F(FriendClassesStats, NestedClassOfFriendClass) {
@@ -435,16 +463,21 @@ class B {
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
-      (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{2});
-  ASSERT_EQ(firstFriendDeclClassResults.at(1).memberFuncResults.size(),
-            std::size_t{1});
-
-  auto fr =
-      firstFriendDeclClassResults.at(1).memberFuncResults.at(0).funcResult;
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 2u);
+  {
+    const auto &cr = get1stClassResult(crs);
+    EXPECT_EQ(cr.memberFuncResults.size(), 0u);
+  }
+  {
+    const auto &cr = get2ndClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
 }
 
 TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClass) {
@@ -472,16 +505,21 @@ template class B::C<int>;
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
-      (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{2});
-  ASSERT_EQ(firstFriendDeclClassResults.at(1).memberFuncResults.size(),
-            std::size_t{1});
-
-  auto fr =
-      firstFriendDeclClassResults.at(1).memberFuncResults.at(0).funcResult;
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 2u);
+  {
+    const auto &cr = get1stClassResult(crs);
+    EXPECT_EQ(cr.memberFuncResults.size(), 0u);
+  }
+  {
+    const auto &cr = get2ndClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
 }
 
 TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClassTemplate) {
@@ -512,18 +550,21 @@ template class B<int>::C<int>;
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
-      (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{2});
-  EXPECT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
-            std::size_t{0});
-  EXPECT_EQ(firstFriendDeclClassResults.at(1).memberFuncResults.size(),
-            std::size_t{1});
-
-  auto fr =
-      firstFriendDeclClassResults.at(1).memberFuncResults.at(0).funcResult;
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 2u);
+  {
+    const auto &cr = get1stClassResult(crs);
+    EXPECT_EQ(cr.memberFuncResults.size(), 0u);
+  }
+  {
+    const auto &cr = get2ndClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
 }
 
 TEST_F(FriendClassesStats, DeeplyNestedClass) {
@@ -551,19 +592,24 @@ class B {
   ASSERT_EQ(res.friendClassCount, 1);
   ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
 
-  const Result::ClassResultsForFriendDecl &firstFriendDeclClassResults =
-      (res.ClassResults.begin())->second;
-  ASSERT_EQ(firstFriendDeclClassResults.size(), std::size_t{3});
-  EXPECT_EQ(firstFriendDeclClassResults.at(0).memberFuncResults.size(),
-            std::size_t{0});
-  EXPECT_EQ(firstFriendDeclClassResults.at(1).memberFuncResults.size(),
-            std::size_t{0});
-  EXPECT_EQ(firstFriendDeclClassResults.at(2).memberFuncResults.size(),
-            std::size_t{1});
-
-  auto fr =
-      firstFriendDeclClassResults.at(2).memberFuncResults.at(0).funcResult;
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 3u);
+  {
+    const auto &cr = get1stClassResult(crs);
+    EXPECT_EQ(cr.memberFuncResults.size(), 0u);
+  }
+  {
+    const auto &cr = get2ndClassResult(crs);
+    EXPECT_EQ(cr.memberFuncResults.size(), 0u);
+  }
+  {
+    const auto &cr = get3rdClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+    }
+  }
 }
 
