@@ -461,8 +461,7 @@ private:
       Result::ClassResult classResult,
       Result::ClassResultsForFriendDecl &classResultsForFriendDecl) {
 
-    // This spec has been investigated already, and because of ODR
-    // all must be the same in all translation units.
+    // This spec has been investigated already.
     if (classResultsForFriendDecl.count(key)) {
       return;
     }
