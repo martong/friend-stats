@@ -9,7 +9,7 @@ struct FriendClassesStats : FriendStats {};
 
 TEST_F(FriendClassesStats, First) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -22,7 +22,7 @@ class B {
     a.b = 2;
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -39,7 +39,7 @@ class B {
 
 TEST_F(FriendClassesStats, Constructor) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -52,7 +52,7 @@ class B {
     a.b = 2;
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -69,7 +69,7 @@ class B {
 
 TEST_F(FriendClassesStats, DefaultConstructor) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   struct X{};
   friend class B;
@@ -77,7 +77,7 @@ class A {
 class B {
   A::X x;
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -94,7 +94,7 @@ class B {
 
 TEST_F(FriendClassesStats, SeveralMemberFunctions) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -110,7 +110,7 @@ class B {
     a.a = 1;
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -134,7 +134,7 @@ class B {
 
 TEST_F(FriendClassesStats, MemberFunctionsAndMemberFunctionTemplates) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -158,7 +158,7 @@ class B {
 };
 template void B::func3<int>(A&);
 template void B::func3<char>(A&);
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -192,7 +192,7 @@ template void B::func3<char>(A&);
 
 TEST_F(FriendClassesStats, SeveralFriendClasses) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -211,7 +211,7 @@ class C {
     a.a = 1;
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 2);
@@ -243,7 +243,7 @@ class C {
 
 TEST_F(FriendClassesStats, TemplateHostClass) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 template <class T>
 class A {
   int a = 0;
@@ -257,7 +257,7 @@ class B {
     a.b = 2;
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -273,7 +273,7 @@ class B {
 
 TEST_F(FriendClassesStats, TemplateFriendClass) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -289,7 +289,7 @@ class B {
   }
 };
 template class B<int>;
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -305,7 +305,7 @@ template class B<int>;
 
 TEST_F(FriendClassesStats, TemplateFriendClasses) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -330,7 +330,7 @@ class C {
 };
 template class B<int>;
 template class C<int>;
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 2);
@@ -362,7 +362,7 @@ template class C<int>;
 
 TEST_F(FriendClassesStats, TemplateFriendClassSpecializations) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -384,7 +384,7 @@ class B<char> {
   }
 };
 template class B<int>;
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -416,7 +416,7 @@ template class B<int>;
 
 TEST_F(FriendClassesStats, TemplateFriendClassWithTemplateFunction) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -436,7 +436,7 @@ class B {
 template class B<int>;
 // explicit instantiation of func<char> of B<int>
 template void B<int>::func<char>(A &a);
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -455,7 +455,7 @@ template void B<int>::func<char>(A &a);
 
 TEST_F(FriendClassesStats, TemplateFriendClassWithTemplateFunctionSpecs) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -476,7 +476,7 @@ template class B<int>;
 // explicit instantiations of func
 template void B<int>::func<char>(A &a);
 template void B<int>::func<float>(A &a);
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -500,7 +500,7 @@ template void B<int>::func<float>(A &a);
 
 TEST_F(FriendClassesStats, NestedClassOfFriendClass) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -515,7 +515,7 @@ class B {
     }
   };
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -540,7 +540,7 @@ class B {
 
 TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClass) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -557,7 +557,7 @@ class B {
   };
 };
 template class B::C<int>;
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -582,7 +582,7 @@ template class B::C<int>;
 
 TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClassTemplate) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -602,7 +602,7 @@ class B {
 };
 template class B<int>;
 template class B<int>::C<int>;
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -627,7 +627,7 @@ template class B<int>::C<int>;
 
 TEST_F(FriendClassesStats, DeeplyNestedClass) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -644,7 +644,7 @@ class B {
     };
   };
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassDeclCount, 1);
@@ -749,7 +749,7 @@ class A {
   friend class B;
 };
     )");
-  Tool->mapVirtualFile(FileA, R"phi(
+  Tool->mapVirtualFile(FileA, R"(
 #include "a.h"
 template <>
 class B<int> {
@@ -757,8 +757,8 @@ class B<int> {
     a.a = 1;
   }
 };
-)phi");
-  Tool->mapVirtualFile(FileB, R"phi(
+)");
+  Tool->mapVirtualFile(FileB, R"(
 #include "a.h"
 template <>
 class B<char> {
@@ -767,7 +767,7 @@ class B<char> {
     a.b = 1;
   }
 };
-)phi");
+)");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendClassDeclCount, 1);
@@ -876,14 +876,14 @@ class B<int> {
   }
 };
     )");
-  Tool->mapVirtualFile(FileA, R"phi(
+  Tool->mapVirtualFile(FileA, R"(
 #include "a.h"
 template void B<int>::func<char>(A&);
-)phi");
-  Tool->mapVirtualFile(FileB, R"phi(
+)");
+  Tool->mapVirtualFile(FileB, R"(
 #include "a.h"
 template void B<int>::func<int>(A&);
-)phi");
+)");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendClassDeclCount, 1);

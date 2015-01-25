@@ -32,7 +32,7 @@ TEST_F(FriendStats, FuncCount) {
 
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedVariablesInFriendFunc) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -43,7 +43,7 @@ void func(A &a) {
   a.a = 1;
   a.b = 2;
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -55,7 +55,7 @@ void func(A &a) {
 
 TEST_F(FriendStats, LambdaInsideFriendFunction) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -69,7 +69,7 @@ void func(A &a) {
   };
   l(a);
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -83,7 +83,7 @@ void func(A &a) {
 // or to have templates defined inside. (I am so lucky)
 TEST_F(FriendStats, LocalClassInFriendFunction) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -98,7 +98,7 @@ void func(A &a) {
     }
   };
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -110,7 +110,7 @@ void func(A &a) {
 
 TEST_F(FriendStats, NumberOfUsedNestedPrivateOrProtectedVariablesInFriendFunc) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 // The below example is not valid C++, but it is here for completeness.
 // The friend function of A cannot access A's nested class' (B) members.
 /*
@@ -139,7 +139,7 @@ class A {
 	}
   };
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -151,7 +151,7 @@ class A {
 
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedVariablesInFriendOpEqual) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -160,7 +160,7 @@ class A {
     return x.a == y.a;
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -172,7 +172,7 @@ class A {
 
 TEST_F(FriendStats, BugAtExternalASTSource_h_575) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 template <class T>
 class XXX {
   public:
@@ -186,7 +186,7 @@ class A {
 };
 };
 void foo() { XXX<int>::A x; bool b = x == x; }
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -198,7 +198,7 @@ void foo() { XXX<int>::A x; bool b = x == x; }
 
 TEST_F(FriendStats, NumberOfPrivateOrProtectedVariablesInParent) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -210,7 +210,7 @@ void func(A &a) {
   a.a = 1;
   a.b = 2;
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -221,14 +221,14 @@ void func(A &a) {
 
 TEST_F(FriendStats, PrivOperatorUsedInFriendFunction) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   void operator+=(A& x) {}
   friend void foo(A& x, A& y) {
     x += y;
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -240,7 +240,7 @@ class A {
 
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedMethodsInFriendFunc) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   void privFunc() {}
   void privFunc(int) {}
@@ -249,7 +249,7 @@ class A {
 void func(A &a) {
   a.privFunc();
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -261,7 +261,7 @@ void func(A &a) {
 
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedMethodsAndVarsInFriendFunc) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b = 0;
@@ -273,7 +273,7 @@ void func(A &a) {
   a.a = 1;
   a.privFunc();
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -287,7 +287,7 @@ void func(A &a) {
 
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedStaticVariablesInFriend) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   static int a;
   static int b;
@@ -297,7 +297,7 @@ class A {
 };
 int A::a = 0;
 int A::b = 0;
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -311,7 +311,7 @@ int A::b = 0;
 
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedStaticMehtodsInFriend) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   static void a() {};
   static void b() {};
@@ -319,7 +319,7 @@ class A {
     A::a();
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -334,7 +334,7 @@ class A {
 TEST_F(FriendStats,
        NumberOfUsedPrivateOrProtectedStaticTemplateMehtodsInFriend) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   template <typename T>
   static void a() {};
@@ -342,7 +342,7 @@ class A {
     A::a<int>();
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -356,7 +356,7 @@ class A {
 
 TEST_F(FriendStats, PublicStaticFunctionsIsNotCounted) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   template <typename T>
   static void a() {};
@@ -366,7 +366,7 @@ public:
     A::a<int>();
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -383,7 +383,7 @@ struct FriendStatsForTypes : FriendStats {};
 
 TEST_F(FriendStatsForTypes, Variable) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   using Int = int;
   friend void func();
@@ -391,7 +391,7 @@ class A {
 void func() {
   A::Int i = 0;
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -402,7 +402,7 @@ void func() {
 
 TEST_F(FriendStatsForTypes, DoNotCountSelf) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int Position;
 public:
@@ -412,7 +412,7 @@ public:
       return X;
     }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -425,7 +425,7 @@ public:
 
 TEST_F(FriendStatsForTypes, NestedVariable) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   using Int = int;
   friend void func();
@@ -435,7 +435,7 @@ void func() {
     A::Int i = 0;
   };
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -446,7 +446,7 @@ void func() {
 
 TEST_F(FriendStatsForTypes, TypeAlias) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   using Int = int;
   using Int2 = int;
@@ -456,7 +456,7 @@ void func() {
   using X = A::Int;
   typedef A::Int2 Y;
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -467,7 +467,7 @@ void func() {
 
 TEST_F(FriendStatsForTypes, NestedTypeAlias) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   using Int = int;
   using Int2 = int;
@@ -479,7 +479,7 @@ void func() {
     typedef A::Int2 Y;
   };
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -490,7 +490,7 @@ void func() {
 
 TEST_F(FriendStatsForTypes, FuncParameter) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   using Int = int;
   using Double = double;
@@ -499,7 +499,7 @@ class A {
 A::Double func(A::Int) {
     return 0.0;
 }
-)phi");
+)");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -510,13 +510,13 @@ A::Double func(A::Int) {
 
 TEST_F(FriendStatsForTypes, FuncParameterNoDuplicates) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   using Int = int;
   friend A::Int func(Int);
 };
 A::Int func(A::Int) { return 0; }
-)phi");
+)");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -527,7 +527,7 @@ A::Int func(A::Int) { return 0; }
 
 TEST_F(FriendStatsForTypes, NestedFunctionParameter) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   using Int = int;
   friend void func();
@@ -537,7 +537,7 @@ void func() {
 	void foo(A::Int);
   };
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -548,7 +548,7 @@ void func() {
 
 TEST_F(FriendStatsForTypes, ParentPrivateCount) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
 
   // two private types defined
@@ -566,7 +566,7 @@ public:
 void func() {
   A::Int i = 0;
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -578,7 +578,7 @@ void func() {
 
 TEST_F(FriendStatsForTypes, ParentPrivateCountComplex) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
 
   // two private types defined
@@ -615,7 +615,7 @@ public:
 void g() {
   B::Int i = 0;
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 2);
@@ -638,7 +638,7 @@ void g() {
 // TEST_F(FriendStatsForTypes, NumberOfUsedPrivateOrProtectedTypesInFriendFunc)
 // {
 // Tool->mapVirtualFile(FileA,
-// R"phi(
+// R"(
 // class A {
 // using Int = int;
 // friend void func(Int);
@@ -651,7 +651,7 @@ void g() {
 // using MyInt = A::Int;
 // A::Int i = 0;
 //};
-//)phi");
+//)");
 // Tool->run(newFrontendActionFactory(&Finder).get());
 // auto res = Handler.getResult();
 // ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -662,7 +662,7 @@ void g() {
 
 TEST_F(FriendStats, PrivTemplateMemberFunctionUsedInFriendFunction) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   template <typename T>
   void foo(T x) {}
@@ -670,7 +670,7 @@ class A {
     x.foo(1);
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -682,7 +682,7 @@ class A {
 
 TEST_F(FriendStats, PrivTemplateMemberOperatorUsedInFriendFunction) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   template <typename T>
   void operator+=(T& x) {}
@@ -690,7 +690,7 @@ class A {
     x += y;
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -702,7 +702,7 @@ class A {
 
 TEST_F(FriendStats, PrivTemplateMemberVariableUsedInFriendFunction) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   template<class T>
   static constexpr T pi = T(3.1415926535897932385);  // variable template
@@ -710,7 +710,7 @@ class A {
     int a = A::pi<int>;
   }
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -725,12 +725,12 @@ struct TemplateFriendStats : FriendStats {};
 
 TEST_F(TemplateFriendStats, FuncCount) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   template <typename T>
   friend void f(T) {}
 };
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncDeclCount, 1);
@@ -739,7 +739,7 @@ class A {
 TEST_F(TemplateFriendStats,
        NumberOfUsedPrivateOrProtectedVariablesInFriendFunc) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A;
 template <typename T> void func(T, A a);
 class A {
@@ -753,7 +753,7 @@ class A {
   }
 };
 template void func<int>(int, A);
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -766,7 +766,7 @@ template void func<int>(int, A);
 TEST_F(TemplateFriendStats,
        NumberOfUsedPrivateOrProtectedVariablesInFriendFuncOutOfLineDef) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -780,7 +780,7 @@ void func(T, A& a) {
   a.b = 2;
 }
 template void func<int>(int, A&);
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -793,7 +793,7 @@ template void func<int>(int, A&);
 TEST_F(TemplateFriendStats,
        NumberOfUsedPrivateOrProtectedVariablesInFriendFuncSpecialization) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 class A {
   int a = 0;
   int b;
@@ -821,7 +821,7 @@ template void func<int>(int, A&);
 // specialization and the explicit/implicit instantiations.
 template void func<double>(double, A&);
 void fooo() { A a; func<double>(1.0,a); }
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -843,7 +843,7 @@ void fooo() { A a; func<double>(1.0,a); }
 
 TEST_F(TemplateFriendStats, ClassTemplate) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 template <typename T> class A {
   int a = 0;
   int b;
@@ -854,7 +854,7 @@ template <typename T> class A {
   }
 };
 void f() { A<int> aint; func(aint); }
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -866,7 +866,7 @@ void f() { A<int> aint; func(aint); }
 
 TEST_F(TemplateFriendStats, ClassTemplateFuncTemplate) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 template <typename T> class A {
   int a = 0;
   int b;
@@ -878,7 +878,7 @@ template <typename T> class A {
   }
 };
 void f() { A<int> aint; func(1, aint); }
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -890,7 +890,7 @@ void f() { A<int> aint; func(1, aint); }
 
 TEST_F(TemplateFriendStats, ClassTemplateFuncTemplateComposite) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 template <typename T> class A {
   int a = 0;
   int b;
@@ -905,7 +905,7 @@ template <typename T> class A {
   }
 };
 void f() { A<int> aint; func(1, aint); func2(aint); }
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 2);
@@ -927,7 +927,7 @@ void f() { A<int> aint; func(1, aint); func2(aint); }
 
 TEST_F(TemplateFriendStats, ClassTemplateFriendFunctionUsingPrivTypes) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 template <typename T> class A {
   using X = int;
   using Y = int;
@@ -937,7 +937,7 @@ template <typename T> class A {
   }
 };
 void f() { A<int> aint; func2(aint); }
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -950,7 +950,7 @@ void f() { A<int> aint; func2(aint); }
 TEST_F(TemplateFriendStats,
        ClassTemplatePartialSpecializationFriendFunctionUsingPrivTypes) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 template <typename T> class A {};
 template <typename T>
 class A<T*> {
@@ -962,7 +962,7 @@ class A<T*> {
   }
 };
 void f() { A<int*> aint; func2(aint); }
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -974,7 +974,7 @@ void f() { A<int*> aint; func2(aint); }
 
 TEST_F(TemplateFriendStats, ClassTemplateFriendFunctionTemplateUsingPrivTypes) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 template <typename T> class A {
   using X = int;
   using Y = int;
@@ -987,7 +987,7 @@ template <typename T> class A {
   }
 };
 void f() { A<int> aint; func(1, aint); }
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -999,7 +999,7 @@ void f() { A<int> aint; func(1, aint); }
 
 TEST_F(TemplateFriendStats, ClassTemplateFuncTemplateOutOfLineDef) {
   Tool->mapVirtualFile(FileA,
-                       R"phi(
+                       R"(
 template <typename T> class A;
 
 template <typename T>
@@ -1020,7 +1020,7 @@ void func(A<T>& a) {
 }
 
 template void func(A<int>& a);
-    )phi");
+    )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncDeclCount, 1);
@@ -1035,8 +1035,8 @@ template void func(A<int>& a);
 
 TEST_F(FriendStatsHeader, NoDuplicateCountOnClasses) {
   Tool->mapVirtualFile(HeaderA, "class A { friend class B; }; class B {};");
-  Tool->mapVirtualFile(FileA, R"phi(#include "a.h")phi");
-  Tool->mapVirtualFile(FileB, R"phi(#include "a.h")phi");
+  Tool->mapVirtualFile(FileA, R"(#include "a.h")");
+  Tool->mapVirtualFile(FileB, R"(#include "a.h")");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendClassDeclCount, 1);
@@ -1045,14 +1045,14 @@ TEST_F(FriendStatsHeader, NoDuplicateCountOnClasses) {
 TEST_F(FriendStatsHeader, NoDuplicateCountOnFunctions) {
   Tool->mapVirtualFile(HeaderA,
                        "class A { friend void func(); }; void func(){};");
-  Tool->mapVirtualFile(FileA, R"phi(
+  Tool->mapVirtualFile(FileA, R"(
 // Blank lines are left here intentionally, to make the spelling location
 // different.
 
 
 #include "a.h"
-    )phi");
-  Tool->mapVirtualFile(FileB, R"phi(#include "a.h")phi");
+    )");
+  Tool->mapVirtualFile(FileB, R"(#include "a.h")");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncDeclCount, 1);
@@ -1081,14 +1081,14 @@ void func(A<T>& a) {
   a.a = 1;
 }
     )");
-  Tool->mapVirtualFile(FileA, R"phi(
+  Tool->mapVirtualFile(FileA, R"(
 #include "a.h"
 template void func(A<int>& a);
-)phi");
-  Tool->mapVirtualFile(FileB, R"phi(
+)");
+  Tool->mapVirtualFile(FileB, R"(
 #include "a.h"
 template void func(A<char>& a);
-)phi");
+)");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncDeclCount, 1);
@@ -1125,14 +1125,14 @@ void func(A<T>& a) {
   a.a = 1;
 }
     )");
-  Tool->mapVirtualFile(FileA, R"phi(
+  Tool->mapVirtualFile(FileA, R"(
 #include "a.h"
 template void func(A<int>& a);
-)phi");
-  Tool->mapVirtualFile(FileB, R"phi(
+)");
+  Tool->mapVirtualFile(FileB, R"(
 #include "a.h"
 template void func(A<int>& a);
-)phi");
+)");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncDeclCount, 1);
@@ -1165,18 +1165,18 @@ void func(A<T>& a) {
   a.a = 1;
 }
     )");
-  Tool->mapVirtualFile(FileA, R"phi(
+  Tool->mapVirtualFile(FileA, R"(
 #include "a.h"
 template void func(A<int>& a);
-)phi");
-  Tool->mapVirtualFile(FileB, R"phi(
+)");
+  Tool->mapVirtualFile(FileB, R"(
 #include "a.h"
 template <class T>
 struct Z { using type = char; };
 template <class T>
 using XXX = Z<T>;
 template void func(A<XXX<char>::type>& a);
-)phi");
+)");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncDeclCount, 1);
