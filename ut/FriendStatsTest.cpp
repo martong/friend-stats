@@ -47,7 +47,7 @@ void func(A &a) {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -73,7 +73,7 @@ void func(A &a) {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -102,7 +102,7 @@ void func(A &a) {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -143,7 +143,7 @@ class A {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -164,7 +164,7 @@ class A {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
@@ -190,7 +190,7 @@ void foo() { XXX<int>::A x; bool b = x == x; }
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
@@ -214,7 +214,7 @@ void func(A &a) {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateVarsCount, 2);
 }
@@ -232,7 +232,7 @@ class A {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateMethodsCount, 1);
   EXPECT_EQ(fr.usedPrivateMethodsCount, 1);
@@ -253,7 +253,7 @@ void func(A &a) {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateMethodsCount, 1);
   EXPECT_EQ(fr.parentPrivateMethodsCount, 2);
@@ -277,7 +277,7 @@ void func(A &a) {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 2);
@@ -301,7 +301,7 @@ int A::b = 0;
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateVarsCount, 2);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
@@ -323,7 +323,7 @@ class A {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateVarsCount, 0);
   EXPECT_EQ(fr.usedPrivateVarsCount, 0);
@@ -346,7 +346,7 @@ class A {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateVarsCount, 0);
   EXPECT_EQ(fr.usedPrivateVarsCount, 0);
@@ -370,7 +370,7 @@ public:
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateVarsCount, 0);
   EXPECT_EQ(fr.usedPrivateVarsCount, 0);
@@ -395,7 +395,7 @@ void func() {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 1);
 }
@@ -416,7 +416,7 @@ public:
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.parentPrivateCount, 0);
   EXPECT_EQ(fr.types.usedPrivateCount, 0);
@@ -439,7 +439,7 @@ void func() {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 1);
 }
@@ -460,7 +460,7 @@ void func() {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 2);
 }
@@ -483,7 +483,7 @@ void func() {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 2);
 }
@@ -503,7 +503,7 @@ A::Double func(A::Int) {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 2);
 }
@@ -520,7 +520,7 @@ A::Int func(A::Int) { return 0; }
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 1);
 }
@@ -541,7 +541,7 @@ void func() {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 1);
 }
@@ -570,7 +570,7 @@ void func() {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 1);
   EXPECT_EQ(fr.types.parentPrivateCount, 2);
@@ -619,7 +619,7 @@ void g() {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 2);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{2});
+  ASSERT_EQ(res.FuncResults.size(), 2u);
 
   {
     const Result::FuncResult &fr =
@@ -655,7 +655,7 @@ void g() {
 // Tool->run(newFrontendActionFactory(&Finder).get());
 // auto res = Handler.getResult();
 // ASSERT_EQ(res.friendFuncCount, 1);
-// ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+// ASSERT_EQ(res.FuncResults.size(), 1u);
 //}
 
 // ===================== Friend function uses template members ================
@@ -674,7 +674,7 @@ class A {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateMethodsCount, 1);
   EXPECT_EQ(fr.usedPrivateMethodsCount, 1);
@@ -694,7 +694,7 @@ class A {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateMethodsCount, 1);
   EXPECT_EQ(fr.usedPrivateMethodsCount, 1);
@@ -714,7 +714,7 @@ class A {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.parentPrivateVarsCount, 1);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
@@ -757,7 +757,7 @@ template void func<int>(int, A);
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -784,7 +784,7 @@ template void func<int>(int, A&);
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -825,7 +825,7 @@ void fooo() { A a; func<double>(1.0,a); }
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
 
   const auto &frs = getFuncResultsFor1stFriendDecl(res);
   EXPECT_EQ(frs.size(), 2u);
@@ -858,7 +858,7 @@ void f() { A<int> aint; func(aint); }
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -882,7 +882,7 @@ void f() { A<int> aint; func(1, aint); }
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -909,7 +909,7 @@ void f() { A<int> aint; func(1, aint); func2(aint); }
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 2);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{2});
+  ASSERT_EQ(res.FuncResults.size(), 2u);
 
   {
     const Result::FuncResult &fr =
@@ -941,7 +941,7 @@ void f() { A<int> aint; func2(aint); }
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 1);
   EXPECT_EQ(fr.types.parentPrivateCount, 3);
@@ -966,7 +966,7 @@ void f() { A<int*> aint; func2(aint); }
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 1);
   EXPECT_EQ(fr.types.parentPrivateCount, 3);
@@ -991,7 +991,7 @@ void f() { A<int> aint; func(1, aint); }
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.types.usedPrivateCount, 2);
   EXPECT_EQ(fr.types.parentPrivateCount, 3);
@@ -1024,7 +1024,7 @@ template void func(A<int>& a);
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   ASSERT_EQ(getFuncResultsFor1stFriendDecl(res).size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
@@ -1221,7 +1221,7 @@ template void func(A<XXX<char>::type>& a);
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
+  ASSERT_EQ(res.FuncResults.size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);

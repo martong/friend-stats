@@ -26,7 +26,7 @@ class B {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 1u);
@@ -56,7 +56,7 @@ class B {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 1u);
@@ -81,7 +81,7 @@ class B {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 1u);
@@ -114,7 +114,7 @@ class B {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 1u);
@@ -157,7 +157,7 @@ class C {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 2);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{2});
+  ASSERT_EQ(res.ClassResults.size(), 2u);
 
   {
     const auto &crs = getClassResultsFor1stFriendDecl(res);
@@ -203,7 +203,7 @@ class B {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = get1stClassResult(getClassResultsFor1stFriendDecl(res));
   ASSERT_EQ(crs.memberFuncResults.size(), 1u);
@@ -235,7 +235,7 @@ template class B<int>;
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = get1stClassResult(getClassResultsFor1stFriendDecl(res));
   ASSERT_EQ(crs.memberFuncResults.size(), 1u);
@@ -276,7 +276,7 @@ template class C<int>;
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 2);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{2});
+  ASSERT_EQ(res.ClassResults.size(), 2u);
 
   {
     const auto &crs = getClassResultsFor1stFriendDecl(res);
@@ -330,7 +330,7 @@ template class B<int>;
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 2u);
@@ -382,7 +382,7 @@ template void B<int>::func<char>(A &a);
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 1u);
@@ -422,7 +422,7 @@ template void B<int>::func<float>(A &a);
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 1u);
@@ -461,7 +461,7 @@ class B {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 2u);
@@ -503,7 +503,7 @@ template class B::C<int>;
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 2u);
@@ -548,7 +548,7 @@ template class B<int>::C<int>;
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 2u);
@@ -590,7 +590,7 @@ class B {
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendClassCount, 1);
-  ASSERT_EQ(res.ClassResults.size(), std::size_t{1});
+  ASSERT_EQ(res.ClassResults.size(), 1u);
 
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 3u);
