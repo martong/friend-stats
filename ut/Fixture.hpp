@@ -48,11 +48,11 @@ inline const Result::FuncResult &getFirstFuncResult(const Result &res) {
   return (*res.FuncResults.begin()->second.begin()).second;
 }
 inline const Result::FuncResultsForFriendDecl &
-getResultsFor1stFriendDecl(const Result &res) {
+getFuncResultsFor1stFriendDecl(const Result &res) {
   return res.FuncResults.begin()->second;
 }
 inline const Result::FuncResultsForFriendDecl &
-getResultsFor2ndFriendDecl(const Result &res) {
+getFuncResultsFor2ndFriendDecl(const Result &res) {
   assert(res.FuncResults.size() > 1);
   return (++res.FuncResults.begin())->second;
 }
@@ -66,6 +66,7 @@ get2ndFuncResult(const Result::FuncResultsForFriendDecl &r) {
   return (++r.begin())->second;
 }
 
+// Class specific result getters
 inline const Result::FuncResult &getFirstMemberFuncResult(const Result &res) {
   return res.ClassResults.begin()
       ->second.at(0)

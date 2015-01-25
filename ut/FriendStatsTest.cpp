@@ -623,13 +623,13 @@ void g() {
 
   {
     const Result::FuncResult &fr =
-        get1stFuncResult(getResultsFor1stFriendDecl(res));
+        get1stFuncResult(getFuncResultsFor1stFriendDecl(res));
     EXPECT_EQ(fr.types.usedPrivateCount, 1);
     EXPECT_EQ(fr.types.parentPrivateCount, 3);
   }
   {
     const Result::FuncResult &fr =
-        get1stFuncResult(getResultsFor2ndFriendDecl(res));
+        get1stFuncResult(getFuncResultsFor2ndFriendDecl(res));
     EXPECT_EQ(fr.types.usedPrivateCount, 1);
     EXPECT_EQ(fr.types.parentPrivateCount, 2);
   }
@@ -827,7 +827,7 @@ void fooo() { A a; func<double>(1.0,a); }
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
 
-  const auto &frs = getResultsFor1stFriendDecl(res);
+  const auto &frs = getFuncResultsFor1stFriendDecl(res);
   EXPECT_EQ(frs.size(), 2u);
   {
     const auto &fr = get1stFuncResult(frs);
@@ -913,13 +913,13 @@ void f() { A<int> aint; func(1, aint); func2(aint); }
 
   {
     const Result::FuncResult &fr =
-        get1stFuncResult(getResultsFor1stFriendDecl(res));
+        get1stFuncResult(getFuncResultsFor1stFriendDecl(res));
     EXPECT_EQ(fr.usedPrivateVarsCount, 2);
     EXPECT_EQ(fr.parentPrivateVarsCount, 3);
   }
   {
     const Result::FuncResult &fr =
-        get1stFuncResult(getResultsFor2ndFriendDecl(res));
+        get1stFuncResult(getFuncResultsFor2ndFriendDecl(res));
     EXPECT_EQ(fr.usedPrivateVarsCount, 1);
     EXPECT_EQ(fr.parentPrivateVarsCount, 3);
   }
@@ -1025,7 +1025,7 @@ template void func(A<int>& a);
   auto res = Handler.getResult();
   ASSERT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), std::size_t{1});
-  ASSERT_EQ(getResultsFor1stFriendDecl(res).size(), 1u);
+  ASSERT_EQ(getFuncResultsFor1stFriendDecl(res).size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -1138,8 +1138,8 @@ template void func(A<char>& a);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 
-  ASSERT_EQ(getResultsFor1stFriendDecl(res).size(), 2u);
-  fr = get2ndFuncResult(getResultsFor1stFriendDecl(res));
+  ASSERT_EQ(getFuncResultsFor1stFriendDecl(res).size(), 2u);
+  fr = get2ndFuncResult(getFuncResultsFor1stFriendDecl(res));
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
@@ -1178,7 +1178,7 @@ template void func(A<int>& a);
   auto res = Handler.getResult();
   EXPECT_EQ(res.friendFuncCount, 1);
   ASSERT_EQ(res.FuncResults.size(), 1u);
-  EXPECT_EQ(getResultsFor1stFriendDecl(res).size(), 1u);
+  EXPECT_EQ(getFuncResultsFor1stFriendDecl(res).size(), 1u);
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
@@ -1226,8 +1226,8 @@ template void func(A<XXX<char>::type>& a);
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 
-  ASSERT_EQ(getResultsFor1stFriendDecl(res).size(), 2u);
-  fr = get2ndFuncResult(getResultsFor1stFriendDecl(res));
+  ASSERT_EQ(getFuncResultsFor1stFriendDecl(res).size(), 2u);
+  fr = get2ndFuncResult(getFuncResultsFor1stFriendDecl(res));
   EXPECT_EQ(fr.usedPrivateVarsCount, 1);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
