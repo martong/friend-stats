@@ -92,17 +92,26 @@ get3rdClassResult(const Result::ClassResultsForFriendDecl &r) {
   ++it;
   return it->second;
 }
+// TODO use getNthMemberFuncResult(const Result::ClassResult &r, std::size_t N)
 inline const Result::FuncResult &
 get1stMemberFuncResult(const Result::ClassResult &r) {
-  return r.memberFuncResults.at(0).funcResult;
+  //return r.memberFuncResults.at(0).funcResult;
+  assert(r.memberFuncResults.size() > 0);
+  return r.memberFuncResults.begin()->second;
 }
 inline const Result::FuncResult &
 get2ndMemberFuncResult(const Result::ClassResult &r) {
-  return r.memberFuncResults.at(1).funcResult;
+  assert(r.memberFuncResults.size() > 1);
+  auto it = r.memberFuncResults.begin();
+  ++it;
+  return it->second;
 }
 inline const Result::FuncResult &
 getNthMemberFuncResult(const Result::ClassResult &r, std::size_t N) {
-  return r.memberFuncResults.at(N-1).funcResult;
+  assert(r.memberFuncResults.size() > N-1);
+  auto it = r.memberFuncResults.begin();
+  std::advance(it, N-1);
+  return it->second;
 }
 inline const Result::FuncResult &getFirstMemberFuncResult(const Result &res) {
   return get1stMemberFuncResult(

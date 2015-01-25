@@ -76,12 +76,11 @@ struct Result {
 
   struct ClassResult {
     std::string diagName;
-    struct MemberFuncResult {
-      SourceLocation memberFuncLoc;
-      const FunctionDecl *functionDecl;
-      FuncResult funcResult;
-    };
-    std::vector<MemberFuncResult> memberFuncResults;
+    // struct MemberFuncResult {
+    // FuncResult funcResult;
+    //};
+    // std::vector<MemberFuncResult> memberFuncResults;
+    FuncResultsForFriendDecl memberFuncResults;
   };
   // TODO comment about instantiaions like with function templates
   using ClassTemplateInstantiationId = std::string;
@@ -461,12 +460,19 @@ private:
       Result::ClassResult classResult,
       Result::ClassResultsForFriendDecl &classResultsForFriendDecl) {
 
-    // This spec has been investigated already.
-    if (classResultsForFriendDecl.count(key)) {
-      return;
+    // This class spec has been investigated already.
+    auto it = classResultsForFriendDecl.find(key);
+    if (it != std::end(classResultsForFriendDecl)) { // do the merge
+      Result::FuncResultsForFriendDecl &origRes = it->second.memberFuncResults;
+      Result::FuncResultsForFriendDecl &newRes =
+          classResult.memberFuncResults;
+      // Add those function template specs which are not present yet.
+      for (auto &x : newRes) {
+        origRes.insert(std::move(x));
+      }
+    } else {
+      classResultsForFriendDecl.insert({key, std::move(classResult)});
     }
-
-    classResultsForFriendDecl.insert({key, std::move(classResult)});
   }
 
   struct NestedClassVisitor : RecursiveASTVisitor<NestedClassVisitor> {
@@ -593,6 +599,8 @@ private:
     funcRes.parentPrivateMethodsCount = classCounts.privateMethodsCount;
     funcRes.types.parentPrivateCount = classCounts.privateTypesCount;
 
+    funcRes.diagName = getDiagName(FuncD);
+
     return FuncDefinition;
   }
 
@@ -606,11 +614,12 @@ private:
 
     for (const auto &method : friendCXXRD->methods()) {
       debug_stream() << "method: " << method << "\n";
-      Result::ClassResult::MemberFuncResult memberFuncRes;
+      Result::FuncResult memberFuncRes;
       auto res = getFuncStatistics(hostRD, method, friendDeclLoc, classCounts,
-                                   sourceManager, memberFuncRes.funcResult);
+                                   sourceManager, memberFuncRes);
       if (res) {
-        classResult.memberFuncResults.push_back(std::move(memberFuncRes));
+        classResult.memberFuncResults.insert(
+            {getDiagName(method), std::move(memberFuncRes)});
       }
     }
 
@@ -620,11 +629,12 @@ private:
     for (const FunctionTemplateDecl *FTD :
          getFunctionTemplateRange(friendCXXRD)) {
       for (const auto &Spec : FTD->specializations()) {
-        Result::ClassResult::MemberFuncResult memberFuncRes;
+        Result::FuncResult memberFuncRes;
         auto res = getFuncStatistics(hostRD, Spec, friendDeclLoc, classCounts,
-                                     sourceManager, memberFuncRes.funcResult);
+                                     sourceManager, memberFuncRes);
         if (res) {
-          classResult.memberFuncResults.push_back(std::move(memberFuncRes));
+          classResult.memberFuncResults.insert(
+              {getDiagName(Spec), std::move(memberFuncRes)});
         }
       }
     }
@@ -748,8 +758,6 @@ private:
       if (FuncDefinition) {
         auto diagName = getDiagName(FuncD);
         auto &funcResultsPerSrcLoc = result.FuncResults[friendDeclLocStr];
-        // TODO put it under getFuncStatistics
-        funcRes.diagName = diagName;
         funcResultsPerSrcLoc.insert({diagName, funcRes});
       }
     };
