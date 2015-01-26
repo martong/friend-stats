@@ -23,6 +23,20 @@ static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 // A help message for this specific tool can be added afterwards.
 static cl::extrahelp MoreHelp("\nMore help text...");
 
+struct TuFileHandler : public MatchFinder::MatchCallback {
+  virtual void run(const MatchFinder::MatchResult &Result) {
+    if (const Decl *D = Result.Nodes.getNodeAs<Decl>("decl")) {
+      if (const TranslationUnitDecl *TUD = dyn_cast<TranslationUnitDecl>(D)) {
+        (void)TUD;
+        const auto& sm = Result.SourceManager;
+        const FileEntry* fe = sm->getFileEntryForID(sm->getMainFileID());
+        llvm::outs() << fe->getName() << "\n";
+        llvm::outs().flush();
+      }
+    }
+  }
+};
+
 void print(const Result::FuncResult &funcRes) {
   llvm::outs() << "friendDeclLoc: " << funcRes.friendDeclLocStr << "\n";
   llvm::outs() << "defLoc: " << funcRes.defLocStr << "\n";
@@ -41,25 +55,11 @@ void print(const Result::FuncResult &funcRes) {
                << funcRes.types.parentPrivateCount << "\n";
 }
 
-int main(int argc, const char **argv) {
-  CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
-  ClangTool Tool(OptionsParser.getCompilations(),
-                 OptionsParser.getSourcePathList());
-
-  FriendHandler Handler;
-  MatchFinder Finder;
-  Finder.addMatcher(FriendMatcher, &Handler);
-
-  auto ret = Tool.run(newFrontendActionFactory(&Finder).get());
-  llvm::outs() << "ClassDecls count: "
-               << Handler.getResult().friendClassDeclCount << "\n";
-  llvm::outs() << "FuncDecls count: " << Handler.getResult().friendFuncDeclCount
-               << "\n";
-
+double friendFuncAvarage(const Result &result) {
   double sum = 0.0;
   int num = 0;
   int numZeroDenom = 0;
-  for (const auto &v : Handler.getResult().FuncResults) {
+  for (const auto &v : result.FuncResults) {
     // llvm::outs() << v.first.printToString(v.first.getManager()) << "\n";
     for (const auto vv : v.second) {
       const auto &funcRes = vv.second;
@@ -79,29 +79,84 @@ int main(int argc, const char **argv) {
       if (denominator) {
         sum += numerator / denominator;
       } else {
-        llvm::outs() << "ZERO PRIV"
-                     << "\n";
+        //llvm::outs() << "ZERO PRIV"
+                     //<< "\n";
         ++numZeroDenom;
       }
-      print(funcRes);
+      //print(funcRes);
     }
   }
   llvm::outs() << "Number of friend function declarations with zero priv "
                   "entity declared: " << numZeroDenom << "\n";
 
   sum /= num;
+  return sum;
+}
 
-  llvm::outs() << "Avarage usage of priv entities (vars, funcs, types): " << sum
-               << "\n";
-
-  for (const auto &friendDecls : Handler.getResult().ClassResults) {
+double friendClassAvarage(const Result &result) {
+  double sum = 0.0;
+  int num = 0;
+  int numZeroDenom = 0;
+  for (const auto &friendDecls : result.ClassResults) {
     for (const auto &classSpecs : friendDecls.second) {
       for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
         const auto &funcRes = funcResPair.second;
-        print(funcRes);
+        int numerator = funcRes.usedPrivateVarsCount +
+                        funcRes.usedPrivateMethodsCount +
+                        funcRes.types.usedPrivateCount;
+        int denominator = funcRes.parentPrivateVarsCount +
+                          funcRes.parentPrivateMethodsCount +
+                          funcRes.types.parentPrivateCount;
+        ++num;
+        // If denominator is zero that means there are no priv or protected
+        // entitties
+        // in the class, only publicly availble entities are there.
+        // If a friend function accesses only public entites that means, it
+        // should
+        // not be friend at all, therefore we add nothing (zero) to sum in such
+        // cases.
+        if (denominator) {
+          sum += numerator / denominator;
+        } else {
+          //llvm::outs() << "ZERO PRIV"
+                       //<< "\n";
+          ++numZeroDenom;
+        }
+        //print(funcRes);
       }
     }
   }
+  llvm::outs()
+      << "Number of function declarations of friend classes with zero priv "
+         "entity declared: " << numZeroDenom << "\n";
+
+  sum /= num;
+  return sum;
+}
+
+int main(int argc, const char **argv) {
+  CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
+  ClangTool Tool(OptionsParser.getCompilations(),
+                 OptionsParser.getSourcePathList());
+
+  FriendHandler Handler;
+  TuFileHandler FileHandler;
+  MatchFinder Finder;
+  Finder.addMatcher(FriendMatcher, &Handler);
+  Finder.addMatcher(TuMatcher, &FileHandler);
+
+  auto ret = Tool.run(newFrontendActionFactory(&Finder).get());
+  llvm::outs() << "ClassDecls count: "
+               << Handler.getResult().friendClassDeclCount << "\n";
+  llvm::outs() << "FuncDecls count: " << Handler.getResult().friendFuncDeclCount
+               << "\n";
+
+  double sum = friendFuncAvarage(Handler.getResult());
+  llvm::outs() << "Avarage usage of priv entities (vars, funcs, types) in "
+                  "friend functions: " << sum << "\n";
+  sum = friendClassAvarage(Handler.getResult());
+  llvm::outs() << "Avarage usage of priv entities (vars, funcs, types) in "
+                  "friend classes: " << sum << "\n";
 
   // Self Diagnostics:
   for (const auto &v : Handler.getResult().FuncResults) {
