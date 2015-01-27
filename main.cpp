@@ -1,3 +1,4 @@
+#include <sstream> // to print results in percentage
 // Declares clang::SyntaxOnlyAction.
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Tooling/CommonOptionsParser.h"
@@ -175,6 +176,12 @@ void selfDiagnostic(const Result &result) {
   }
 }
 
+std::string to_percentage(double d) {
+  std::stringstream ss;
+  ss << std::fixed << d * 100 << " %";
+  return ss.str();
+}
+
 int main(int argc, const char **argv) {
   CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
 
@@ -199,10 +206,10 @@ int main(int argc, const char **argv) {
 
   double sum = friendFuncAvarage(Handler.getResult());
   llvm::outs() << "Avarage usage of priv entities (vars, funcs, types) in "
-                  "friend functions: " << sum << "\n";
+                  "friend functions: " << to_percentage(sum) << "\n";
   sum = friendClassAvarage(Handler.getResult());
   llvm::outs() << "Avarage usage of priv entities (vars, funcs, types) in "
-                  "friend classes: " << sum << "\n";
+                  "friend classes: " << to_percentage(sum) << "\n";
 
   bool doSelfDiagnostics = false;
   if (doSelfDiagnostics) {
