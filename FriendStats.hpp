@@ -444,6 +444,12 @@ public:
 
     auto srcLoc = FD->getLocation();
 
+    // Do not collect stats of friend decls in system headers
+    auto fullSrcLoc = FullSourceLoc(srcLoc, *Result.SourceManager);
+    if (fullSrcLoc.isInSystemHeader()) {
+      return;
+    }
+
     if (FD->getFriendType()) { // friend decl is class
       handleFriendClass(hostRD, FD, srcLoc, classCounts, Result);
     } else if (CTD) { // friend decl is class template
