@@ -550,12 +550,17 @@ private:
 
   // Here FuncD is the declaration of the function, which may or may not
   // has a body.
-  // Returns the declaration of the body if there is one.
-  // funcRes will contain valid statistics only if there is a body.
+  // Returns the declaration of the body if there is one and if we want to
+  // collect stats for this specific function decl.
   static const FunctionDecl *getFuncStatistics(
       const CXXRecordDecl *hostRD, const FunctionDecl *FuncD,
       const SourceLocation friendDeclLoc, const ClassCounts &classCounts,
       const SourceManager *sourceManager, Result::FuncResult &funcRes) {
+    // Do not include in the stats the trivial compiler generated constructors,
+    // dtors, and assignments.
+    if (FuncD->isTrivial()) {
+      return nullptr;
+    }
     // Get the Body and the function declaration which contains it,
     // i.e. that \cDecl is the function definition itself.
     const FunctionDecl *FuncDefinition =
@@ -586,7 +591,7 @@ private:
     TypeHandlerVisitor Visitor{hostRD};
     Visitor.TraverseFunctionDecl(const_cast<FunctionDecl *>(FuncDefinition));
 
-    // This is location dependent
+    // This is order dependent
     // TODO funcRes.members = ...
     funcRes = memberHandlerVisitor.getResult();
     funcRes.usedPrivateVarsCount += staticVarsVisitor.getResult();

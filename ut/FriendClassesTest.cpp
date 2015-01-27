@@ -67,7 +67,9 @@ class B {
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
-TEST_F(FriendClassesStats, DefaultConstructor) {
+// Test that stats are not included for the trivial compiler generated
+// constructors, dtors, and assignments.
+TEST_F(FriendClassesStats, TrivialFunctionsAreSkipped) {
   Tool->mapVirtualFile(FileA,
                        R"(
 class A {
@@ -86,10 +88,7 @@ class B {
   const auto &crs = getClassResultsFor1stFriendDecl(res);
   ASSERT_EQ(crs.size(), 1u);
   const auto &cr = get1stClassResult(crs);
-  ASSERT_EQ(cr.memberFuncResults.size(), 1u);
-  const Result::FuncResult &fr = get1stMemberFuncResult(cr);
-  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
-  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  ASSERT_EQ(cr.memberFuncResults.size(), 0u);
 }
 
 TEST_F(FriendClassesStats, SeveralMemberFunctions) {
