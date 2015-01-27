@@ -140,6 +140,36 @@ double friendClassAvarage(const Result &result) {
   return sum;
 }
 
+void selfDiagnostic(const Result &result) {
+  for (const auto &v : result.FuncResults) {
+    for (const auto vv : v.second) {
+      const auto &funcRes = vv.second;
+      if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
+          funcRes.usedPrivateMethodsCount > funcRes.parentPrivateMethodsCount ||
+          funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
+        llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
+                     << "\n";
+        print(funcRes);
+      }
+    }
+  }
+  for (const auto &friendDecls : result.ClassResults) {
+    for (const auto &classSpecs : friendDecls.second) {
+      for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
+        const auto &funcRes = funcResPair.second;
+        if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
+            funcRes.usedPrivateMethodsCount >
+                funcRes.parentPrivateMethodsCount ||
+            funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
+          llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
+                       << "\n";
+          print(funcRes);
+        }
+      }
+    }
+  }
+}
+
 int main(int argc, const char **argv) {
   CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
   ClangTool Tool(OptionsParser.getCompilations(),
@@ -164,35 +194,10 @@ int main(int argc, const char **argv) {
   llvm::outs() << "Avarage usage of priv entities (vars, funcs, types) in "
                   "friend classes: " << sum << "\n";
 
-  // Self Diagnostics:
-  for (const auto &v : Handler.getResult().FuncResults) {
-    for (const auto vv : v.second) {
-      const auto &funcRes = vv.second;
-      if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
-          funcRes.usedPrivateMethodsCount > funcRes.parentPrivateMethodsCount ||
-          funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
-        llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
-                     << "\n";
-        print(funcRes);
-      }
-    }
+  bool doSelfDiagnostics = false;
+  if (doSelfDiagnostics) {
+    selfDiagnostic(Handler.getResult());
   }
-  for (const auto &friendDecls : Handler.getResult().ClassResults) {
-    for (const auto &classSpecs : friendDecls.second) {
-      for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
-        const auto &funcRes = funcResPair.second;
-        if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
-            funcRes.usedPrivateMethodsCount >
-                funcRes.parentPrivateMethodsCount ||
-            funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
-          llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
-                       << "\n";
-          print(funcRes);
-        }
-      }
-    }
-  }
-
   return ret;
 }
 
