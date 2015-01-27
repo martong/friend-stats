@@ -13,7 +13,7 @@ using namespace clang;
 
 // Apply a custom category to all command-line options so that they are the
 // only ones displayed.
-static llvm::cl::OptionCategory MyToolCategory("my-tool options");
+static llvm::cl::OptionCategory MyToolCategory("friend-stats-tool options");
 
 // CommonOptionsParser declares HelpMessage with a description of the common
 // command-line options related to the compilation database and input files.
@@ -21,7 +21,12 @@ static llvm::cl::OptionCategory MyToolCategory("my-tool options");
 static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
 // A help message for this specific tool can be added afterwards.
-static cl::extrahelp MoreHelp("\nMore help text...");
+static cl::extrahelp
+    MoreHelp("\nThis tool collects statistics about friend declarations.");
+
+static cl::opt<bool> UseCompilationDbFiles(
+    "db", cl::desc("Run the tool on all files of the compilation db."),
+    cl::cat(MyToolCategory));
 
 struct TuFileHandler : public MatchFinder::MatchCallback {
   const std::size_t numFiles = 0;
@@ -172,11 +177,16 @@ void selfDiagnostic(const Result &result) {
 
 int main(int argc, const char **argv) {
   CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
-  ClangTool Tool(OptionsParser.getCompilations(),
-                 OptionsParser.getSourcePathList());
+
+  auto files = OptionsParser.getSourcePathList();
+  if (UseCompilationDbFiles) {
+    files = OptionsParser.getCompilations().getAllFiles();
+  }
+
+  ClangTool Tool(OptionsParser.getCompilations(), files);
 
   FriendHandler Handler;
-  TuFileHandler FileHandler{OptionsParser.getSourcePathList().size()};
+  TuFileHandler FileHandler{files.size()};
   MatchFinder Finder;
   Finder.addMatcher(FriendMatcher, &Handler);
   Finder.addMatcher(TuMatcher, &FileHandler);
