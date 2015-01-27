@@ -88,9 +88,9 @@ double friendFuncAvarage(const Result &result) {
       // not be friend at all, therefore we add nothing (zero) to sum in such
       // cases.
       if (denominator) {
-        sum += numerator / denominator;
+        sum += static_cast<double>(numerator) / denominator;
       } else {
-        // llvm::outs() << "ZERO PRIV"
+        // llvm::outs() << "ZERO PRIV" << "\n";
         //<< "\n";
         ++numZeroDenom;
       }
@@ -127,7 +127,7 @@ double friendClassAvarage(const Result &result) {
         // not be friend at all, therefore we add nothing (zero) to sum in such
         // cases.
         if (denominator) {
-          sum += numerator / denominator;
+          sum += static_cast<double>(numerator) / denominator;
         } else {
           // llvm::outs() << "ZERO PRIV"
           //<< "\n";
