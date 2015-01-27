@@ -24,13 +24,19 @@ static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 static cl::extrahelp MoreHelp("\nMore help text...");
 
 struct TuFileHandler : public MatchFinder::MatchCallback {
+  const std::size_t numFiles = 0;
+  std::size_t processedFiles = 0;
+  TuFileHandler(std::size_t numFiles) : numFiles(numFiles) {}
   virtual void run(const MatchFinder::MatchResult &Result) {
     if (const Decl *D = Result.Nodes.getNodeAs<Decl>("decl")) {
       if (const TranslationUnitDecl *TUD = dyn_cast<TranslationUnitDecl>(D)) {
         (void)TUD;
-        const auto& sm = Result.SourceManager;
-        const FileEntry* fe = sm->getFileEntryForID(sm->getMainFileID());
-        llvm::outs() << fe->getName() << "\n";
+        ++processedFiles;
+        const auto &sm = Result.SourceManager;
+        const FileEntry *fe = sm->getFileEntryForID(sm->getMainFileID());
+        llvm::outs() << fe->getName() << " [" << processedFiles << "/"
+                     << numFiles << "]"
+                     << "\n";
         llvm::outs().flush();
       }
     }
@@ -79,11 +85,11 @@ double friendFuncAvarage(const Result &result) {
       if (denominator) {
         sum += numerator / denominator;
       } else {
-        //llvm::outs() << "ZERO PRIV"
-                     //<< "\n";
+        // llvm::outs() << "ZERO PRIV"
+        //<< "\n";
         ++numZeroDenom;
       }
-      //print(funcRes);
+      // print(funcRes);
     }
   }
   llvm::outs() << "Number of friend function declarations with zero priv "
@@ -118,11 +124,11 @@ double friendClassAvarage(const Result &result) {
         if (denominator) {
           sum += numerator / denominator;
         } else {
-          //llvm::outs() << "ZERO PRIV"
-                       //<< "\n";
+          // llvm::outs() << "ZERO PRIV"
+          //<< "\n";
           ++numZeroDenom;
         }
-        //print(funcRes);
+        // print(funcRes);
       }
     }
   }
@@ -140,7 +146,7 @@ int main(int argc, const char **argv) {
                  OptionsParser.getSourcePathList());
 
   FriendHandler Handler;
-  TuFileHandler FileHandler;
+  TuFileHandler FileHandler{OptionsParser.getSourcePathList().size()};
   MatchFinder Finder;
   Finder.addMatcher(FriendMatcher, &Handler);
   Finder.addMatcher(TuMatcher, &FileHandler);
