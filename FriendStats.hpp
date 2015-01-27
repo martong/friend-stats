@@ -4,8 +4,10 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/AST/TypeVisitor.h"
-#include <map>
+//#include <map>
 #include <set>
+#include <unordered_map>
+//#include <unordered_set>
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
@@ -71,8 +73,8 @@ struct Result {
   using FriendDeclId = std::string;
   using FunctionTemplateInstantiationId = std::string;
   using FuncResultsForFriendDecl =
-      std::map<FunctionTemplateInstantiationId, FuncResult>;
-  std::map<FriendDeclId, FuncResultsForFriendDecl> FuncResults;
+      std::unordered_map<FunctionTemplateInstantiationId, FuncResult>;
+  std::unordered_map<FriendDeclId, FuncResultsForFriendDecl> FuncResults;
 
   struct ClassResult {
     std::string diagName;
@@ -85,8 +87,8 @@ struct Result {
   // TODO comment about instantiaions like with function templates
   using ClassTemplateInstantiationId = std::string;
   using ClassResultsForFriendDecl =
-      std::map<ClassTemplateInstantiationId, ClassResult>;
-  std::map<FriendDeclId, ClassResultsForFriendDecl> ClassResults;
+      std::unordered_map<ClassTemplateInstantiationId, ClassResult>;
+  std::unordered_map<FriendDeclId, ClassResultsForFriendDecl> ClassResults;
 };
 
 template <typename T> bool privOrProt(const T *x) {
