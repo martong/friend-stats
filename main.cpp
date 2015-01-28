@@ -29,23 +29,19 @@ static cl::opt<bool> UseCompilationDbFiles(
     "db", cl::desc("Run the tool on all files of the compilation db."),
     cl::cat(MyToolCategory));
 
-struct TuFileHandler : public MatchFinder::MatchCallback {
+class ProgressIndicator : public SourceFileCallbacks {
   const std::size_t numFiles = 0;
   std::size_t processedFiles = 0;
-  TuFileHandler(std::size_t numFiles) : numFiles(numFiles) {}
-  virtual void run(const MatchFinder::MatchResult &Result) {
-    if (const Decl *D = Result.Nodes.getNodeAs<Decl>("decl")) {
-      if (const TranslationUnitDecl *TUD = dyn_cast<TranslationUnitDecl>(D)) {
-        (void)TUD;
-        ++processedFiles;
-        const auto &sm = Result.SourceManager;
-        const FileEntry *fe = sm->getFileEntryForID(sm->getMainFileID());
-        llvm::outs() << fe->getName() << " [" << processedFiles << "/"
-                     << numFiles << "]"
-                     << "\n";
-        llvm::outs().flush();
-      }
-    }
+
+public:
+  ProgressIndicator(std::size_t numFiles) : numFiles(numFiles) {}
+  virtual bool handleBeginSource(CompilerInstance &CI,
+                                 StringRef Filename) override {
+    ++processedFiles;
+    llvm::outs() << Filename << " [" << processedFiles << "/" << numFiles << "]"
+                 << "\n";
+    llvm::outs().flush();
+    return true;
   }
 };
 
@@ -193,12 +189,12 @@ int main(int argc, const char **argv) {
   ClangTool Tool(OptionsParser.getCompilations(), files);
 
   FriendHandler Handler;
-  TuFileHandler FileHandler{files.size()};
   MatchFinder Finder;
   Finder.addMatcher(FriendMatcher, &Handler);
-  Finder.addMatcher(TuMatcher, &FileHandler);
 
-  auto ret = Tool.run(newFrontendActionFactory(&Finder).get());
+  ProgressIndicator progressIndicator{files.size()};
+  auto ret =
+      Tool.run(newFrontendActionFactory(&Finder, &progressIndicator).get());
   llvm::outs() << "ClassDecls count: "
                << Handler.getResult().friendClassDeclCount << "\n";
   llvm::outs() << "FuncDecls count: " << Handler.getResult().friendFuncDeclCount
