@@ -531,6 +531,7 @@ private:
 
   // TODO Make it templated on RecordDecl/TypedefNameDecl
   // See TypeHandlerVisitor::GetTypeAliasDecl
+  // When there is no declaration for the type it will return a nullptr.
   RecordDecl *getRecordDecl(QualType QT) {
     const Type *T = QT.getTypePtr();
     if (const RecordType *TT = dyn_cast<RecordType>(T)) {
@@ -695,15 +696,18 @@ private:
       return;
     }
 
-    ++result.friendClassDeclCount;
-
     TypeSourceInfo *TInfo = FD->getFriendType();
     QualType QT = TInfo->getType();
     if (debug) {
       QT->dump();
     }
     RecordDecl *friendRD = getRecordDecl(QT);
+    if (!friendRD) {
+      return;
+    }
     debug_stream() << "friendRD: " << friendRD << "\n";
+
+    ++result.friendClassDeclCount;
 
     CXXRecordDecl *friendCXXRD = dyn_cast<CXXRecordDecl>(friendRD);
     if (!friendCXXRD) {
