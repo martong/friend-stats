@@ -262,6 +262,8 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
   void HandleType(QualType QT) {
     TypedefNameDecl *TND = GetTypeAliasDecl(QT);
     if (!TND) {
+      debug_stream() << "not Type Alias "
+                     << "\n";
       return;
     }
 
@@ -334,7 +336,87 @@ public:
 
     return true;
   }
+
+  bool shouldVisitImplicitCode() const { return true; }
+  bool VisitCXXConstructExpr(const CXXConstructExpr *CE) {
+    debug_stream() << "CXXConstructExpr: " << CE << "\n";
+    const auto *CD = CE->getConstructor();
+    const DeclContext *iDC = dyn_cast<DeclContext>(CD);
+    while (iDC->getParent()) {
+      if (auto *RD = dyn_cast<RecordDecl>(iDC->getParent())) {
+        if (RD == Class) {
+          if (const auto iRD = dyn_cast<RecordDecl>(iDC)) {
+            if (privOrProt(iRD)) {
+              const Type *T = iRD->getTypeForDecl();
+              debug_stream() << "T: " << T << "\n";
+              if (debug)
+                T->dump();
+              countedTypes.insert(T);
+            }
+          }
+          return true;
+        }
+      }
+      iDC = iDC->getParent();
+    }
+    return true;
+  }
 };
+
+/*
+inline Result::FuncResult::Types
+GetTypeStatsFromDefaultCtor(const CXXRecordDecl *Class,
+                            const FunctionDecl *FD) {
+  Result::FuncResult::Types res;
+  const CXXConstructorDecl *CD = dyn_cast<const CXXConstructorDecl>(FD);
+  debug_stream() << "XXXXXXXXXXX: " << FD
+                 << "\n";
+  if (!CD) {
+    return res;
+  }
+  //if (!CD->isTrivial()) {
+    //return res;
+  //}
+  //CD->isDefaultConstructor()
+  for (const CXXCtorInitializer *CI : CD->inits()) {
+    debug_stream() << "CXXCtorInitializer: " << CI << "\n";
+    //const FieldDecl *FD = CI->getAnyMember();
+    //FD->type
+    const RecordDecl *RD = CI->getAnyMember()->getParent();
+    debug_stream() << "RD: " << RD << "\n";
+    const DeclContext *iRD = dyn_cast<DeclContext>(RD);
+    while (iRD->getParent()) {
+      if (auto *CRD = dyn_cast<CXXRecordDecl>(iRD->getParent())) {
+        if (CRD == Class) {
+          debug_stream() << "---- Contained"
+                         << "\n";
+          ++res.usedPrivateCount;
+        }
+      }
+      iRD = iRD->getParent();
+    }
+  }
+  return res;
+}
+
+inline std::size_t
+GetTypeStatsFromDefaultCtor2(const CXXRecordDecl *Class,
+                            const FunctionDecl *FD) {
+  const CXXConstructorDecl *CD = dyn_cast<const CXXConstructorDecl>(FD);
+  if (!CD) {
+    return 0;
+  }
+  if (!CD->isDefaultConstructor()) {
+    return 0;
+  }
+  TypeHandlerVisitor V{Class};
+  const CXXRecordDecl* RD = dyn_cast<const CXXRecordDecl>(FD->getDeclContext());
+  if (!RD) { return 0;}
+  V.TraverseCXXRecordDecl(const_cast<CXXRecordDecl*>(RD));
+
+  return V.getResult();
+}
+*/
 
 class MemberHandlerVisitor : public RecursiveASTVisitor<MemberHandlerVisitor> {
   const CXXRecordDecl *Class;
@@ -592,6 +674,7 @@ private:
     callExprVisitor.TraverseFunctionDecl(
         const_cast<FunctionDecl *>(FuncDefinition));
     TypeHandlerVisitor Visitor{hostRD};
+    debug_stream() << "FuncDefinition: " << FuncDefinition << "\n";
     Visitor.TraverseFunctionDecl(const_cast<FunctionDecl *>(FuncDefinition));
 
     // This is order dependent
