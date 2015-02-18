@@ -80,7 +80,7 @@ class A {
 class B {
   A::X x;
   A::Y y;
-  //A::U u = 1;
+  A::U u = 1;
   using Local = int;
   Local l;
 public:
@@ -98,7 +98,7 @@ void foo () { B b; }
   const auto &cr = get1stClassResult(crs);
   ASSERT_EQ(cr.memberFuncResults.size(), 1u);
   const Result::FuncResult &fr = get1stMemberFuncResult(cr);
-  EXPECT_EQ(fr.types.usedPrivateCount, 2);
+  EXPECT_EQ(fr.types.usedPrivateCount, 3);
   EXPECT_EQ(fr.types.parentPrivateCount, 4);
 }
 

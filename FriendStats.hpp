@@ -338,6 +338,7 @@ public:
   }
 
   bool shouldVisitImplicitCode() const { return true; }
+
   bool VisitCXXConstructExpr(const CXXConstructExpr *CE) {
     debug_stream() << "CXXConstructExpr: " << CE << "\n";
     const auto *CD = CE->getConstructor();
@@ -359,6 +360,16 @@ public:
       }
       iDC = iDC->getParent();
     }
+    return true;
+  }
+
+  bool VisitCXXDefaultInitExpr(const CXXDefaultInitExpr *E) {
+    const FieldDecl *FD = E->getField();
+    QualType QT = FD->getType();
+    debug_stream() << "QT: ";
+    if (debug)
+      QT->dump();
+    HandleType(QT);
     return true;
   }
 };
