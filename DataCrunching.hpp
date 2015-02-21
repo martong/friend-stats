@@ -87,11 +87,39 @@ public:
   const Store &get() const { return store; }
 };
 
+
+inline raw_ostream &operator<<(raw_ostream &os,
+                                const std::pair<int, int>& p) {
+  os << "(" << p.first << "," << p.second << ")";
+  return os;
+}
+
+template <typename T>
+inline raw_ostream &operator<<(raw_ostream &os,
+                                const DiscreteDistribution<T>& d) {
+  const auto& store = d.get();
+  for (const auto& v : store) {
+    std::string s;
+    llvm::raw_string_ostream ss{s};
+    ss << v.first;
+    if(ss.str().size() < 8) {
+      os << v.first << "\t\t" << v.second << "\n";
+    } else {
+      os << v.first << "\t" << v.second << "\n";
+    }
+  }
+  return os;
+}
+
 inline std::pair<int, int> getInterval(const double &d) {
   return std::make_pair(int(d), int(d + 1.));
 }
 
 struct PercentageDistribution {
-  void operator()(const Result::FuncResult &funcRes) {}
+  DiscreteDistribution<std::pair<int, int>> dist;
+  void operator()(const Result::FuncResult &funcRes) {
+    PrivateUsage usage = privateUsage(funcRes);
+    dist.addValue(getInterval(usage.usage * 100));
+  }
 };
 

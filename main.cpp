@@ -66,9 +66,11 @@ private:
   SelfDiagnostics diags;
   struct Func {
     Average average;
+    PercentageDistribution percentageDist;
   } func;
   struct Class {
     Average average;
+    PercentageDistribution percentageDist;
   } clazz;
 
   void traverseFriendFuncData() {
@@ -77,6 +79,7 @@ private:
         const auto &funcRes = vv.second;
         diags(funcRes);
         func.average(funcRes);
+        func.percentageDist(funcRes);
       }
     }
   }
@@ -88,6 +91,7 @@ private:
           const auto &funcRes = funcResPair.second;
           diags(funcRes);
           clazz.average(funcRes);
+          clazz.percentageDist(funcRes);
         }
       }
     }
@@ -109,6 +113,10 @@ private:
     sum = clazz.average.get();
     llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
                     "friend classes: " << to_percentage(sum) << "\n";
+
+    llvm::outs() << "Friend functions private usage distribution: "
+                 << "\n";
+    llvm::outs() << func.percentageDist.dist;
   }
 };
 
