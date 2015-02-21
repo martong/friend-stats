@@ -39,9 +39,9 @@ public:
   virtual bool handleBeginSource(CompilerInstance &CI,
                                  StringRef Filename) override {
     ++processedFiles;
-    llvm::outs() << Filename << " [" << processedFiles << "/" << numFiles << "]"
+    llvm::errs() << Filename << " [" << processedFiles << "/" << numFiles << "]"
                  << "\n";
-    llvm::outs().flush();
+    llvm::errs().flush();
     return true;
   }
 };
@@ -104,24 +104,16 @@ private:
   }
 
   void conclusion() {
+    llvm::outs() << "########## Friend FUNCTIONS ##########"
+                 << "\n";
     llvm::outs() << "Number of available friend function definitions: "
                  << func.average.num << "\n";
     llvm::outs() << "Number of friend function declarations with zero priv "
-                    "entity declared: " << func.average.numZeroDenom << "\n";
+                    "entity declared in host class: "
+                 << func.average.numZeroDenom << "\n";
     double sum = func.average.get();
     llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
                     "friend functions: " << to_percentage(sum) << "\n";
-
-    llvm::outs()
-        << "Number of available function definitions in friend classes: "
-        << clazz.average.num << "\n";
-    llvm::outs()
-        << "Number of function declarations of friend classes with zero priv "
-           "entity declared: " << clazz.average.numZeroDenom << "\n";
-    sum = clazz.average.get();
-    llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
-                    "friend classes: " << to_percentage(sum) << "\n";
-
     llvm::outs()
         << "Friend functions private usage (in percentage) distribution: "
         << "\n";
@@ -132,6 +124,28 @@ private:
     llvm::outs() << R"("friend for" candidate distribution: )"
                  << "\n";
     llvm::outs() << func.candidateDistribution.dist;
+
+    llvm::outs() << "\n";
+    llvm::outs() << "########## Friend CLASSES ##########"
+                 << "\n";
+    llvm::outs()
+        << "Number of available function definitions in friend classes: "
+        << clazz.average.num << "\n";
+    llvm::outs()
+        << "Number of function declarations of friend classes with zero priv "
+           "entity declared in host class: " << clazz.average.numZeroDenom
+        << "\n";
+    sum = clazz.average.get();
+    llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
+                    "friend classes: " << to_percentage(sum) << "\n";
+    llvm::outs() << R"("Indirect friend")"
+                    "functions private usage (in percentage) distribution: "
+                 << "\n";
+    llvm::outs() << clazz.percentageDist.dist;
+    llvm::outs() << R"("Indirect friend")"
+                    " functions private usage (by piece) distribution: "
+                 << "\n";
+    llvm::outs() << clazz.usedPrivsDistribution.dist;
   }
 };
 
@@ -152,10 +166,12 @@ int main(int argc, const char **argv) {
   ProgressIndicator progressIndicator{files.size()};
   auto ret =
       Tool.run(newFrontendActionFactory(&Finder, &progressIndicator).get());
+  llvm::outs() << "\n";
   llvm::outs() << "Number of processed friend function declarations: "
                << Handler.getResult().friendFuncDeclCount << "\n";
   llvm::outs() << "Number of processed friend class declarations: "
                << Handler.getResult().friendClassDeclCount << "\n";
+  llvm::outs() << "\n";
 
   DataTraversal traversal{Handler.getResult()};
   traversal();
