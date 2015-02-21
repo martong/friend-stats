@@ -101,12 +101,17 @@ private:
     llvm::outs() << "---- DataTraversal ----"
                  << "\n";
 
+    llvm::outs() << "Number of available friend function definitions: "
+                 << func.average.num << "\n";
     llvm::outs() << "Number of friend function declarations with zero priv "
                     "entity declared: " << func.average.numZeroDenom << "\n";
     double sum = func.average.get();
     llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
                     "friend functions: " << to_percentage(sum) << "\n";
 
+    llvm::outs()
+        << "Number of available function definitions in friend classes: "
+        << clazz.average.num << "\n";
     llvm::outs()
         << "Number of function declarations of friend classes with zero priv "
            "entity declared: " << clazz.average.numZeroDenom << "\n";
@@ -137,10 +142,10 @@ int main(int argc, const char **argv) {
   ProgressIndicator progressIndicator{files.size()};
   auto ret =
       Tool.run(newFrontendActionFactory(&Finder, &progressIndicator).get());
-  llvm::outs() << "ClassDecls count: "
+  llvm::outs() << "Number of processed friend function declarations: "
+               << Handler.getResult().friendFuncDeclCount << "\n";
+  llvm::outs() << "Number of processed friend class declarations: "
                << Handler.getResult().friendClassDeclCount << "\n";
-  llvm::outs() << "FuncDecls count: " << Handler.getResult().friendFuncDeclCount
-               << "\n";
 
   DataTraversal traversal{Handler.getResult()};
   traversal();
