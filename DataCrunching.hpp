@@ -123,3 +123,11 @@ struct PercentageDistribution {
   }
 };
 
+struct NumberOfUsedPrivsDistribution {
+  DiscreteDistribution<int> dist;
+  void operator()(const Result::FuncResult &funcRes) {
+    PrivateUsage usage = privateUsage(funcRes);
+    dist.addValue(usage.numerator);
+  }
+};
+
