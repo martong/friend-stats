@@ -68,6 +68,7 @@ private:
     Average average;
     PercentageDistribution percentageDist;
     NumberOfUsedPrivsDistribution usedPrivsDistribution;
+    CandidateDistribution candidateDistribution;
   } func;
   struct Class {
     Average average;
@@ -83,6 +84,7 @@ private:
         func.average(funcRes);
         func.percentageDist(funcRes);
         func.usedPrivsDistribution(funcRes);
+        func.candidateDistribution(funcRes);
       }
     }
   }
@@ -102,9 +104,6 @@ private:
   }
 
   void conclusion() {
-    llvm::outs() << "---- DataTraversal ----"
-                 << "\n";
-
     llvm::outs() << "Number of available friend function definitions: "
                  << func.average.num << "\n";
     llvm::outs() << "Number of friend function declarations with zero priv "
@@ -130,6 +129,9 @@ private:
     llvm::outs() << "Friend functions private usage (by piece) distribution: "
                  << "\n";
     llvm::outs() << func.usedPrivsDistribution.dist;
+    llvm::outs() << R"("friend for" candidate distribution: )"
+                 << "\n";
+    llvm::outs() << func.candidateDistribution.dist;
   }
 };
 
