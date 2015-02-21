@@ -39,9 +39,9 @@ public:
   virtual bool handleBeginSource(CompilerInstance &CI,
                                  StringRef Filename) override {
     ++processedFiles;
-    llvm::errs() << Filename << " [" << processedFiles << "/" << numFiles << "]"
+    llvm::outs() << Filename << " [" << processedFiles << "/" << numFiles << "]"
                  << "\n";
-    llvm::errs().flush();
+    llvm::outs().flush();
     return true;
   }
 };
