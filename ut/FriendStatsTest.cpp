@@ -726,10 +726,13 @@ struct TemplateFriendStats : FriendStats {};
 TEST_F(TemplateFriendStats, FuncCount) {
   Tool->mapVirtualFile(FileA,
                        R"(
+template <typename T>
+void f(T);
 class A {
   template <typename T>
   friend void f(T) {}
 };
+template void f<int>(int);
     )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
