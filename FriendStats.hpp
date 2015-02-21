@@ -827,9 +827,6 @@ private:
                             const MatchFinder::MatchResult &Result) {
     std::string friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
     auto it = result.FuncResults.find(friendDeclLocStr);
-    if (it == std::end(result.FuncResults)) {
-      ++result.friendFuncDeclCount;
-    }
 
     NamedDecl *ND = FD->getFriendDecl();
     if (!ND) {
@@ -859,6 +856,7 @@ private:
     };
 
     Result::FuncResult funcRes;
+    bool funcDeclCounted = false;
     auto handleFuncD = [&](FunctionDecl *FuncD) {
       if (isDuplicate(FuncD))
         return;
@@ -868,6 +866,10 @@ private:
         auto diagName = getDiagName(FuncD);
         auto &funcResultsPerSrcLoc = result.FuncResults[friendDeclLocStr];
         funcResultsPerSrcLoc.insert({diagName, funcRes});
+        if (!isDuplicate(FuncD) && !funcDeclCounted) {
+          ++result.friendFuncDeclCount;
+          funcDeclCounted = true;
+        }
       }
     };
 
