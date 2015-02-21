@@ -1,4 +1,5 @@
 cp user-config-xxx.jam boost_1_56_0/tools/build/src/user-config.jam
+# ~/friend/measure/boost/boost_1_56_0
 cd boost_1_56_0
 bear ./b2 variant=debug toolset=clang-xxx link=static
 ~/friend/build_release/bin/friend-stats -p . -db asdf 2>/dev/null
