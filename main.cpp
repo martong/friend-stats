@@ -93,85 +93,6 @@ struct Average {
   double get() const { return sum / num; }
 };
 
-double friendFuncAverage(const Result &result) {
-  double sum = 0.0;
-  int num = 0;
-  int numZeroDenom = 0;
-  for (const auto &v : result.FuncResults) {
-    // llvm::outs() << v.first.printToString(v.first.getManager()) << "\n";
-    for (const auto vv : v.second) {
-      const auto &funcRes = vv.second;
-      int numerator = funcRes.usedPrivateVarsCount +
-                      funcRes.usedPrivateMethodsCount +
-                      funcRes.types.usedPrivateCount;
-      int denominator = funcRes.parentPrivateVarsCount +
-                        funcRes.parentPrivateMethodsCount +
-                        funcRes.types.parentPrivateCount;
-      ++num;
-      // If denominator is zero that means there are no priv or protected
-      // entitties
-      // in the class, only publicly availble entities are there.
-      // If a friend function accesses only public entites that means, it should
-      // not be friend at all, therefore we add nothing (zero) to sum in such
-      // cases.
-      if (denominator) {
-        sum += static_cast<double>(numerator) / denominator;
-      } else {
-        // llvm::outs() << "ZERO PRIV" << "\n";
-        //<< "\n";
-        ++numZeroDenom;
-      }
-      // print(funcRes);
-    }
-  }
-  llvm::outs() << "Number of friend function declarations with zero priv "
-                  "entity declared: " << numZeroDenom << "\n";
-
-  sum /= num;
-  return sum;
-}
-
-double friendClassAverage(const Result &result) {
-  double sum = 0.0;
-  int num = 0;
-  int numZeroDenom = 0;
-  for (const auto &friendDecls : result.ClassResults) {
-    for (const auto &classSpecs : friendDecls.second) {
-      for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
-        const auto &funcRes = funcResPair.second;
-        int numerator = funcRes.usedPrivateVarsCount +
-                        funcRes.usedPrivateMethodsCount +
-                        funcRes.types.usedPrivateCount;
-        int denominator = funcRes.parentPrivateVarsCount +
-                          funcRes.parentPrivateMethodsCount +
-                          funcRes.types.parentPrivateCount;
-        ++num;
-        // If denominator is zero that means there are no priv or protected
-        // entitties
-        // in the class, only publicly availble entities are there.
-        // If a friend function accesses only public entites that means, it
-        // should
-        // not be friend at all, therefore we add nothing (zero) to sum in such
-        // cases.
-        if (denominator) {
-          sum += static_cast<double>(numerator) / denominator;
-        } else {
-          // llvm::outs() << "ZERO PRIV"
-          //<< "\n";
-          ++numZeroDenom;
-        }
-        // print(funcRes);
-      }
-    }
-  }
-  llvm::outs()
-      << "Number of function declarations of friend classes with zero priv "
-         "entity declared: " << numZeroDenom << "\n";
-
-  sum /= num;
-  return sum;
-}
-
 void selfDiagnostic(const Result &result) {
   for (const auto &v : result.FuncResults) {
     for (const auto vv : v.second) {
@@ -286,13 +207,6 @@ int main(int argc, const char **argv) {
                << Handler.getResult().friendClassDeclCount << "\n";
   llvm::outs() << "FuncDecls count: " << Handler.getResult().friendFuncDeclCount
                << "\n";
-
-  double sum = friendFuncAverage(Handler.getResult());
-  llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
-                  "friend functions: " << to_percentage(sum) << "\n";
-  sum = friendClassAverage(Handler.getResult());
-  llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
-                  "friend classes: " << to_percentage(sum) << "\n";
 
   DataTraversal traversal{Handler.getResult()};
   traversal();
