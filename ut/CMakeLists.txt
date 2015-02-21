@@ -6,6 +6,7 @@ function(add_friend_stats_unittest test_dirname)
 endfunction()
 
 add_friend_stats_unittest(FriendStatsSimpleTests
+  DataCrunchingTest.cpp
   FriendStatsTest.cpp
   FriendClassesTest.cpp
   )
