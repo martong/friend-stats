@@ -21,17 +21,31 @@ inline void print(const Result::FuncResult &funcRes) {
                << funcRes.types.parentPrivateCount << "\n";
 }
 
+struct PrivateUsage {
+  int numerator = 0;
+  int denominator = 0;
+  double usage = 0.0;
+};
+inline PrivateUsage privateUsage(const Result::FuncResult &funcRes) {
+  PrivateUsage usage;
+  usage.numerator = funcRes.usedPrivateVarsCount +
+                    funcRes.usedPrivateMethodsCount +
+                    funcRes.types.usedPrivateCount;
+  usage.denominator = funcRes.parentPrivateVarsCount +
+                      funcRes.parentPrivateMethodsCount +
+                      funcRes.types.parentPrivateCount;
+  if (usage.denominator) {
+    usage.usage = static_cast<double>(usage.numerator) / usage.denominator;
+  }
+  return usage;
+}
+
 struct Average {
   double sum = 0.0;
   int num = 0;
   int numZeroDenom = 0;
   void operator()(const Result::FuncResult &funcRes) {
-    int numerator = funcRes.usedPrivateVarsCount +
-                    funcRes.usedPrivateMethodsCount +
-                    funcRes.types.usedPrivateCount;
-    int denominator = funcRes.parentPrivateVarsCount +
-                      funcRes.parentPrivateMethodsCount +
-                      funcRes.types.parentPrivateCount;
+    PrivateUsage usage = privateUsage(funcRes);
     ++num;
     // If denominator is zero that means there are no priv or protected
     // entitties
@@ -39,8 +53,8 @@ struct Average {
     // If a friend function accesses only public entites that means, it should
     // not be friend at all, therefore we add nothing (zero) to sum in such
     // cases.
-    if (denominator) {
-      sum += static_cast<double>(numerator) / denominator;
+    if (usage.denominator) {
+      sum += usage.usage;
     } else {
       // llvm::outs() << "ZERO PRIV" << "\n";
       //<< "\n";
@@ -76,4 +90,8 @@ public:
 inline std::pair<int, int> getInterval(const double &d) {
   return std::make_pair(int(d), int(d + 1.));
 }
+
+struct PercentageDistribution {
+  void operator()(const Result::FuncResult &funcRes) {}
+};
 
