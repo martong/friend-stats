@@ -139,7 +139,7 @@ private:
     llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
                     "friend classes: " << to_percentage(sum) << "\n";
     llvm::outs() << R"("Indirect friend")"
-                    "functions private usage (in percentage) distribution: "
+                    " functions private usage (in percentage) distribution: "
                  << "\n";
     llvm::outs() << clazz.percentageDist.dist;
     llvm::outs() << R"("Indirect friend")"
