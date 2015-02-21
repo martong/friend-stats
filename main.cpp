@@ -93,35 +93,18 @@ struct Average {
   double get() const { return sum / num; }
 };
 
-void selfDiagnostic(const Result &result) {
-  for (const auto &v : result.FuncResults) {
-    for (const auto vv : v.second) {
-      const auto &funcRes = vv.second;
-      if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
-          funcRes.usedPrivateMethodsCount > funcRes.parentPrivateMethodsCount ||
-          funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
-        llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
-                     << "\n";
-        print(funcRes);
-      }
+struct SelfDiagnostics {
+  void operator()(const Result::FuncResult &funcRes) {
+    if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
+        funcRes.usedPrivateMethodsCount > funcRes.parentPrivateMethodsCount ||
+        funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
+      llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
+                   << "\n";
+      print(funcRes);
+      exit(1);
     }
   }
-  for (const auto &friendDecls : result.ClassResults) {
-    for (const auto &classSpecs : friendDecls.second) {
-      for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
-        const auto &funcRes = funcResPair.second;
-        if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
-            funcRes.usedPrivateMethodsCount >
-                funcRes.parentPrivateMethodsCount ||
-            funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
-          llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
-                       << "\n";
-          print(funcRes);
-        }
-      }
-    }
-  }
-}
+};
 
 inline std::string to_percentage(double d) {
   std::stringstream ss;
@@ -140,6 +123,7 @@ public:
 
 private:
   const Result &result;
+  SelfDiagnostics diags;
   struct Func {
     Average average;
   } func;
@@ -151,6 +135,7 @@ private:
     for (const auto &v : result.FuncResults) {
       for (const auto vv : v.second) {
         const auto &funcRes = vv.second;
+        diags(funcRes);
         func.average(funcRes);
       }
     }
@@ -161,6 +146,7 @@ private:
       for (const auto &classSpecs : friendDecls.second) {
         for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
           const auto &funcRes = funcResPair.second;
+          diags(funcRes);
           clazz.average(funcRes);
         }
       }
@@ -211,10 +197,6 @@ int main(int argc, const char **argv) {
   DataTraversal traversal{Handler.getResult()};
   traversal();
 
-  const bool doSelfDiagnostics = false;
-  if (doSelfDiagnostics) {
-    selfDiagnostic(Handler.getResult());
-  }
   return ret;
 }
 
