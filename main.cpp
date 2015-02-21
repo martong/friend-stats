@@ -63,7 +63,37 @@ void print(const Result::FuncResult &funcRes) {
                << funcRes.types.parentPrivateCount << "\n";
 }
 
-double friendFuncAvarage(const Result &result) {
+struct Average {
+  double sum = 0.0;
+  int num = 0;
+  int numZeroDenom = 0;
+  void operator()(const Result::FuncResult &funcRes) {
+    int numerator = funcRes.usedPrivateVarsCount +
+                    funcRes.usedPrivateMethodsCount +
+                    funcRes.types.usedPrivateCount;
+    int denominator = funcRes.parentPrivateVarsCount +
+                      funcRes.parentPrivateMethodsCount +
+                      funcRes.types.parentPrivateCount;
+    ++num;
+    // If denominator is zero that means there are no priv or protected
+    // entitties
+    // in the class, only publicly availble entities are there.
+    // If a friend function accesses only public entites that means, it should
+    // not be friend at all, therefore we add nothing (zero) to sum in such
+    // cases.
+    if (denominator) {
+      sum += static_cast<double>(numerator) / denominator;
+    } else {
+      // llvm::outs() << "ZERO PRIV" << "\n";
+      //<< "\n";
+      ++numZeroDenom;
+    }
+    // print(funcRes);
+  }
+  double get() const { return sum / num; }
+};
+
+double friendFuncAverage(const Result &result) {
   double sum = 0.0;
   int num = 0;
   int numZeroDenom = 0;
@@ -101,7 +131,7 @@ double friendFuncAvarage(const Result &result) {
   return sum;
 }
 
-double friendClassAvarage(const Result &result) {
+double friendClassAverage(const Result &result) {
   double sum = 0.0;
   int num = 0;
   int numZeroDenom = 0;
@@ -172,11 +202,68 @@ void selfDiagnostic(const Result &result) {
   }
 }
 
-std::string to_percentage(double d) {
+inline std::string to_percentage(double d) {
   std::stringstream ss;
   ss << std::fixed << d * 100 << " %";
   return ss.str();
 }
+
+class DataTraversal {
+public:
+  DataTraversal(const Result &result) : result(result) {}
+  void operator()() {
+    traverseFriendFuncData();
+    traverseFriendClassData();
+    conclusion();
+  }
+
+private:
+  const Result &result;
+  struct Func {
+    Average average;
+  } func;
+  struct Class {
+    Average average;
+  } clazz;
+
+  void traverseFriendFuncData() {
+    for (const auto &v : result.FuncResults) {
+      for (const auto vv : v.second) {
+        const auto &funcRes = vv.second;
+        func.average(funcRes);
+      }
+    }
+  }
+
+  void traverseFriendClassData() {
+    for (const auto &friendDecls : result.ClassResults) {
+      for (const auto &classSpecs : friendDecls.second) {
+        for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
+          const auto &funcRes = funcResPair.second;
+          clazz.average(funcRes);
+        }
+      }
+    }
+  }
+
+  void conclusion() {
+    llvm::outs() << "---- DataTraversal ----"
+                 << "\n";
+
+    llvm::outs() << "Number of friend function declarations with zero priv "
+                    "entity declared: " << func.average.numZeroDenom << "\n";
+    double sum = func.average.get();
+    llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
+                    "friend functions: " << to_percentage(sum) << "\n";
+
+    llvm::outs()
+        << "Number of function declarations of friend classes with zero priv "
+           "entity declared: " << clazz.average.numZeroDenom << "\n";
+    sum = clazz.average.get();
+    llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
+                    "friend classes: " << to_percentage(sum) << "\n";
+  }
+};
 
 int main(int argc, const char **argv) {
   CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
@@ -200,14 +287,17 @@ int main(int argc, const char **argv) {
   llvm::outs() << "FuncDecls count: " << Handler.getResult().friendFuncDeclCount
                << "\n";
 
-  double sum = friendFuncAvarage(Handler.getResult());
-  llvm::outs() << "Avarage usage of priv entities (vars, funcs, types) in "
+  double sum = friendFuncAverage(Handler.getResult());
+  llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
                   "friend functions: " << to_percentage(sum) << "\n";
-  sum = friendClassAvarage(Handler.getResult());
-  llvm::outs() << "Avarage usage of priv entities (vars, funcs, types) in "
+  sum = friendClassAverage(Handler.getResult());
+  llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
                   "friend classes: " << to_percentage(sum) << "\n";
 
-  bool doSelfDiagnostics = false;
+  DataTraversal traversal{Handler.getResult()};
+  traversal();
+
+  const bool doSelfDiagnostics = false;
   if (doSelfDiagnostics) {
     selfDiagnostic(Handler.getResult());
   }
