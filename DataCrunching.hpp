@@ -119,7 +119,11 @@ struct PercentageDistribution {
   DiscreteDistribution<std::pair<int, int>> dist;
   void operator()(const Result::FuncResult &funcRes) {
     PrivateUsage usage = privateUsage(funcRes);
-    dist.addValue(getInterval(usage.usage * 100));
+    if (usage.usage == 0.0) {
+      dist.addValue(getInterval(-.5));
+    } else {
+      dist.addValue(getInterval(usage.usage * 100));
+    }
   }
 };
 
