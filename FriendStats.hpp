@@ -199,24 +199,6 @@ public:
   }
 };
 
-// It handles static methods and operator call expressions as well.
-class CallExprVisitor : public RecursiveASTVisitor<CallExprVisitor> {
-  const CXXRecordDecl *Class;
-  std::set<Decl *> countedDecls;
-
-public:
-  std::size_t getResult() const { return countedDecls.size(); }
-  CallExprVisitor(const CXXRecordDecl *Class) : Class(Class) {}
-  bool VisitDeclRefExpr(DeclRefExpr *DRef) {
-    if (CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(DRef->getDecl())) {
-      if (Class == MD->getDeclContext() && privOrProt(MD)) {
-        countedDecls.insert(MD);
-      }
-    }
-    return true;
-  }
-};
-
 class StaticVarsVisitor : public RecursiveASTVisitor<StaticVarsVisitor> {
   const CXXRecordDecl *Class;
   std::set<Decl *> countedDecls;
@@ -454,6 +436,16 @@ public:
     return true;
   }
 
+  // It handles static methods and operator call expressions as well.
+  bool VisitDeclRefExpr(DeclRefExpr *DRef) {
+    if (CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(DRef->getDecl())) {
+      if (Class == MD->getDeclContext() && privOrProt(MD)) {
+        methods.insert(MD);
+      }
+    }
+    return true;
+  }
+
   const Result::FuncResult getResult() const {
     Result::FuncResult funcResult;
     funcResult.usedPrivateVarsCount = fields.size();
@@ -681,9 +673,6 @@ private:
     StaticVarsVisitor staticVarsVisitor{hostRD};
     staticVarsVisitor.TraverseFunctionDecl(
         const_cast<FunctionDecl *>(FuncDefinition));
-    CallExprVisitor callExprVisitor{hostRD};
-    callExprVisitor.TraverseFunctionDecl(
-        const_cast<FunctionDecl *>(FuncDefinition));
     TypeHandlerVisitor Visitor{hostRD};
     debug_stream() << "FuncDefinition: " << FuncDefinition << "\n";
     Visitor.TraverseFunctionDecl(const_cast<FunctionDecl *>(FuncDefinition));
@@ -692,7 +681,6 @@ private:
     // TODO funcRes.members = ...
     funcRes = memberHandlerVisitor.getResult();
     funcRes.usedPrivateVarsCount += staticVarsVisitor.getResult();
-    funcRes.usedPrivateMethodsCount += callExprVisitor.getResult();
     funcRes.types.usedPrivateCount = Visitor.getResult();
 
     assert(sourceManager);
