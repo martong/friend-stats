@@ -115,13 +115,13 @@ private:
     llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
                     "friend functions: " << to_percentage(sum) << "\n";
     llvm::outs()
-        << "Friend functions private usage (in percentage) distribution: "
+        << "Friend functions private usage (in percentage) distribution:"
         << "\n";
     llvm::outs() << func.percentageDist.dist;
-    llvm::outs() << "Friend functions private usage (by piece) distribution: "
+    llvm::outs() << "Friend functions private usage (by piece) distribution:"
                  << "\n";
     llvm::outs() << func.usedPrivsDistribution.dist;
-    llvm::outs() << R"("friend for" candidate distribution: )"
+    llvm::outs() << R"("friend for" candidate distribution:)"
                  << "\n";
     llvm::outs() << func.candidateDistribution.dist;
 
@@ -139,11 +139,11 @@ private:
     llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
                     "friend classes: " << to_percentage(sum) << "\n";
     llvm::outs() << R"("Indirect friend")"
-                    " functions private usage (in percentage) distribution: "
+                    " functions private usage (in percentage) distribution:"
                  << "\n";
     llvm::outs() << clazz.percentageDist.dist;
     llvm::outs() << R"("Indirect friend")"
-                    " functions private usage (by piece) distribution: "
+                    " functions private usage (by piece) distribution:"
                  << "\n";
     llvm::outs() << clazz.usedPrivsDistribution.dist;
   }
