@@ -70,10 +70,9 @@ struct SelfDiagnostics {
     if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
         funcRes.usedPrivateMethodsCount > funcRes.parentPrivateMethodsCount ||
         funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
-      llvm::errs() << "WRONG MEASURE here: \n" << funcRes.friendDeclLocStr
+      llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
                    << "\n";
       print(funcRes);
-      exit(1);
     }
   }
 };
