@@ -8,6 +8,7 @@
 
 #include "FriendStats.hpp"
 #include "DataCrunching.hpp"
+#include "DataIO.hpp"
 
 using namespace clang::tooling;
 using namespace llvm;
