@@ -8,20 +8,6 @@ using namespace clang::tooling;
 using namespace llvm;
 using namespace clang;
 
-TEST_F(FriendStats, ClassCount) {
-  Tool->mapVirtualFile(FileA, "class A { friend class B; }; class B {};");
-  Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Handler.getResult();
-  EXPECT_EQ(res.friendClassDeclCount, 1);
-}
-
-TEST_F(FriendStats, ClassCount_ExtendedFriend) {
-  Tool->mapVirtualFile(FileA, "class Y {}; class A { friend Y; }; ");
-  Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Handler.getResult();
-  EXPECT_EQ(res.friendClassDeclCount, 1);
-}
-
 TEST_F(FriendStats, FuncCount) {
   Tool->mapVirtualFile(FileA,
                        "class A { friend void func(); }; void func(){};");
