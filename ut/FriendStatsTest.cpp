@@ -259,6 +259,28 @@ void func(A &a) {
   EXPECT_EQ(fr.parentPrivateMethodsCount, 2);
 }
 
+TEST_F(FriendStats,
+       NumberOfUsedPrivateOrProtectedMethodsInFriendFuncConstructorCounted) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+class A {
+  A() {}
+  void privFunc() {}
+  friend void func(A &);
+};
+void func(A &a) {
+  a.privFunc();
+};
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncDeclCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), 1u);
+  auto fr = getFirstFuncResult(res);
+  EXPECT_EQ(fr.usedPrivateMethodsCount, 1);
+  EXPECT_EQ(fr.parentPrivateMethodsCount, 2);
+}
+
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedMethodsAndVarsInFriendFunc) {
   Tool->mapVirtualFile(FileA,
                        R"(
