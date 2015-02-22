@@ -6,8 +6,6 @@
 #include "clang/AST/TypeVisitor.h"
 #include <map>
 #include <set>
-//#include <unordered_map>
-//#include <unordered_set>
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
@@ -78,13 +76,15 @@ struct Result {
 
   struct ClassResult {
     std::string diagName;
-    // struct MemberFuncResult {
-    // FuncResult funcResult;
-    //};
-    // std::vector<MemberFuncResult> memberFuncResults;
     FuncResultsForFriendDecl memberFuncResults;
   };
-  // TODO comment about instantiaions like with function templates
+  // Each friend class template could have different specializations or
+  // instantiations. We handle one non-template class exactly the same as it was
+  // an instantiation/specialization of a class template. We collect statistics
+  // from every member functions of such records(class template inst/spec or
+  // non-template class). Also we collect stats from member function templates.
+  // We do this exactly the same as we do it with direct friend functions and
+  // function templates.
   using ClassTemplateInstantiationId = std::string;
   using ClassResultsForFriendDecl =
       std::map<ClassTemplateInstantiationId, ClassResult>;
@@ -355,61 +355,6 @@ public:
     return true;
   }
 };
-
-/*
-inline Result::FuncResult::Types
-GetTypeStatsFromDefaultCtor(const CXXRecordDecl *Class,
-                            const FunctionDecl *FD) {
-  Result::FuncResult::Types res;
-  const CXXConstructorDecl *CD = dyn_cast<const CXXConstructorDecl>(FD);
-  debug_stream() << "XXXXXXXXXXX: " << FD
-                 << "\n";
-  if (!CD) {
-    return res;
-  }
-  //if (!CD->isTrivial()) {
-    //return res;
-  //}
-  //CD->isDefaultConstructor()
-  for (const CXXCtorInitializer *CI : CD->inits()) {
-    debug_stream() << "CXXCtorInitializer: " << CI << "\n";
-    //const FieldDecl *FD = CI->getAnyMember();
-    //FD->type
-    const RecordDecl *RD = CI->getAnyMember()->getParent();
-    debug_stream() << "RD: " << RD << "\n";
-    const DeclContext *iRD = dyn_cast<DeclContext>(RD);
-    while (iRD->getParent()) {
-      if (auto *CRD = dyn_cast<CXXRecordDecl>(iRD->getParent())) {
-        if (CRD == Class) {
-          debug_stream() << "---- Contained"
-                         << "\n";
-          ++res.usedPrivateCount;
-        }
-      }
-      iRD = iRD->getParent();
-    }
-  }
-  return res;
-}
-
-inline std::size_t
-GetTypeStatsFromDefaultCtor2(const CXXRecordDecl *Class,
-                            const FunctionDecl *FD) {
-  const CXXConstructorDecl *CD = dyn_cast<const CXXConstructorDecl>(FD);
-  if (!CD) {
-    return 0;
-  }
-  if (!CD->isDefaultConstructor()) {
-    return 0;
-  }
-  TypeHandlerVisitor V{Class};
-  const CXXRecordDecl* RD = dyn_cast<const CXXRecordDecl>(FD->getDeclContext());
-  if (!RD) { return 0;}
-  V.TraverseCXXRecordDecl(const_cast<CXXRecordDecl*>(RD));
-
-  return V.getResult();
-}
-*/
 
 class MemberHandlerVisitor : public RecursiveASTVisitor<MemberHandlerVisitor> {
   const CXXRecordDecl *Class;
