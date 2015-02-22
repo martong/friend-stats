@@ -56,24 +56,21 @@ struct Average {
     if (usage.denominator) {
       sum += usage.usage;
     } else {
-      // llvm::outs() << "ZERO PRIV" << "\n";
-      //<< "\n";
       ++numZeroDenom;
     }
-    // print(funcRes);
   }
   double get() const { return sum / num; }
 };
 
 struct SelfDiagnostics {
-  void operator()(const Result::FuncResult &funcRes) {
+  // Returns true if the stat entry is sane
+  bool operator()(const Result::FuncResult &funcRes) {
     if (funcRes.usedPrivateVarsCount > funcRes.parentPrivateVarsCount ||
         funcRes.usedPrivateMethodsCount > funcRes.parentPrivateMethodsCount ||
         funcRes.types.usedPrivateCount > funcRes.types.parentPrivateCount) {
-      llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
-                   << "\n";
-      print(funcRes);
+      return false;
     }
+    return true;
   }
 };
 

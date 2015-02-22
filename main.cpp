@@ -80,11 +80,17 @@ private:
     for (const auto &v : result.FuncResults) {
       for (const auto vv : v.second) {
         const auto &funcRes = vv.second;
-        diags(funcRes);
-        func.average(funcRes);
-        func.percentageDist(funcRes);
-        func.usedPrivsDistribution(funcRes);
-        func.candidateDistribution(funcRes);
+        if (diags(funcRes)) {
+          func.average(funcRes);
+          func.percentageDist(funcRes);
+          func.usedPrivsDistribution(funcRes);
+          func.candidateDistribution(funcRes);
+        } else {
+          llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
+                       << "\n";
+          print(funcRes);
+          llvm::outs() << "SKIPPING ENTRY FROM STATISTICS\n\n";
+        }
       }
     }
   }
@@ -94,10 +100,16 @@ private:
       for (const auto &classSpecs : friendDecls.second) {
         for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
           const auto &funcRes = funcResPair.second;
-          diags(funcRes);
-          clazz.average(funcRes);
-          clazz.percentageDist(funcRes);
-          clazz.usedPrivsDistribution(funcRes);
+          if (diags(funcRes)) {
+            clazz.average(funcRes);
+            clazz.percentageDist(funcRes);
+            clazz.usedPrivsDistribution(funcRes);
+          } else {
+            llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
+                         << "\n";
+            print(funcRes);
+            llvm::outs() << "SKIPPING ENTRY FROM STATISTICS\n\n";
+          }
         }
       }
     }
