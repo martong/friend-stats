@@ -7,7 +7,7 @@ endfunction()
 
 add_friend_stats_unittest(FriendStatsSimpleTests
   DataCrunchingTest.cpp
-  FriendStatsTest.cpp
+  FriendFunctionsTest.cpp
   FriendClassesTest.cpp
   )
 
