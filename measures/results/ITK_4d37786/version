@@ -1,0 +1,9 @@
+commit 4d37786a33fa30dee279d1f4c4dabb7541d56171
+Merge: b5d151e 9feec2a
+Author: Matt McCormick <matt.mccormick@kitware.com>
+Date:   Tue Feb 3 16:39:09 2015 -0500
+
+    Merge topic 'VS2013-Win64-fixes-subbranch'
+    
+    9feec2a8 COMP: workaround for 64bit VS2013 Release ICE
+    18d59989 BUG: workaround for 64bit VS2013 Release segfaults

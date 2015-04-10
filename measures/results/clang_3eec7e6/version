@@ -1,0 +1,48 @@
+origin	http://llvm.org/git/clang.git (fetch)
+origin	http://llvm.org/git/clang.git (push)
+commit 3eec7e69d00b4488fd766f9d2a5ee9cecc470a22
+Author: NAKAMURA Takumi <geek4civic@gmail.com>
+Date:   Wed Dec 10 08:20:32 2014 +0000
+
+    clang/test/Modules/modular_maps.cpp REQUIRES shell. chdir is unsupported on Lit internal runner.
+    
+    git-svn-id: https://llvm.org/svn/llvm-project/cfe/trunk@223921 91177308-0d34-0410-b5e6-96231b3b80d8
+
+
+
+origin	http://llvm.org/git/llvm.git (fetch)
+origin	http://llvm.org/git/llvm.git (push)
+commit 895316336e4a774a47b1a4daada070e0ac97f46e
+Author: David Majnemer <david.majnemer@gmail.com>
+Date:   Wed Dec 10 09:14:55 2014 +0000
+
+    ConstantFold: div undef, 0 should fold to undef, not zero
+    
+    Dividing by zero yields an undefined value.
+    
+    git-svn-id: https://llvm.org/svn/llvm-project/llvm/trunk@223924 91177308-0d34-0410-b5e6-96231b3b80d8
+
+
+
+origin	http://llvm.org/git/libcxx (fetch)
+origin	http://llvm.org/git/libcxx (push)
+commit 453a50040bb9cda453d85863570e2710c3616faa
+Author: Eric Fiselier <eric@efcs.ca>
+Date:   Tue Dec 9 22:53:21 2014 +0000
+
+    Update information on where to find buildbots. Remove dead buildbot links.
+    
+    git-svn-id: https://llvm.org/svn/llvm-project/libcxx/trunk@223848 91177308-0d34-0410-b5e6-96231b3b80d8
+
+
+
+origin	http://llvm.org/git/clang-tools-extra.git (fetch)
+origin	http://llvm.org/git/clang-tools-extra.git (push)
+commit 4e38769a0097beb3a8d6f1715c176732b64d87fa
+Author: Richard Smith <richard-llvm@metafoo.co.uk>
+Date:   Wed Dec 10 03:10:06 2014 +0000
+
+    Update to match clang r223913.
+    
+    
+    git-svn-id: https://llvm.org/svn/llvm-project/clang-tools-extra/trunk@223914 91177308-0d34-0410-b5e6-96231b3b80d8
