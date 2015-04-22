@@ -13,6 +13,11 @@ friend-stats -p /path/to/compile_db /path/to/source/file
 OR
 friend-stats -p /path/to/compile_db -db dummy_argument
 ```
+In case of segmentation fault try to increase the stack size.
+E.g. on OSX set it to the maximum: 
+`ulimit -s 65532`
+RecursiveASTVisitor can eat up the stack in case of complicated program structures.
+
 ### Usage examples
 #### Stats for one file
 ```
