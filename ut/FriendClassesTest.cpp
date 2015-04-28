@@ -628,6 +628,46 @@ template class B::C<int>;
   }
 }
 
+TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClass2) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+class A {
+  friend class B;
+};
+class B {
+  void func(A &a) {}
+  template <typename T>
+  class C {
+    void func(A &a) {}
+  };
+};
+template class B::C<int>;
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassDeclCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), 1u);
+
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 2u);
+  {
+    const auto &cr = get1stClassResult(crs);
+    EXPECT_EQ(cr.memberFuncResults.size(), 1u);
+    const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 0);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 0);
+  }
+  {
+    const auto &cr = get2ndClassResult(crs);
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+    {
+      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+      EXPECT_EQ(fr.usedPrivateVarsCount, 0);
+      EXPECT_EQ(fr.parentPrivateVarsCount, 0);
+    }
+  }
+}
+
 TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClassTemplate) {
   Tool->mapVirtualFile(FileA,
                        R"(
