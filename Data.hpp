@@ -58,9 +58,12 @@ struct Result {
   // Each friend function template could have different specializations with
   // their own definition.
   using FriendDeclId = std::string;
+  using BefriendingClassInstantiationId = std::string;
   using FunctionTemplateInstantiationId = std::string;
+  using FuncResultKey = std::pair<BefriendingClassInstantiationId,
+                                  FunctionTemplateInstantiationId>;
   using FuncResultsForFriendDecl =
-      std::map<FunctionTemplateInstantiationId, FuncResult>;
+      std::map<FuncResultKey, FuncResult>;
   std::map<FriendDeclId, FuncResultsForFriendDecl> FuncResults;
 
   struct ClassResult {

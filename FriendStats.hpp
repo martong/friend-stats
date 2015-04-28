@@ -14,7 +14,7 @@ using namespace clang::ast_matchers;
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
-const bool debug = false;
+const bool debug = true;
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
@@ -588,7 +588,7 @@ private:
       if (res) {
         auto funcDiagName = memberFuncRes.diagName;
         classResult.memberFuncResults.insert(
-            {funcDiagName, std::move(memberFuncRes)});
+            {{getDiagName(hostRD), funcDiagName}, std::move(memberFuncRes)});
       }
     }
 
@@ -604,7 +604,7 @@ private:
         if (res) {
           auto funcDiagName = memberFuncRes.diagName;
           classResult.memberFuncResults.insert(
-              {funcDiagName, std::move(memberFuncRes)});
+              {{getDiagName(hostRD), funcDiagName}, std::move(memberFuncRes)});
         }
       }
     }
@@ -695,22 +695,16 @@ private:
       return;
     }
 
-    auto getDiagName = [](const FunctionDecl *FD) {
-      static LangOptions LO;
-      static PrintingPolicy PP{LO};
-      std::string s;
-      llvm::raw_string_ostream ss{s};
-      FD->getNameForDiagnostic(ss, PP, true);
-      return ss.str();
-    };
+    auto hostRDDiagName = getDiagName(hostRD);
 
     auto isDuplicate = [&](const FunctionDecl *FD) {
       auto diagName = getDiagName(FD);
       if (it != std::end(result.FuncResults)) {
         debug_stream() << "diagName: " << diagName << "\n";
         auto &funcResultsPerSrcLoc = it->second;
-        if (funcResultsPerSrcLoc.count(diagName) > 0) {
-          debug_stream() << "DUPLICATE: " << diagName << "\n";
+        if (funcResultsPerSrcLoc.count({hostRDDiagName, diagName}) > 0) {
+          debug_stream() << "DUPLICATE: " << hostRDDiagName << " " << diagName
+                         << "\n";
           return true;
         }
       }
@@ -727,8 +721,10 @@ private:
       if (FuncDefinition) {
         auto diagName = getDiagName(FuncD);
         auto &funcResultsPerSrcLoc = result.FuncResults[friendDeclLocStr];
-        funcResultsPerSrcLoc.insert({diagName, funcRes});
-        if (!isDuplicate(FuncD) && !funcDeclCounted) {
+        funcResultsPerSrcLoc.insert({{hostRDDiagName, diagName}, funcRes});
+        debug_stream() << "INSERT function: " << hostRDDiagName << " "
+                       << diagName << "\n";
+        if (!funcDeclCounted) {
           ++result.friendFuncDeclCount;
           funcDeclCounted = true;
         }
