@@ -906,6 +906,46 @@ void f2() { A<char> aint; func(aint); }
   }
 }
 
+TEST_F(TemplateFriendStats, BefriendingClassTemplateWithOneInstOneSpec) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+template <typename T> class A {
+  int a = 0;
+  int b;
+  int c;
+  friend void func(A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+};
+template <>
+class A<float> {
+  int a = 0;
+  int b;
+  friend void func(A &a) {
+    a.a = 1;
+  }
+};
+void f1() { A<int> aint; func(aint); }
+// superfluous
+void f2() { A<float> aint; func(aint); }
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncDeclCount, 2);
+  ASSERT_EQ(res.FuncResults.size(), 2u);
+  {
+    auto fr = getFirstFuncResult(res);
+    EXPECT_EQ(fr.usedPrivateVarsCount, 1);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 2);
+  }
+  {
+    auto fr = get1stFuncResult(getFuncResultsFor2ndFriendDecl(res));
+    EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
+}
+
 TEST_F(TemplateFriendStats, ClassTemplateFuncTemplate) {
   Tool->mapVirtualFile(FileA,
                        R"(
