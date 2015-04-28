@@ -852,7 +852,7 @@ void fooo() { A a; func<double>(1.0,a); }
   }
 }
 
-TEST_F(TemplateFriendStats, ClassTemplate) {
+TEST_F(TemplateFriendStats, BefriendingClassTemplate) {
   Tool->mapVirtualFile(FileA,
                        R"(
 template <typename T> class A {
@@ -873,6 +873,37 @@ void f() { A<int> aint; func(aint); }
   auto fr = getFirstFuncResult(res);
   EXPECT_EQ(fr.usedPrivateVarsCount, 2);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
+TEST_F(TemplateFriendStats, BefriendingClassTemplateImplicitInstantiations) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+template <typename T> class A {
+  int a = 0;
+  int b;
+  int c;
+  friend void func(A &a) {
+    a.a = 1;
+    a.b = 2;
+  }
+};
+void f1() { A<int> aint; func(aint); }
+void f2() { A<char> aint; func(aint); }
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  EXPECT_EQ(res.friendFuncDeclCount, 2);
+  EXPECT_EQ(res.FuncResults.size(), 1u);
+  {
+    auto fr = get1stFuncResult(getFuncResultsFor1stFriendDecl(res));
+    EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
+  {
+    auto fr = get2ndFuncResult(getFuncResultsFor1stFriendDecl(res));
+    EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+  }
 }
 
 TEST_F(TemplateFriendStats, ClassTemplateFuncTemplate) {
