@@ -432,6 +432,7 @@ public:
       handleFriendFunction(hostRD, FD, srcLoc, classCounts, Result);
     }
     result.friendFuncDeclCount = result.FuncResults.size();
+    result.friendClassDeclCount = result.ClassResults.size();
   }
   const Result &getResult() const { return result; }
 
@@ -632,12 +633,8 @@ private:
                                  const ClassTemplateDecl *CTD,
                                  const SourceLocation &friendDeclLoc,
                                  const ClassCounts &classCounts) {
-    std::string friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
-    auto it = result.ClassResults.find(friendDeclLocStr);
-    if (it == std::end(result.ClassResults)) {
-      ++result.friendClassDeclCount;
-    }
 
+    std::string friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
     Result::ClassResultsForFriendDecl &classResultsForFriendDecl =
         result.ClassResults[friendDeclLocStr];
     auto hostId = getDiagName(hostRD);
@@ -679,8 +676,6 @@ private:
       return;
     }
     debug_stream() << "friendRD: " << friendRD << "\n";
-
-    ++result.friendClassDeclCount;
 
     CXXRecordDecl *friendCXXRD = dyn_cast<CXXRecordDecl>(friendRD);
     if (!friendCXXRD) {
