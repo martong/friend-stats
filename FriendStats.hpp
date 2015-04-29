@@ -14,7 +14,8 @@ using namespace clang::ast_matchers;
 
 // TODO this should be a command line parameter or something similar, but
 // definitely should not be in vcs.
-const bool debug = true;
+//const bool debug = true;
+const bool debug = false;
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
@@ -60,15 +61,27 @@ inline func_templ_range getFunctionTemplateRange(const CXXRecordDecl *RD) {
 // False if the given cxx record is belonging to a template declaration.
 // True if it is an instantiation/specialization or a non-template class.
 inline bool isConcreteClass(const CXXRecordDecl *RD) {
-  if (RD->getDescribedClassTemplate()) {
+
+  auto isExplicitSpecialization = [](const CXXRecordDecl *RD) {
+    if (RD->getDescribedClassTemplate()) {
+      return false;
+    }
+    if (dyn_cast<ClassTemplatePartialSpecializationDecl>(RD)) {
+      return false;
+    }
+    return true;
+  };
+
+  if (!isExplicitSpecialization(RD)) {
     return false;
   }
+
   // We have to investigate all the parent CXXRecordDecls up in the tree
   // and ensure that they are not template declarations.
   const DeclContext *iRD = dyn_cast<DeclContext>(RD);
   while (iRD->getParent()) {
     if (auto *CRD = dyn_cast<CXXRecordDecl>(iRD->getParent())) {
-      if (CRD->getDescribedClassTemplate()) {
+      if (!isExplicitSpecialization(CRD)) {
         return false;
       }
     }

@@ -1047,11 +1047,15 @@ void f() { A<int*> aint; func2(aint); }
     )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
-  ASSERT_EQ(res.friendFuncDeclCount, 1);
+  //ASSERT_EQ(res.friendFuncDeclCount, 1);
   ASSERT_EQ(res.FuncResults.size(), 1u);
-  auto fr = getFirstFuncResult(res);
-  EXPECT_EQ(fr.types.usedPrivateCount, 1);
-  EXPECT_EQ(fr.types.parentPrivateCount, 3);
+  ASSERT_EQ(getFuncResultsFor1stFriendDecl(res).size(), 1u);
+  {
+    const Result::FuncResult &fr =
+        get1stFuncResult(getFuncResultsFor1stFriendDecl(res));
+    EXPECT_EQ(fr.types.usedPrivateCount, 1);
+    EXPECT_EQ(fr.types.parentPrivateCount, 3);
+  }
 }
 
 TEST_F(TemplateFriendStats, ClassTemplateFriendFunctionTemplateUsingPrivTypes) {
