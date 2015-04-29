@@ -708,15 +708,16 @@ private:
       return;
     }
 
-    auto hostRDDiagName = getDiagName(hostRD);
+    auto hostId = getDiagName(hostRD);
 
     auto isDuplicate = [&](const FunctionDecl *FD) {
       auto diagName = getDiagName(FD);
+      auto key = std::make_pair(hostId, diagName);
       if (it != std::end(result.FuncResults)) {
         debug_stream() << "diagName: " << diagName << "\n";
         auto &funcResultsPerSrcLoc = it->second;
-        if (funcResultsPerSrcLoc.count({hostRDDiagName, diagName}) > 0) {
-          debug_stream() << "DUPLICATE: " << hostRDDiagName << " " << diagName
+        if (funcResultsPerSrcLoc.count(key) > 0) {
+          debug_stream() << "DUPLICATE: " << hostId << " " << diagName
                          << "\n";
           return true;
         }
@@ -733,8 +734,9 @@ private:
       if (FuncDefinition) {
         auto diagName = getDiagName(FuncD);
         auto &funcResultsPerSrcLoc = result.FuncResults[friendDeclLocStr];
-        funcResultsPerSrcLoc.insert({{hostRDDiagName, diagName}, funcRes});
-        debug_stream() << "INSERT function: " << hostRDDiagName << " "
+        auto key = std::make_pair(hostId, diagName);
+        funcResultsPerSrcLoc.insert({key, funcRes});
+        debug_stream() << "INSERT function: " << hostId << " "
                        << diagName << "\n";
       }
     };
