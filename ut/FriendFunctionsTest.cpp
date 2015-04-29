@@ -892,7 +892,7 @@ void f2() { A<char> aint; func(aint); }
     )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
-  EXPECT_EQ(res.friendFuncDeclCount, 2);
+  EXPECT_EQ(res.friendFuncDeclCount, 1);
   EXPECT_EQ(res.FuncResults.size(), 1u);
   {
     auto fr = get1stFuncResult(getFuncResultsFor1stFriendDecl(res));

@@ -431,6 +431,7 @@ public:
     } else { // friend decl is function or function template
       handleFriendFunction(hostRD, FD, srcLoc, classCounts, Result);
     }
+    result.friendFuncDeclCount = result.FuncResults.size();
   }
   const Result &getResult() const { return result; }
 
