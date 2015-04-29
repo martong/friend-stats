@@ -78,8 +78,10 @@ struct Result {
   // We do this exactly the same as we do it with direct friend functions and
   // function templates.
   using ClassTemplateInstantiationId = std::string;
+  using ClassResultKey = std::pair<BefriendingClassInstantiationId,
+                                  ClassTemplateInstantiationId>;
   using ClassResultsForFriendDecl =
-      std::map<ClassTemplateInstantiationId, ClassResult>;
+      std::map<ClassResultKey, ClassResult>;
   std::map<FriendDeclId, ClassResultsForFriendDecl> ClassResults;
 };
 

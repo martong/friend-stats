@@ -436,10 +436,11 @@ public:
 
 private:
   static void insertIntoClassResultsForFriendDecl(
+      Result::BefriendingClassInstantiationId hostId,
       Result::ClassResult classResult,
       Result::ClassResultsForFriendDecl &classResultsForFriendDecl) {
 
-    auto key = classResult.diagName;
+    auto key = std::make_pair(hostId, classResult.diagName);
 
     // This class spec has been investigated already.
     auto it = classResultsForFriendDecl.find(key);
@@ -461,7 +462,7 @@ private:
         const SourceLocation friendDeclLoc, const ClassCounts &classCounts,
         const SourceManager *sourceManager,
         Result::ClassResultsForFriendDecl &classResultsForFriendDecl)
-        : hostRD(hostRD), friendCXXRD(friendCXXRD),
+        : hostRD(hostRD), hostId(getDiagName(hostRD)), friendCXXRD(friendCXXRD),
           friendDeclLoc(friendDeclLoc), classCounts(classCounts),
           sourceManager(sourceManager),
           classResultsForFriendDecl(classResultsForFriendDecl) {}
@@ -479,14 +480,14 @@ private:
         debug_stream() << "NestedClassVisitor/CTD :" << CTD << "\n";
         for (const auto *spec : CTD->specializations()) {
           insertIntoClassResultsForFriendDecl(
-              getClassInstantiationStats(hostRD, spec, friendDeclLoc,
-                                         classCounts, sourceManager),
+              hostId, getClassInstantiationStats(hostRD, spec, friendDeclLoc,
+                                                 classCounts, sourceManager),
               classResultsForFriendDecl);
         }
       } else {
         Result::ClassResult classResult = getClassInstantiationStats(
             hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
-        insertIntoClassResultsForFriendDecl(std::move(classResult),
+        insertIntoClassResultsForFriendDecl(hostId, std::move(classResult),
                                             classResultsForFriendDecl);
       }
       return true;
@@ -494,6 +495,7 @@ private:
 
   private:
     const CXXRecordDecl *hostRD = nullptr;
+    Result::BefriendingClassInstantiationId hostId;
     const CXXRecordDecl *friendCXXRD = nullptr;
     const SourceLocation friendDeclLoc;
     const ClassCounts &classCounts;
@@ -637,13 +639,14 @@ private:
 
     Result::ClassResultsForFriendDecl &classResultsForFriendDecl =
         result.ClassResults[friendDeclLocStr];
+    auto hostId = getDiagName(hostRD);
     for (const ClassTemplateSpecializationDecl *CTSD : CTD->specializations()) {
       debug_stream() << "CTSD: " << CTSD << "\n";
       const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(CTSD);
       debug_stream() << "CXXRD: " << CXXRD << "\n";
       Result::ClassResult classResult = getClassInstantiationStats(
           hostRD, CXXRD, friendDeclLoc, classCounts, sourceManager);
-      insertIntoClassResultsForFriendDecl(std::move(classResult),
+      insertIntoClassResultsForFriendDecl(hostId, std::move(classResult),
                                           classResultsForFriendDecl);
       NestedClassVisitor nestedClassVisitor{
           hostRD,      CXXRD,         friendDeclLoc,
@@ -687,7 +690,8 @@ private:
         hostRD, friendCXXRD, friendDeclLoc, classCounts, sourceManager);
     Result::ClassResultsForFriendDecl &classResultsForFriendDecl =
         result.ClassResults[friendDeclLocStr];
-    insertIntoClassResultsForFriendDecl(std::move(classResult),
+    auto hostId = getDiagName(hostRD);
+    insertIntoClassResultsForFriendDecl(hostId, std::move(classResult),
                                         classResultsForFriendDecl);
 
     NestedClassVisitor nestedClassVisitor{
