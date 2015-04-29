@@ -194,7 +194,7 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
     CXXRecordDecl *DeclContextRD =
         dyn_cast<CXXRecordDecl>(TND->getDeclContext());
 
-    auto insert = [&](QualType QT) {
+    auto insert = [&TND, this](QualType QT) {
       if (privOrProt(TND))
         countedTypes.insert(QT.getTypePtr());
     };
@@ -700,6 +700,7 @@ private:
                             const SourceLocation &friendDeclLoc,
                             const ClassCounts &classCounts,
                             const MatchFinder::MatchResult &Result) {
+
     std::string friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
     auto it = result.FuncResults.find(friendDeclLocStr);
 
@@ -710,7 +711,7 @@ private:
 
     auto hostId = getDiagName(hostRD);
 
-    auto isDuplicate = [&](const FunctionDecl *FD) {
+    auto isDuplicate = [hostId, it, this](const FunctionDecl *FD) {
       auto diagName = getDiagName(FD);
       auto key = std::make_pair(hostId, diagName);
       if (it != std::end(result.FuncResults)) {
@@ -726,7 +727,10 @@ private:
     };
 
     Result::FuncResult funcRes;
-    auto handleFuncD = [&](FunctionDecl *FuncD) {
+
+    auto handleFuncD =
+        [hostRD, &friendDeclLoc, &friendDeclLocStr, &classCounts, &isDuplicate,
+         hostId, this, &funcRes](FunctionDecl *FuncD) {
       if (isDuplicate(FuncD))
         return;
       auto FuncDefinition = getFuncStatistics(
