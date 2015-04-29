@@ -730,7 +730,6 @@ private:
     };
 
     Result::FuncResult funcRes;
-    bool funcDeclCounted = false;
     auto handleFuncD = [&](FunctionDecl *FuncD) {
       if (isDuplicate(FuncD))
         return;
@@ -742,10 +741,6 @@ private:
         funcResultsPerSrcLoc.insert({{hostRDDiagName, diagName}, funcRes});
         debug_stream() << "INSERT function: " << hostRDDiagName << " "
                        << diagName << "\n";
-        if (!funcDeclCounted) {
-          ++result.friendFuncDeclCount;
-          funcDeclCounted = true;
-        }
       }
     };
 
