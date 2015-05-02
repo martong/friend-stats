@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdlib>
 #include <set>
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
@@ -12,10 +13,15 @@
 using namespace clang;
 using namespace clang::ast_matchers;
 
-// TODO this should be a command line parameter or something similar, but
-// definitely should not be in vcs.
-//const bool debug = true;
-const bool debug = false;
+auto init_debug = []{
+	auto ptr = std::getenv("FRIEND_STATS_DEBUG");
+	std::string value{ptr ? ptr : ""};
+	if (value == "yes") {
+		return true;
+	}
+    return false;
+};
+const bool debug = init_debug();
 
 inline llvm::raw_ostream &debug_stream() {
   return debug ? llvm::outs() : llvm::nulls();
