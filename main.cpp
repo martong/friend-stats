@@ -92,23 +92,23 @@ private:
 
   void traverseFriendFuncData() {
     for (const auto &v : result.FuncResults) {
-      for (const auto vv : v.second) {
-        const auto &funcRes = vv.second;
+      for (const auto funcResPair : v.second) {
+        const auto &funcRes = funcResPair.second;
         if (diags(funcRes)) {
           func.average(funcRes);
           func.percentageDist(funcRes);
           func.usedPrivsDistribution(funcRes);
           func.candidateDistribution(funcRes);
           if (PrintZeroPrivInHost && func.zeroPrivInHost(funcRes)) {
-            print(funcRes);
+            print(funcResPair);
           }
           if (PrintZeroPrivInFriend && func.zeroPrivInFriend (funcRes)) {
-            print(funcRes);
+            print(funcResPair);
           }
         } else {
           llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
                        << "\n";
-          print(funcRes);
+          print(funcResPair);
           llvm::outs() << "SKIPPING ENTRY FROM STATISTICS\n\n";
         }
       }
@@ -127,7 +127,7 @@ private:
           } else {
             llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
                          << "\n";
-            print(funcRes);
+            print(funcResPair);
             llvm::outs() << "SKIPPING ENTRY FROM STATISTICS\n\n";
           }
         }

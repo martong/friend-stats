@@ -21,6 +21,21 @@ inline void print(const Result::FuncResult &funcRes) {
                << funcRes.types.parentPrivateCount << "\n";
 }
 
+inline void print(const Result::FuncResultKey &key) {
+  llvm::outs() << "befriending class: " << key.first << "\n"
+               << "friendly function: " << key.second << "\n";
+}
+
+inline void
+print(const Result::FuncResultsForFriendDecl::value_type &funcResPair) {
+  llvm::outs() << "============================================================"
+                  "================\n";
+  print(funcResPair.first);
+  print(funcResPair.second);
+  llvm::outs() << "============================================================"
+                  "================\n";
+}
+
 inline raw_ostream &operator<<(raw_ostream &os,
                                 const std::pair<int, int>& p) {
   os << "(" << p.first << "," << p.second << ")";
