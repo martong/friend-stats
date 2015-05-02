@@ -79,6 +79,7 @@ private:
     NumberOfUsedPrivsDistribution usedPrivsDistribution;
     CandidateDistribution candidateDistribution;
     ZeroPrivInHost zeroPrivInHost;
+    ZeroPrivInFriend zeroPrivInFriend;
   } func;
   struct Class {
     Average average;
@@ -96,6 +97,9 @@ private:
           func.usedPrivsDistribution(funcRes);
           func.candidateDistribution(funcRes);
           if (PrintZeroPrivInHost && func.zeroPrivInHost(funcRes)) {
+            print(funcRes);
+          }
+          if (PrintZeroPrivInFriend && func.zeroPrivInFriend (funcRes)) {
             print(funcRes);
           }
         } else {
