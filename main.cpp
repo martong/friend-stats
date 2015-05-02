@@ -25,19 +25,22 @@ static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
 // A help message for this specific tool can be added afterwards.
 static cl::extrahelp
-    MoreHelp("\nThis tool collects statistics about friend declarations.");
+    MoreHelp("\nThis tool collects statistics about friend declarations");
 
 static cl::opt<bool> UseCompilationDbFiles(
-    "db", cl::desc("Run the tool on all files of the compilation db."),
+    "db", cl::desc("Run the tool on all files of the compilation db"),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
 static cl::opt<bool> PrintZeroPrivInHost(
-    "zh", cl::desc("Print entries whose befriending class has no priv entities."),
+    "zh", cl::desc("Print entries (for friend function decls) whose "
+                   "befriending class has no priv entities"),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
-static cl::opt<bool> PrintZeroPrivInFriend(
-    "zf", cl::desc("Print entries who does not access any privs."),
-    cl::ValueOptional, cl::cat(MyToolCategory));
+static cl::opt<bool>
+    PrintZeroPrivInFriend("zf",
+                          cl::desc("Print entries (for friend function decls) "
+                                   "who does not access any priv entities"),
+                          cl::ValueOptional, cl::cat(MyToolCategory));
 
 class ProgressIndicator : public SourceFileCallbacks {
   const std::size_t numFiles = 0;
