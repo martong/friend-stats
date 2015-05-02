@@ -29,7 +29,7 @@ static cl::extrahelp
 
 static cl::opt<bool> UseCompilationDbFiles(
     "db", cl::desc("Run the tool on all files of the compilation db."),
-    cl::cat(MyToolCategory));
+    cl::ValueOptional, cl::cat(MyToolCategory));
 
 class ProgressIndicator : public SourceFileCallbacks {
   const std::size_t numFiles = 0;
@@ -166,7 +166,7 @@ int main(int argc, const char **argv) {
   CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
 
   auto files = OptionsParser.getSourcePathList();
-  if (UseCompilationDbFiles) {
+  if (UseCompilationDbFiles.getNumOccurrences() > 0) {
     files = OptionsParser.getCompilations().getAllFiles();
   }
 
