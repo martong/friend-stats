@@ -89,6 +89,16 @@ struct NumberOfUsedPrivsDistribution {
   }
 };
 
+struct ZeroPrivInHost {
+  bool operator()(const Result::FuncResult &funcRes) {
+    PrivateUsage usage = privateUsage(funcRes);
+    if (usage.denominator == 0.0) {
+      return true;
+    }
+    return false;
+  }
+};
+
 // Ideal candidate for "friend for" is with the highest candidate value.
 // 0 < candidate value <= 100
 // candidate value == -1 means it should not be a friend at all

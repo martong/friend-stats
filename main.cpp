@@ -31,6 +31,14 @@ static cl::opt<bool> UseCompilationDbFiles(
     "db", cl::desc("Run the tool on all files of the compilation db."),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
+static cl::opt<bool> PrintZeroPrivInHost(
+    "zh", cl::desc("Print entries whose befriending class has no priv entities."),
+    cl::ValueOptional, cl::cat(MyToolCategory));
+
+static cl::opt<bool> PrintZeroPrivInFriend(
+    "zf", cl::desc("Print entries who does not access any privs."),
+    cl::ValueOptional, cl::cat(MyToolCategory));
+
 class ProgressIndicator : public SourceFileCallbacks {
   const std::size_t numFiles = 0;
   std::size_t processedFiles = 0;
@@ -70,6 +78,7 @@ private:
     PercentageDistribution percentageDist;
     NumberOfUsedPrivsDistribution usedPrivsDistribution;
     CandidateDistribution candidateDistribution;
+    ZeroPrivInHost zeroPrivInHost;
   } func;
   struct Class {
     Average average;
@@ -86,6 +95,9 @@ private:
           func.percentageDist(funcRes);
           func.usedPrivsDistribution(funcRes);
           func.candidateDistribution(funcRes);
+          if (PrintZeroPrivInHost && func.zeroPrivInHost(funcRes)) {
+            print(funcRes);
+          }
         } else {
           llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
                        << "\n";
