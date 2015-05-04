@@ -852,6 +852,44 @@ void fooo() { A a; func<double>(1.0,a); }
   }
 }
 
+// Note, included in paper/article
+TEST_F(TemplateFriendStats,
+       DiagNamesInFriendFunctionSepcialization) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+class A {
+  template <typename T>
+  friend void func(T, A& a);
+};
+template <typename T>
+void func(T, A& a) {}
+
+// Full(explicit) specialization
+template <> void func<double>(double, A& a) {} //CA
+
+// Explicit instantiations
+template void func<int>(int, A&);
+template void func<double>(double, A&); //CB
+// Implicit instantiation
+void foo() { A a; func<double>(1.0, a); } //CC
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncDeclCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), 1u);
+
+  const auto &frs = getFuncResultsFor1stFriendDecl(res);
+  EXPECT_EQ(frs.size(), 2u);
+  {
+    const auto &fr = get1stFuncResult(frs);
+    EXPECT_EQ(fr.diagName, "func<double>");
+  }
+  {
+    const auto &fr = get2ndFuncResult(frs);
+    EXPECT_EQ(fr.diagName, "func<int>");
+  }
+}
+
 TEST_F(TemplateFriendStats, BefriendingClassTemplate) {
   Tool->mapVirtualFile(FileA,
                        R"(
