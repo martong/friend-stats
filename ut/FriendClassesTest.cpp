@@ -629,7 +629,7 @@ template class B::C<int>;
 }
 
 // Note, included in paper/article
-TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClass2) {
+TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClass_DiagNames) {
   Tool->mapVirtualFile(FileA,
                        R"(
 class A {
