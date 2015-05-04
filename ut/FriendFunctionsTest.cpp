@@ -870,8 +870,12 @@ template <> void func<double>(double, A& a) {} //CA
 // Explicit instantiations
 template void func<int>(int, A&);
 template void func<double>(double, A&); //CB
+
 // Implicit instantiation
 void foo() { A a; func<double>(1.0, a); } //CC
+
+// An other primary template
+template <typename T> void func(T*, A&) {} //CD
     )");
   Tool->run(newFrontendActionFactory(&Finder).get());
   auto res = Handler.getResult();
