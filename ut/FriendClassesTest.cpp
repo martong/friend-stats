@@ -628,6 +628,7 @@ template class B::C<int>;
   }
 }
 
+// Note, included in paper/article
 TEST_F(FriendClassesStats, NestedClassTemplateOfFriendClass2) {
   Tool->mapVirtualFile(FileA,
                        R"(
@@ -652,19 +653,21 @@ template class B::C<int>;
   ASSERT_EQ(crs.size(), 2u);
   {
     const auto &cr = get1stClassResult(crs);
-    EXPECT_EQ(cr.memberFuncResults.size(), 1u);
+    EXPECT_EQ(cr.diagName, "B");
+    ASSERT_EQ(cr.memberFuncResults.size(), 1u);
     const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+    EXPECT_EQ(fr.diagName, "B::func");
     EXPECT_EQ(fr.usedPrivateVarsCount, 0);
     EXPECT_EQ(fr.parentPrivateVarsCount, 0);
   }
   {
     const auto &cr = get2ndClassResult(crs);
+    EXPECT_EQ(cr.diagName, "B::C<int>");
     ASSERT_EQ(cr.memberFuncResults.size(), 1u);
-    {
-      const Result::FuncResult &fr = get1stMemberFuncResult(cr);
-      EXPECT_EQ(fr.usedPrivateVarsCount, 0);
-      EXPECT_EQ(fr.parentPrivateVarsCount, 0);
-    }
+    const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+    EXPECT_EQ(fr.diagName, "B::C<int>::func");
+    EXPECT_EQ(fr.usedPrivateVarsCount, 0);
+    EXPECT_EQ(fr.parentPrivateVarsCount, 0);
   }
 }
 
