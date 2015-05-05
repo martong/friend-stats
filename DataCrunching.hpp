@@ -92,20 +92,14 @@ struct NumberOfUsedPrivsDistribution {
 struct ZeroPrivInHost {
   bool operator()(const Result::FuncResult &funcRes) {
     PrivateUsage usage = privateUsage(funcRes);
-    if (usage.denominator == 0.0) {
-      return true;
-    }
-    return false;
+    return usage.denominator == 0.0;
   }
 };
 
 struct ZeroPrivInFriend {
   bool operator()(const Result::FuncResult &funcRes) {
     PrivateUsage usage = privateUsage(funcRes);
-    if (usage.usage == 0.0) {
-      return true;
-    }
-    return false;
+    return usage.usage == 0.0;
   }
 };
 
