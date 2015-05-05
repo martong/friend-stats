@@ -91,7 +91,6 @@ private:
     Average average;
     PercentageDistribution percentageDist;
     NumberOfUsedPrivsDistribution usedPrivsDistribution;
-    CandidateDistribution candidateDistribution;
     StrongCandidate strongCandidate;
     StrongCandidateBecauseMemberVars strongCandidateBecuaseMemberVars;
     ZeroPrivInHost zeroPrivInHost;
@@ -111,7 +110,6 @@ private:
           func.average(funcRes);
           func.percentageDist(funcRes);
           func.usedPrivsDistribution(funcRes);
-          func.candidateDistribution(funcRes);
 
           // Order in the condition is important here, because
           // we want the stats even if we don't want to print out the entries.
@@ -181,7 +179,6 @@ private:
                  << func.strongCandidate.count << "\n";
     llvm::outs() << "From this, strong candidates because of member usage: "
                  << func.strongCandidateBecuaseMemberVars.count << "\n";
-    // llvm::outs() << func.candidateDistribution.dist;
 
     llvm::outs() << "\n";
     llvm::outs() << "########## Friend CLASSES ##########"
