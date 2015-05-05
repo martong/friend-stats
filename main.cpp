@@ -47,6 +47,12 @@ static cl::opt<bool> PrintStrongCandidate(
                    "are strong candidates of selective friend"),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
+static cl::opt<bool> PrintStrongCandidateBecauseOfMemberVars(
+    "scmv", cl::desc("Print entries (for friend function decls) whose "
+                     "are strong candidates of selective friend because of "
+                     "their member variable usage"),
+    cl::ValueOptional, cl::cat(MyToolCategory));
+
 class ProgressIndicator : public SourceFileCallbacks {
   const std::size_t numFiles = 0;
   std::size_t processedFiles = 0;
@@ -87,6 +93,7 @@ private:
     NumberOfUsedPrivsDistribution usedPrivsDistribution;
     CandidateDistribution candidateDistribution;
     StrongCandidate strongCandidate;
+    StrongCandidateBecauseMemberVars strongCandidateBecuaseMemberVars;
     ZeroPrivInHost zeroPrivInHost;
     ZeroPrivInFriend zeroPrivInFriend;
   } func;
@@ -105,9 +112,17 @@ private:
           func.percentageDist(funcRes);
           func.usedPrivsDistribution(funcRes);
           func.candidateDistribution(funcRes);
-          if (PrintStrongCandidate && func.strongCandidate(funcRes)) {
+
+          // Order in the condition is important here, because
+          // we want the stats even if we don't want to print out the entries.
+          if (func.strongCandidate(funcRes) && PrintStrongCandidate) {
             print(funcResPair);
           }
+          if (func.strongCandidateBecuaseMemberVars(funcRes) &&
+              PrintStrongCandidateBecauseOfMemberVars) {
+            print(funcResPair);
+          }
+
           if (PrintZeroPrivInHost && func.zeroPrivInHost(funcRes)) {
             print(funcResPair);
           }
@@ -164,6 +179,8 @@ private:
     llvm::outs() << func.usedPrivsDistribution.dist;
     llvm::outs() << R"(Number of "friend for" strong candidates: )"
                  << func.strongCandidate.count << "\n";
+    llvm::outs() << "From this, strong candidates because of member usage: "
+                 << func.strongCandidateBecuaseMemberVars.count << "\n";
     // llvm::outs() << func.candidateDistribution.dist;
 
     llvm::outs() << "\n";

@@ -113,8 +113,24 @@ struct StrongCandidate {
   std::size_t count = 0;
   bool operator()(const Result::FuncResult &funcRes) {
     PrivateUsage usage = privateUsage(funcRes);
-    bool result =
-        (1 <= usage.numerator && usage.numerator <= 3) && usage.usage <= 0.5;
+    bool result = (1 <= usage.numerator && usage.numerator <= 3) &&
+                  (0.0 < usage.usage && usage.usage <= 0.5);
+    if (result) {
+      ++count;
+    }
+    return result;
+  }
+};
+
+struct StrongCandidateBecauseMemberVars {
+  std::size_t count = 0;
+  bool operator()(const Result::FuncResult &funcRes) {
+    const auto &uc = funcRes.usedPrivateVarsCount;
+    const double up = funcRes.parentPrivateVarsCount == 0
+                          ? 0.0
+                          : static_cast<double>(funcRes.usedPrivateVarsCount) /
+                                funcRes.parentPrivateVarsCount;
+    bool result = (1 <= uc && uc <= 3) && (0.0 < up && up <= 0.5);
     if (result) {
       ++count;
     }
