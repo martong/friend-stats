@@ -135,6 +135,7 @@ class A {
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
+// Note, included in paper/article
 TEST_F(FriendStats, NumberOfUsedPrivateOrProtectedVariablesInFriendOpEqual) {
   Tool->mapVirtualFile(FileA,
                        R"(
