@@ -109,6 +109,19 @@ struct ZeroPrivInFriend {
   }
 };
 
+struct StrongCandidate {
+  std::size_t count = 0;
+  bool operator()(const Result::FuncResult &funcRes) {
+    PrivateUsage usage = privateUsage(funcRes);
+    bool result =
+        (1 <= usage.numerator && usage.numerator <= 3) && usage.usage <= 0.5;
+    if (result) {
+      ++count;
+    }
+    return result;
+  }
+};
+
 // Ideal candidate for "friend for" is with the highest candidate value.
 // 0 < candidate value <= 100
 // candidate value == -1 means it should not be a friend at all

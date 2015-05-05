@@ -42,6 +42,11 @@ static cl::opt<bool>
                                    "who does not access any priv entities"),
                           cl::ValueOptional, cl::cat(MyToolCategory));
 
+static cl::opt<bool> PrintStrongCandidate(
+    "sc", cl::desc("Print entries (for friend function decls) whose "
+                   "are strong candidates of selective friend"),
+    cl::ValueOptional, cl::cat(MyToolCategory));
+
 class ProgressIndicator : public SourceFileCallbacks {
   const std::size_t numFiles = 0;
   std::size_t processedFiles = 0;
@@ -81,6 +86,7 @@ private:
     PercentageDistribution percentageDist;
     NumberOfUsedPrivsDistribution usedPrivsDistribution;
     CandidateDistribution candidateDistribution;
+    StrongCandidate strongCandidate;
     ZeroPrivInHost zeroPrivInHost;
     ZeroPrivInFriend zeroPrivInFriend;
   } func;
@@ -99,6 +105,9 @@ private:
           func.percentageDist(funcRes);
           func.usedPrivsDistribution(funcRes);
           func.candidateDistribution(funcRes);
+          if (PrintStrongCandidate && func.strongCandidate(funcRes)) {
+            print(funcResPair);
+          }
           if (PrintZeroPrivInHost && func.zeroPrivInHost(funcRes)) {
             print(funcResPair);
           }
@@ -153,9 +162,9 @@ private:
     llvm::outs() << "Friend functions private usage (by piece) distribution:"
                  << "\n";
     llvm::outs() << func.usedPrivsDistribution.dist;
-    llvm::outs() << R"("friend for" candidate distribution:)"
-                 << "\n";
-    llvm::outs() << func.candidateDistribution.dist;
+    llvm::outs() << R"(Number of "friend for" strong candidates: )"
+                 << func.strongCandidate.count << "\n";
+    // llvm::outs() << func.candidateDistribution.dist;
 
     llvm::outs() << "\n";
     llvm::outs() << "########## Friend CLASSES ##########"
