@@ -2,6 +2,9 @@
 
 ## Build
 ```
+# First clone llvm and clang.
+# You can find the llvm/clang versions I used, here:
+# https://github.com/martong/friend-stats/blob/master/measures/results/clang_3eec7e6/version
 cd llvm/tools/clang/tools/extra
 git clone git@github.com:martong/friend-stats.git
 echo "add_subdirectory(friend-stats)" >> CMakeLists.txt
