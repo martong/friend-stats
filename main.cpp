@@ -33,14 +33,14 @@ static cl::opt<bool> UseCompilationDbFiles(
 
 static cl::opt<bool> PrintZeroPrivInHost(
     "zh", cl::desc("Print entries (for friend function decls) whose "
-                   "befriending class has no priv entities"),
+                   "befriending class has no private entities"),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
-static cl::opt<bool>
-    PrintZeroPrivInFriend("zf",
-                          cl::desc("Print entries (for friend function decls) "
-                                   "who does not access any priv entities"),
-                          cl::ValueOptional, cl::cat(MyToolCategory));
+static cl::opt<bool> PrintZeroPrivInFriend(
+    "zf", cl::desc("Print entries (for friend function decls) "
+                   "who does not access any priv entities and the befriending "
+                   "class has private entities."),
+    cl::ValueOptional, cl::cat(MyToolCategory));
 
 static cl::opt<bool> PrintStrongCandidate(
     "sc", cl::desc("Print entries (for friend function decls) whose "
@@ -124,7 +124,8 @@ private:
           if (PrintZeroPrivInHost && func.zeroPrivInHost(funcRes)) {
             print(funcResPair);
           }
-          if (PrintZeroPrivInFriend && func.zeroPrivInFriend (funcRes)) {
+          if (PrintZeroPrivInFriend && func.zeroPrivInFriend(funcRes) &&
+              !func.zeroPrivInHost(funcRes)) {
             print(funcResPair);
           }
         } else {
@@ -164,10 +165,13 @@ private:
                  << func.average.num << "\n";
     llvm::outs() << "Number of friend function declarations with zero priv "
                     "entity declared in host class: "
-                 << func.average.numZeroDenom << "\n";
+                 << func.average.numZeroDenom
+                 << "\n";
     double sum = func.average.get();
     llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
-                    "friend functions: " << to_percentage(sum) << "\n";
+                    "friend functions: "
+                 << to_percentage(sum)
+                 << "\n";
     llvm::outs()
         << "Friend functions private usage (in percentage) distribution:"
         << "\n";
@@ -188,11 +192,14 @@ private:
         << clazz.average.num << "\n";
     llvm::outs()
         << "Number of function declarations of friend classes with zero priv "
-           "entity declared in host class: " << clazz.average.numZeroDenom
+           "entity declared in host class: "
+        << clazz.average.numZeroDenom
         << "\n";
     sum = clazz.average.get();
     llvm::outs() << "Average usage of priv entities (vars, funcs, types) in "
-                    "friend classes: " << to_percentage(sum) << "\n";
+                    "friend classes: "
+                 << to_percentage(sum)
+                 << "\n";
     llvm::outs() << R"("Indirect friend")"
                     " functions private usage (in percentage) distribution:"
                  << "\n";
