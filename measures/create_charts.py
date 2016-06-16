@@ -32,7 +32,8 @@ def plot_func(xs, ys, filename):
     plt.xlabel('No. used private entities')
     plt.ylabel('No. friend function instances')
 
-    plt.show()
+    #plt.show()
+    plt.savefig(filename+'.func.png')
 
 def plot_class(xs, ys, filename):
     fig = plt.figure()
@@ -47,7 +48,8 @@ def plot_class(xs, ys, filename):
     plt.xlabel('No. used private entities')
     plt.ylabel('No. friend class function instances')
 
-    plt.show()
+    #plt.show()
+    plt.savefig(filename+'.class.png')
 
 def parse_file(filename):
     with open(filename) as f:
