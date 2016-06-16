@@ -4,7 +4,18 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import re
 
+
+def getLib(path):
+    m = re.search('/\w*__.*?/', path)
+    return m.group(0).strip('/')
+
+def getName(lib):
+    return lib.split('__')[0]
+
+def getVersion(lib):
+    return lib.split('__')[1]
 
 def plot_func(xs, ys, filename):
     fig = plt.figure()
@@ -13,7 +24,11 @@ def plot_func(xs, ys, filename):
     plt.bar(ind, ys, width=width)
     plt.xticks(ind + width / 2, xs)
 
-    plt.title('The usage of privates in friend functions\n' + filename)
+    lib = getLib(filename)
+    libstr = "%s, version:%s" % (getName(lib), getVersion(lib))
+    plt.title('Privates in friend functions\n' + libstr)
+    #plt.title('The usage of privates in friend functions')
+    #plt.title('\n'+libstr, loc='right');
     plt.xlabel('No. used private entities')
     plt.ylabel('No. friend function instances')
 
@@ -26,7 +41,9 @@ def plot_class(xs, ys, filename):
     plt.bar(ind, ys, width=width)
     plt.xticks(ind + width / 2, xs)
 
-    plt.title('The usage of privates in friend classes')
+    lib = getLib(filename)
+    libstr = "%s, version:%s" % (getName(lib), getVersion(lib))
+    plt.title('Privates in friend classes\n' + libstr)
     plt.xlabel('No. used private entities')
     plt.ylabel('No. friend class function instances')
 
