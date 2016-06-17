@@ -1,55 +1,31 @@
 #!/usr/bin/env python
 
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
-import re
+import charts_common as cc
 
 
-def getLib(path):
-    m = re.search('/\w*__.*?/', path)
-    return m.group(0).strip('/')
-
-def getName(lib):
-    return lib.split('__')[0]
-
-def getVersion(lib):
-    return lib.split('__')[1]
-
-def plot_func(xs, ys, filename):
-    fig = plt.figure()
+def plot(xs, ys, filename, kind):
+    kindstr = ""
+    if kind == "func":
+        kindstr = "functions"
+    else:
+        kindstr = "classes"
     width = .75
     ind = np.arange(len(ys))
     plt.bar(ind, ys, width=width)
     plt.xticks(ind + width / 2, xs)
 
-    lib = getLib(filename)
-    libstr = "%s, version:%s" % (getName(lib), getVersion(lib))
-    plt.title('Privates in friend functions\n' + libstr)
-    #plt.title('The usage of privates in friend functions')
-    #plt.title('\n'+libstr, loc='right');
-    plt.xlabel('No. used private entities')
-    plt.ylabel('No. friend function instances')
+    lib = cc.getLib(filename)
+    libstr = "%s, version:%s" % (cc.getName(lib), cc.getVersion(lib))
+    plt.title('Privates in friend %s\n%s' % (kindstr, libstr))
+    plt.xlabel('private usage')
+    plt.ylabel('No. friendly function instances')
 
-    #plt.show()
-    plt.savefig(filename+'.func.png')
+    # plt.show()
+    plt.savefig('%s.%s.png' % (filename, kind))
 
-def plot_class(xs, ys, filename):
-    fig = plt.figure()
-    width = .75
-    ind = np.arange(len(ys))
-    plt.bar(ind, ys, width=width)
-    plt.xticks(ind + width / 2, xs)
-
-    lib = getLib(filename)
-    libstr = "%s, version:%s" % (getName(lib), getVersion(lib))
-    plt.title('Privates in friend classes\n' + libstr)
-    plt.xlabel('No. used private entities')
-    plt.ylabel('No. friend class function instances')
-
-    #plt.show()
-    plt.savefig(filename+'.class.png')
 
 def parse_file(filename):
     with open(filename) as f:
@@ -60,7 +36,7 @@ def parse_file(filename):
         indirect_frind_data_xs = []
         indirect_frind_data_ys = []
         for line in f:
-            if "Friend functions private usage (by piece) distribution:" in line:
+            if "Friend functions private usage (by piece) distribution" in line:
                 is_friend_data_line = True
                 continue
             if is_friend_data_line:
@@ -88,8 +64,8 @@ def parse_file(filename):
                 except ValueError:
                     is_indirect_friend_data_line = False
 
-        plot_func(friend_data_xs, friend_data_ys, filename)
-        plot_class(indirect_frind_data_xs, indirect_frind_data_ys, filename)
+        plot(friend_data_xs, friend_data_ys, filename, "func")
+        plot(indirect_frind_data_xs, indirect_frind_data_ys, filename, "class")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ps', nargs='*')
