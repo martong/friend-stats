@@ -1,58 +1,39 @@
 #!/usr/bin/env python
 
-import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import charts_common as cc
 
 
-def plot(data):
+def plot(data, filename, kind):
+
+    kindstr = ""
+    if kind == "func":
+        kindstr = "functions"
+    else:
+        kindstr = "classes"
+
     xs = []
     ys = []
     for key, value in data.iteritems():
         xs.append(key)
         ys.append(value)
 
-    #plt.plot(xs, ys, 'rs')
-    #plt.axis([-1, max(xs)+1, 0, max(ys)+int(max(ys)/10)])
-    #plt.show()
-
-    #fig = plt.figure()
     width = .95
     ind = np.arange(len(ys))
     plt.bar(ind, ys, width=width)
-    #plt.xticks(ind + width / 2, xs)
-    plt.show()
+    # plt.xticks(ind + width / 2, xs)
 
+    lib = cc.getLib(filename)
+    libstr = "%s, version:%s" % (cc.getName(lib), cc.getVersion(lib))
+    plt.title('Privates usage ratio in friend %s\n%s' % (kindstr, libstr))
+    plt.xlabel('private usage ratio (%)')
+    plt.ylabel('No. friendly function instances')
 
-def hist_plot(data):
-    #plt.plot(xs, ys, 'rs')
-    #plt.axis([-1, max(xs)+1, 0, max(ys)+int(max(ys)/10)])
-    #plt.show()
+    # plt.show()
+    plt.savefig('%s.ratio.%s.png' % (filename, kind))
 
-    #fig = plt.figure()
-    #width = .75
-    #ind = np.arange(len(ys))
-    #plt.bar(ind, ys, width=width)
-    #plt.xticks(ind + width / 2, xs)
-    #plt.show()
-
-    #print data
-    hist_data = [np.full((value), key, dtype=int)
-                 for key, value in data.iteritems()]
-    #hist_data = np.full((3, 5), 7, dtype=int)
-    #print hist_data
-    #return
-
-    n, bins, patches = plt.hist(hist_data, 5, facecolor='g', alpha=0.95)
-
-    plt.xlabel('Smarts')
-    plt.ylabel('Probability')
-    plt.title('Histogram of IQ')
-    plt.text(60, .025, r'$\mu=100,\ \sigma=15$')
-    #plt.axis([40, 160, 0, 0.03])
-    plt.grid(True)
-    plt.show()
 
 def parse_file(filename):
     with open(filename) as f:
@@ -60,9 +41,9 @@ def parse_file(filename):
         is_indirect_friend_data_line = False
         friend_data_dict = {n: 0 for n in range(101)}
         indirect_friend_data_dict = {n: 0 for n in range(101)}
-        #friend_data_dict = {}
         for line in f:
-            if "Friend functions private usage (in percentage) distribution:" in line:
+            if ("Friend functions private usage (in percentage) distribution:"
+                    in line):
                 is_friend_data_line = True
                 continue
             if is_friend_data_line:
@@ -72,16 +53,14 @@ def parse_file(filename):
                     rangex_tokens = rangex.split(',')
                     x = int(rangex_tokens[0])
                     y = int(ws[1])
-                    if x==0 and int(rangex_tokens[1])==0:
+                    if x == 0 and int(rangex_tokens[1]) == 0:
                         continue
-                    #friend_data_xs.append(x)
-                    #friend_data_ys.append(y)
                     friend_data_dict[x] = y
-                    #print x, ' ', y
                 except ValueError:
                     is_friend_data_line = False
 
-            if '"Indirect friend" functions private usage (in percentage)' in line:
+            if ('"Indirect friend" functions private usage (in percentage)'
+                    in line):
                 is_indirect_friend_data_line = True
                 continue
             if is_indirect_friend_data_line:
@@ -91,17 +70,14 @@ def parse_file(filename):
                     rangex_tokens = rangex.split(',')
                     x = int(rangex_tokens[0])
                     y = int(ws[1])
-                    if x==0 and int(rangex_tokens[1])==0:
+                    if x == 0 and int(rangex_tokens[1]) == 0:
                         continue
-                    #friend_data_xs.append(x)
-                    #friend_data_ys.append(y)
                     indirect_friend_data_dict[x] = y
-                    #print x, ' ', y
                 except ValueError:
                     is_indirect_friend_data_line = False
 
-        plot(friend_data_dict)
-        plot(indirect_friend_data_dict)
+        plot(friend_data_dict, filename, "func")
+        plot(indirect_friend_data_dict, filename, "class")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('ps', nargs='*')
