@@ -1,13 +1,18 @@
 # friend-stats
 
 ## Build
+* Clone LLVM and Clang. You can find the llvm/clang VERSION I used, here:
+  https://github.com/martong/friend-stats/blob/master/measures/results/clang__3eec7e6_(3.6)/version
 ```
-# First clone llvm and clang.
-# You can find the llvm/clang VERSION I used, here:
-# https://github.com/martong/friend-stats/blob/master/measures/results/clang__3eec7e6_(3.6)/version
 cd llvm/tools/clang/tools/extra
 git clone git@github.com:martong/friend-stats.git
 echo "add_subdirectory(friend-stats)" >> CMakeLists.txt
+```
+* Setup and call Cmake. Note, this will build the unittest as well.
+```
+cd build_path
+cmake path_to_LLVM_src_root -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DLLVM_BUILD_TESTS=1
+ninja
 ```
 
 ## Usage 
