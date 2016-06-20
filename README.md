@@ -11,7 +11,7 @@ echo "add_subdirectory(friend-stats)" >> CMakeLists.txt
 * Setup and call Cmake. Note, this will build the unittest as well.
 ```
 cd build_path
-cmake path_to_LLVM_src_root -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DLLVM_BUILD_TESTS=1
+cmake path_to_LLVM_src_root -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DLLVM_BUILD_TESTS=1
 ninja
 ```
 
