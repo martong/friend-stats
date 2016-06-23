@@ -89,6 +89,9 @@ struct FriendStatsHeader : ::testing::Test {
 inline const Result::FuncResult &getFirstFuncResult(const Result &res) {
   return (*res.FuncResults.begin()->second.begin()).second;
 }
+inline const Result::FuncResultsForFriendDecl::value_type &getFirstFuncResPair(const Result &res) {
+  return (*res.FuncResults.begin()->second.begin());
+}
 inline const Result::FuncResultsForFriendDecl &
 getFuncResultsFor1stFriendDecl(const Result &res) {
   return res.FuncResults.begin()->second;

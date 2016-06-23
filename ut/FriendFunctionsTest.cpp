@@ -2,11 +2,23 @@
 #include "clang/Frontend/FrontendActions.h"
 
 #include "../FriendStats.hpp"
+#include "../DataIO.hpp"
+#include "../DataCrunching.hpp"
 #include "Fixture.hpp"
 
 using namespace clang::tooling;
 using namespace llvm;
 using namespace clang;
+
+template <typename T>
+void printFuncResults(const T& res) {
+  for (const auto &v : res.FuncResults) {
+    llvm::outs() << "FriendDeclId: " << v.first << "\n";
+    for (const auto funcResPair : v.second) {
+      print(funcResPair);
+    }
+  }
+}
 
 TEST_F(FriendStats, FuncCount) {
   Tool->mapVirtualFile(FileA,
@@ -1320,3 +1332,133 @@ template void func(A<XXX<char>::type>& a);
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
+//================= MEYERS CANDIDATES ==========================================
+
+TEST_F(FriendStats, Meyers) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+template <typename T> class Rational {
+public:
+  int x;
+  Rational(const T &numerator = 0,
+           const T &denominator = 1);
+  friend const Rational
+  operator*(const Rational &lhs,
+            const Rational &rhs) { return Rational{lhs.x}; }
+};
+
+Rational<int> oneHalf(1, 2);
+Rational<int> result = oneHalf * 2;
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncDeclCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), 1u);
+
+  ZeroPrivInFriend zpf;
+  ASSERT_EQ(zpf(getFirstFuncResult(res)), true);
+
+  MeyersCandidate mc;
+  const auto& funcResPair = getFirstFuncResPair(res);
+  EXPECT_EQ(mc(funcResPair), true);
+}
+
+TEST_F(FriendStats, NotMeyersBecauseNotTemplateClass) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+class Rational {
+public:
+  int x;
+  Rational(const int &numerator = 0,
+           const int &denominator = 1);
+  friend const Rational
+  operator*(const Rational &lhs,
+            const Rational &rhs) { return Rational{lhs.x}; }
+};
+
+Rational oneHalf(1, 2);
+Rational result = oneHalf * 2;
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncDeclCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), 1u);
+
+  ZeroPrivInFriend zpf;
+  ASSERT_EQ(zpf(getFirstFuncResult(res)), true);
+
+  MeyersCandidate mc;
+  const auto& funcResPair = getFirstFuncResPair(res);
+  EXPECT_EQ(mc(funcResPair), false);
+}
+
+TEST_F(FriendStats, NotMeyersBecauseOutOfClassFriendDef) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+template <typename T> class A;
+
+template <typename T>
+void func(A<T> &a);
+
+template <typename T> class A {
+public:
+  int pub;
+private:
+  int a = 0;
+  int b;
+  int c;
+
+  // refers to a full specialization for this particular T
+  friend void func <T> (A &a);
+};
+
+template <typename T>
+void func(A<T>& a) {
+  a.pub = 1;
+}
+
+template void func(A<int>& a);
+
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncDeclCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), 1u);
+
+  ZeroPrivInFriend zpf;
+  ASSERT_EQ(zpf(getFirstFuncResult(res)), true);
+
+  MeyersCandidate mc;
+  const auto& funcResPair = getFirstFuncResPair(res);
+  EXPECT_EQ(mc(funcResPair), false);
+}
+
+TEST_F(FriendStats, NotMeyersBecauseOfPrivUsage) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+template <typename T> class Rational {
+  int priv;
+public:
+  int x;
+  Rational(const T &numerator = 0,
+           const T &denominator = 1);
+  friend const Rational
+  operator*(const Rational &lhs,
+            const Rational &rhs) { return Rational{lhs.priv}; }
+};
+
+Rational<int> oneHalf(1, 2);
+Rational<int> result = oneHalf * 2;
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncDeclCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), 1u);
+
+  ZeroPrivInFriend zpf;
+  ASSERT_EQ(zpf(getFirstFuncResult(res)), false);
+
+  MeyersCandidate mc;
+  const auto& funcResPair = getFirstFuncResPair(res);
+  EXPECT_EQ(mc(funcResPair), false);
+}

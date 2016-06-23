@@ -132,3 +132,18 @@ struct StrongCandidateBecauseMemberVars {
   }
 };
 
+struct MeyersCandidate {
+  std::size_t count = 0;
+  bool
+  operator()(const Result::FuncResultsForFriendDecl::value_type &funcResPair) {
+    const auto &key = funcResPair.first;
+    const auto &funcRes = funcResPair.second;
+    static ZeroPrivInFriend zpf;
+    bool match = zpf(funcRes) && key.first.find("<") != std::string::npos &&
+                 funcRes.defLocStr == funcRes.friendDeclLocStr;
+    if (match)
+      ++count;
+    return match;
+  }
+};
+
