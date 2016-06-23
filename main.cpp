@@ -95,6 +95,7 @@ private:
     StrongCandidateBecauseMemberVars strongCandidateBecuaseMemberVars;
     ZeroPrivInHost zeroPrivInHost;
     ZeroPrivInFriend zeroPrivInFriend;
+    MeyersCandidate meyersCandidate;
   } func;
   struct Class {
     Average average;
@@ -128,6 +129,7 @@ private:
               !func.zeroPrivInHost(funcRes)) {
             print(funcResPair);
           }
+          func.meyersCandidate(funcResPair);
         } else {
           llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
                        << "\n";
@@ -183,6 +185,8 @@ private:
                  << func.strongCandidate.count << "\n";
     llvm::outs() << "From this, strong candidates because of member usage: "
                  << func.strongCandidateBecuaseMemberVars.count << "\n";
+    llvm::outs() << "Number of Meyers candidates: "
+                 << func.meyersCandidate.count << "\n";
 
     llvm::outs() << "\n";
     llvm::outs() << "########## Friend CLASSES ##########"
