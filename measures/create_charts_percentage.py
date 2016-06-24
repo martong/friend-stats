@@ -27,12 +27,14 @@ def plot(data, filename, kind):
 
     lib = cc.getLib(filename)
     libstr = "%s, version:%s" % (cc.getName(lib), cc.getVersion(lib))
-    plt.title('Privates usage ratio in friend %s\n%s' % (kindstr, libstr))
+    #plt.title('Privates usage ratio in friend %s\n%s' % (kindstr, libstr))
     plt.xlabel('private usage ratio (%)')
     plt.ylabel('No. friendly function instances')
+    plt.xlim(xmax=102)
 
-    # plt.show()
+    #plt.show()
     plt.savefig('%s.ratio.%s.png' % (filename, kind))
+    plt.clf()
 
 
 def parse_file(filename):
