@@ -32,14 +32,18 @@ static cl::opt<bool> UseCompilationDbFiles(
     cl::ValueOptional, cl::cat(MyToolCategory));
 
 static cl::opt<bool> PrintZeroPrivInHost(
-    "zh", cl::desc("Print entries (for friend function decls) whose "
+    "zh", cl::desc("Print friend function instances whose "
                    "befriending class has no private entities"),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
 static cl::opt<bool> PrintZeroPrivInFriend(
-    "zf", cl::desc("Print entries (for friend function decls) "
-                   "who does not access any priv entities and the befriending "
-                   "class has private entities."),
+    "zf", cl::desc("Print friend function instances "
+                   "who does not access any private entities."),
+    cl::ValueOptional, cl::cat(MyToolCategory));
+
+static cl::opt<bool> PrintPossiblyIncorrectFriend(
+    "if", cl::desc("Print friend function instances "
+                   "which are possible not correct."),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
 static cl::opt<bool> PrintStrongCandidate(
@@ -96,6 +100,7 @@ private:
     ZeroPrivInHost zeroPrivInHost;
     ZeroPrivInFriend zeroPrivInFriend;
     MeyersCandidate meyersCandidate;
+    PossiblyIncorrectFriend possiblyIncorrect;
   } func;
   struct Class {
     Average average;
@@ -125,11 +130,16 @@ private:
           if (PrintZeroPrivInHost && func.zeroPrivInHost(funcRes)) {
             print(funcResPair);
           }
-          if (PrintZeroPrivInFriend && func.zeroPrivInFriend(funcRes) &&
-              !func.zeroPrivInHost(funcRes)) {
+          if (PrintZeroPrivInFriend && func.zeroPrivInFriend(funcRes)) {
             print(funcResPair);
           }
+
           func.meyersCandidate(funcResPair);
+
+          if (PrintPossiblyIncorrectFriend && func.possiblyIncorrect(funcResPair)) {
+            print(funcResPair);
+          }
+
         } else {
           llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
                        << "\n";
