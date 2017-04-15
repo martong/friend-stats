@@ -22,7 +22,7 @@ def plot(xs, ys, filename, kind, meyers_candidates=0):
     mc_ys[0] = meyers_candidates
     print ys
     print mc_ys
-    plt.bar(ind + .05, mc_ys, color='r', width=width, hatch='///')
+    plt.bar(ind + .05, mc_ys, color='w', width=width, hatch='///')
 
     lib = cc.getLib(filename)
     libstr = "%s, version:%s" % (cc.getName(lib), cc.getVersion(lib))
