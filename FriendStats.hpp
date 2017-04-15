@@ -165,14 +165,16 @@ public:
 };
 
 class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
-  const CXXRecordDecl *Class;
+  const CXXRecordDecl *Class; // The befriending class
   Result::FuncResult::Types typesResult;
-  std::set<const Type *> countedTypes;
+  std::set<const TypeDecl *> countedTypes;
 
-  // TODO Verify and make it nicer
-  TypedefNameDecl *GetTypeAliasDecl(QualType QT) {
+  Decl *GetTypeDecl(QualType QT) {
     const Type *T = QT.getTypePtr();
     if (const TypedefType *TT = dyn_cast<TypedefType>(T)) {
+      return TT->getDecl();
+    }
+    if (const TagType *TT = dyn_cast<TagType>(T)) {
       return TT->getDecl();
     }
     while (true) {
@@ -184,28 +186,39 @@ class TypeHandlerVisitor : public RecursiveASTVisitor<TypeHandlerVisitor> {
       if (const TypedefType *TT = dyn_cast<TypedefType>(T2)) {
         return TT->getDecl();
       }
+      if (const TagType *TT = dyn_cast<TagType>(T2)) {
+        return TT->getDecl();
+      }
       T = T2;
     }
     return nullptr;
   }
 
   void HandleType(QualType QT) {
-    TypedefNameDecl *TND = GetTypeAliasDecl(QT);
-    if (!TND) {
-      debug_stream() << "not Type Alias "
-                     << "\n";
+    QT = QT.getUnqualifiedType();
+    Decl *D = GetTypeDecl(QT);
+    if (!D) {
+      if (debug) debug_stream() << "not Type Decl " << "\n";
       return;
     }
+    TypeDecl *TD = cast<TypeDecl>(D);
 
     CXXRecordDecl *DeclContextRD =
-        dyn_cast<CXXRecordDecl>(TND->getDeclContext());
+        dyn_cast<CXXRecordDecl>(TD->getDeclContext());
 
-    auto insert = [&TND, this](QualType QT) {
-      if (privOrProt(TND))
-        countedTypes.insert(QT.getTypePtr());
+    auto insert = [&TD, this](QualType QT) {
+      if (privOrProt(TD)) {
+        if (debug) {
+          debug_stream() << "TD: " << TD << "\n";
+          debug_stream() << "QT.canonical: "
+                         << QT.getCanonicalType().getTypePtr() << "\n";
+          debug_stream() << "QT.TypePtr: " << QT.getTypePtr() << "\n";
+        }
+        countedTypes.insert(TD);
+      }
     };
 
-    // The actual CXXRecordDecl where our friend function is declared is a
+    // The CXXRecordDecl where our friend function is declared is a
     // class template specialization.
     if (const ClassTemplateSpecializationDecl *CTSD =
             dyn_cast<ClassTemplateSpecializationDecl>(Class)) {
@@ -240,8 +253,10 @@ public:
 
   bool VisitValueDecl(ValueDecl *D) {
     QualType QT = D->getType();
-    if (debug)
+    if (debug){
+      debug_stream() << "ValueDecl\n";
       QT->dump();
+    }
 
     const Type *T = QT.getTypePtr();
     if (const FunctionProtoType *FP = T->getAs<FunctionProtoType>()) {
@@ -282,7 +297,7 @@ public:
               debug_stream() << "T: " << T << "\n";
               if (debug)
                 T->dump();
-              countedTypes.insert(T);
+              countedTypes.insert(iRD);
             }
           }
           return true;
@@ -512,7 +527,7 @@ private:
   };
 
   // TODO Make it templated on RecordDecl/TypedefNameDecl
-  // See TypeHandlerVisitor::GetTypeAliasDecl
+  // See TypeHandlerVisitor::GetTypeDecl
   // When there is no declaration for the type it will return a nullptr.
   RecordDecl *getRecordDecl(QualType QT) {
     const Type *T = QT.getTypePtr();
