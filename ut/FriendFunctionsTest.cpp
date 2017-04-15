@@ -661,6 +661,29 @@ void func() {
   EXPECT_EQ(fr.types.usedPrivateCount, 1);
 }
 
+TEST_F(FriendStatsForTypes, UsedPrivateInTemplateArg) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+template <class T>
+struct X {};
+
+class A {
+  friend void func();
+  using Int = int;
+};
+
+void func() {
+  X<A::Int> x;
+};
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncDeclCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), 1u);
+  auto fr = getFirstFuncResult(res);
+  EXPECT_EQ(fr.types.usedPrivateCount, 1);
+}
+
 
 TEST_F(FriendStatsForTypes, BoostUsedPrivateClass) {
   Tool->mapVirtualFile(FileA,
