@@ -96,6 +96,7 @@ struct ZeroPrivInHost {
   }
 };
 
+// friendly function instances with zero private usage
 struct ZeroPrivInFriend {
   bool operator()(const Result::FuncResult &funcRes) {
     PrivateUsage usage = privateUsage(funcRes);
@@ -139,11 +140,24 @@ struct MeyersCandidate {
     const auto &key = funcResPair.first;
     const auto &funcRes = funcResPair.second;
     static ZeroPrivInFriend zpf;
+    // TODO false positives: non template operator<, operator<= and operator<<
     bool match = zpf(funcRes) && key.first.find("<") != std::string::npos &&
                  funcRes.defLocStr == funcRes.friendDeclLocStr;
     if (match)
       ++count;
     return match;
+  }
+};
+
+// possibly incorrect friendly function instances
+struct PossiblyIncorrectFriend {
+  bool
+  operator()(const Result::FuncResultsForFriendDecl::value_type &funcResPair) {
+    const auto &funcRes = funcResPair.second;
+    static ZeroPrivInHost zph;
+    static ZeroPrivInFriend zpf;
+    static MeyersCandidate mc;
+    return !zph(funcRes) && zpf(funcRes) && !mc(funcResPair);
   }
 };
 
