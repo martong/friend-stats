@@ -41,6 +41,10 @@ static cl::opt<bool> PrintZeroPrivInFriend(
                    "who does not access any private entities."),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
+static cl::opt<bool> NoStatistics(
+    "no_stats", cl::desc("Do not print out statistics about friend usage."),
+    cl::ValueOptional, cl::cat(MyToolCategory));
+
 static cl::opt<bool> PrintPossiblyIncorrectFriend(
     "if", cl::desc("Print friend function instances "
                    "which are possible not correct."),
@@ -85,7 +89,8 @@ public:
   void operator()() {
     traverseFriendFuncData();
     traverseFriendClassData();
-    conclusion();
+    if (!NoStatistics)
+      conclusion();
   }
 
 private:
