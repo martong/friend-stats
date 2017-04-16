@@ -743,28 +743,28 @@ void g() {
   }
 }
 
-// TEST_F(FriendStatsForTypes, NumberOfUsedPrivateOrProtectedTypesInFriendFunc)
-// {
-// Tool->mapVirtualFile(FileA,
-// R"(
-// class A {
-// using Int = int;
-// friend void func(Int);
-//};
-// void func(A::Int) {
-// struct X {
-// A::Int i;
-// void foo(A::Int);
-//};
-// using MyInt = A::Int;
-// A::Int i = 0;
-//};
-//)");
-// Tool->run(newFrontendActionFactory(&Finder).get());
-// auto res = Handler.getResult();
-// ASSERT_EQ(res.friendFuncDeclCount, 1);
-// ASSERT_EQ(res.FuncResults.size(), 1u);
-//}
+TEST_F(FriendStatsForTypes, NumberOfUsedPrivateOrProtectedTypesInFriendFunc) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+class A {
+ using Int = int;
+ friend void func(Int);
+};
+
+void func(A::Int) {
+ struct X {
+  A::Int i;
+  void foo(A::Int);
+ };
+ using MyInt = A::Int;
+ A::Int i = 0;
+}
+)");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendFuncDeclCount, 1);
+  ASSERT_EQ(res.FuncResults.size(), 1u);
+}
 
 // ===================== Friend function uses template members ================
 
