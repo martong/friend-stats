@@ -155,7 +155,10 @@ private:
 
           func.meyersCandidate(funcResPair);
 
-          if (PrintPossiblyIncorrectFriend && func.possiblyIncorrect(funcResPair)) {
+          if (PrintPossiblyIncorrectFriend &&
+              func.possiblyIncorrect(funcResPair)) {
+            llvm::outs()
+                << "Warning: possibly incorrect friend function instance:\n";
             print(funcResPair);
           }
 
@@ -198,15 +201,15 @@ private:
   }
 
   void printHostClassesWithZeroPrivate() {
-    for (const auto& cip : hostClassesWithZeroPriv.classes) {
+    for (const auto &cip : hostClassesWithZeroPriv.classes) {
+      llvm::outs()
+          << "Warning: befriending class with zero private entities:\n";
       print(*cip);
     }
   }
 
   void printIncorrectFriendClass(const Result::ClassResult &classResult) {
-    llvm::outs()
-        << "============================================================"
-           "================\n";
+    llvm::outs() << "Warning: possibly incorrect friend class:\n";
     llvm::outs() << "diagName: " << classResult.diagName << "\n";
     llvm::outs() << "defLoc: " << classResult.defLocStr << "\n";
     llvm::outs() << "friendDeclLoc: " << classResult.friendDeclLocStr << "\n";

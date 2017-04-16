@@ -28,8 +28,6 @@ inline void print(const Result::FuncResultKey &key) {
 
 inline void
 print(const Result::FuncResultsForFriendDecl::value_type &funcResPair) {
-  llvm::outs() << "============================================================"
-                  "================\n";
   print(funcResPair.first);
   print(funcResPair.second);
   llvm::outs() << "============================================================"
@@ -37,8 +35,6 @@ print(const Result::FuncResultsForFriendDecl::value_type &funcResPair) {
 }
 
 inline void print(const ClassInfo& ci) {
-  llvm::outs() << "============================================================"
-                  "================\n";
   llvm::outs() << "defLoc: " << ci.locStr << "\n";
   llvm::outs() << "diagName: " << ci.diagName << "\n";
   llvm::outs() << "============================================================"
