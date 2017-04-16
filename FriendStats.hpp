@@ -624,6 +624,9 @@ private:
 
     Result::ClassResult classResult;
     classResult.diagName = getDiagName(friendCXXRD);
+    classResult.defLocStr =
+        friendCXXRD->getLocation().printToString(*sourceManager);
+    classResult.friendDeclLocStr = friendDeclLoc.printToString(*sourceManager);
 
     for (const auto &method : friendCXXRD->methods()) {
       debug_stream() << "method: " << method << "\n";

@@ -56,6 +56,11 @@ static cl::opt<bool> PrintHostClassesWithZeroPrivate(
         "Print befriending classes which have only public members and types."),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
+static cl::opt<bool> PrintIncorrectFriendClasses(
+    "incorrect_friend_classes",
+    cl::desc("Print friend classes which don't use any private entities."),
+    cl::ValueOptional, cl::cat(MyToolCategory));
+
 static cl::opt<bool> PrintStrongCandidate(
     "sc", cl::desc("Print entries (for friend function decls) whose "
                    "are strong candidates of selective friend"),
@@ -169,6 +174,7 @@ private:
   void traverseFriendClassData() {
     for (const auto &friendDecls : result.ClassResults) {
       for (const auto &classSpecs : friendDecls.second) {
+        IncorrectFriendClass incorrectFriendClass;
         for (const auto &funcResPair : classSpecs.second.memberFuncResults) {
           const auto &funcRes = funcResPair.second;
           if (diags(funcRes)) {
@@ -176,12 +182,16 @@ private:
             clazz.percentageDist(funcRes);
             clazz.usedPrivsDistribution(funcRes);
             hostClassesWithZeroPriv(funcRes);
+            incorrectFriendClass(funcRes);
           } else {
             llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
                          << "\n";
             print(funcResPair);
             llvm::outs() << "SKIPPING ENTRY FROM STATISTICS\n\n";
           }
+        }
+        if (PrintIncorrectFriendClasses && incorrectFriendClass.result) {
+          printIncorrectFriendClass(classSpecs.second);
         }
       }
     }
@@ -191,6 +201,18 @@ private:
     for (const auto& cip : hostClassesWithZeroPriv.classes) {
       print(*cip);
     }
+  }
+
+  void printIncorrectFriendClass(const Result::ClassResult &classResult) {
+    llvm::outs()
+        << "============================================================"
+           "================\n";
+    llvm::outs() << "diagName: " << classResult.diagName << "\n";
+    llvm::outs() << "defLoc: " << classResult.defLocStr << "\n";
+    llvm::outs() << "friendDeclLoc: " << classResult.friendDeclLocStr << "\n";
+    llvm::outs()
+        << "============================================================"
+           "================\n";
   }
 
   void conclusion() {

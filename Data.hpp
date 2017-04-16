@@ -80,6 +80,8 @@ struct Result {
 
   struct ClassResult {
     std::string diagName;
+    std::string defLocStr;
+    std::string friendDeclLocStr;
     FuncResultsForFriendDecl memberFuncResults;
   };
   // Each friend class template could have different specializations or

@@ -160,7 +160,7 @@ struct MeyersCandidate {
   }
 };
 
-// possibly incorrect friendly function instances
+// possibly incorrect friend function instances
 struct PossiblyIncorrectFriend {
   bool
   operator()(const Result::FuncResultsForFriendDecl::value_type &funcResPair) {
@@ -169,6 +169,22 @@ struct PossiblyIncorrectFriend {
     static ZeroPrivInFriend zpf;
     static MeyersCandidate mc;
     return !zph(funcRes) && zpf(funcRes) && !mc(funcResPair);
+  }
+};
+
+struct IncorrectFriendClassFunctionInstance {
+  bool operator()(const Result::FuncResult &funcRes) {
+    static ZeroPrivInHost zph;
+    static ZeroPrivInFriend zpf;
+    return !zph(funcRes) && zpf(funcRes);
+  }
+};
+
+struct IncorrectFriendClass {
+  bool result = true;
+  void operator()(const Result::FuncResult &funcRes) {
+    static IncorrectFriendClassFunctionInstance incFunc;
+    result = result && incFunc(funcRes);
   }
 };
 
