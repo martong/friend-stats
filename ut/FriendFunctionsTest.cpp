@@ -684,46 +684,6 @@ void func() {
   EXPECT_EQ(fr.types.usedPrivateCount, 1);
 }
 
-
-TEST_F(FriendStatsForTypes, BoostUsedPrivateClass) {
-  Tool->mapVirtualFile(FileA,
-                       R"(
-class posix_thread {
-
-private:
-  friend void* boost_asio_detail_posix_thread_function(void* arg);
-
-  class func_base
-  {
-  public:
-    virtual ~func_base() {}
-    virtual void run() = 0;
-  };
-
-  struct auto_func_base_ptr
-  {
-    func_base* ptr;
-    ~auto_func_base_ptr() { delete ptr; }
-  };
-
-};
-
-void* boost_asio_detail_posix_thread_function(void* arg)
-{
-  posix_thread::auto_func_base_ptr func = {
-      static_cast<posix_thread::func_base*>(arg) };
-  func.ptr->run();
-  return 0;
-}
-    )");
-  Tool->run(newFrontendActionFactory(&Finder).get());
-  auto res = Handler.getResult();
-  ASSERT_EQ(res.friendFuncDeclCount, 1);
-  ASSERT_EQ(res.FuncResults.size(), 1u);
-  auto fr = getFirstFuncResult(res);
-  EXPECT_EQ(fr.types.usedPrivateCount, 2);
-}
-
 TEST_F(FriendStatsForTypes, ParentPrivateCountComplex) {
   Tool->mapVirtualFile(FileA,
                        R"(
