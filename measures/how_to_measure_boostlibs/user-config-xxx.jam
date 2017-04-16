@@ -39,7 +39,7 @@
 
 # --------------------------------------------------------------------
 using clang : xxx
-: usr/bin/clang++
+: /usr/bin/clang++
 :
 <compileflags>-std=c++11
 <compileflags>-stdlib=libc++
