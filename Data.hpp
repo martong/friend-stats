@@ -7,12 +7,22 @@
 // FIXME
 using namespace clang;
 
+struct ClassInfo {
+  SourceLocation loc;
+  std::string locStr;
+  std::string diagName;
+  ClassInfo(SourceLocation loc, std::string&& locStr, std::string&& diagName) :
+    loc(loc), locStr(std::move(locStr)), diagName(std::move(diagName))
+  {}
+};
+
 // Holds the number of private or protected variables, methods, types
 // in a class.
 struct ClassCounts {
   int privateVarsCount = 0;
   int privateMethodsCount = 0;
   int privateTypesCount = 0;
+  std::shared_ptr<ClassInfo> info;
 };
 
 struct Result {
@@ -49,6 +59,8 @@ struct Result {
       // in this (friend) function's referred class.
       int parentPrivateCount = 0;
     } types;
+
+    std::shared_ptr<ClassInfo> parentClassInfo;
   };
 
   // Each friend funciton declaration might have it's connected function

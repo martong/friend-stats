@@ -36,6 +36,15 @@ print(const Result::FuncResultsForFriendDecl::value_type &funcResPair) {
                   "================\n";
 }
 
+inline void print(const ClassInfo& ci) {
+  llvm::outs() << "============================================================"
+                  "================\n";
+  llvm::outs() << "defLoc: " << ci.locStr << "\n";
+  llvm::outs() << "diagName: " << ci.diagName << "\n";
+  llvm::outs() << "============================================================"
+                  "================\n";
+}
+
 inline raw_ostream &operator<<(raw_ostream &os,
                                 const std::pair<int, int>& p) {
   os << "(" << p.first << "," << p.second << ")";

@@ -362,22 +362,6 @@ public:
   }
 };
 
-inline ClassCounts getClassCounts(const CXXRecordDecl *RD) {
-  ClassCounts classCounts;
-
-  // TODO This could be done with decls_begin, since CXXRecordDecl is a
-  // DeclContext. That might be more efficient, since that way we would
-  // not traverse the full tree of RD.
-  PrivTypeCounter privTypeCounter;
-  privTypeCounter.TraverseCXXRecordDecl(const_cast<CXXRecordDecl *>(RD));
-  classCounts.privateTypesCount = privTypeCounter.getResult();
-
-  classCounts.privateVarsCount = numberOfPrivOrProtFields(RD);
-  classCounts.privateMethodsCount = numberOfPrivOrProtMethods(RD);
-
-  return classCounts;
-}
-
 auto const TuMatcher = decl().bind("decl");
 struct TuHandler : public MatchFinder::MatchCallback {
   virtual void run(const MatchFinder::MatchResult &Result) {
@@ -401,6 +385,27 @@ class FriendHandler : public MatchFinder::MatchCallback {
   SourceManager *sourceManager = nullptr;
 
 public:
+
+  ClassCounts getClassCounts(const CXXRecordDecl *RD) {
+    ClassCounts classCounts;
+
+    // TODO This could be done with decls_begin, since CXXRecordDecl is a
+    // DeclContext. That might be more efficient, since that way we would
+    // not traverse the full tree of RD.
+    PrivTypeCounter privTypeCounter;
+    privTypeCounter.TraverseCXXRecordDecl(const_cast<CXXRecordDecl *>(RD));
+
+    classCounts.privateTypesCount = privTypeCounter.getResult();
+    classCounts.privateVarsCount = numberOfPrivOrProtFields(RD);
+    classCounts.privateMethodsCount = numberOfPrivOrProtMethods(RD);
+
+    classCounts.info = std::make_shared<ClassInfo>(
+        RD->getLocation(), RD->getLocation().printToString(*sourceManager),
+        getDiagName(RD));
+
+    return classCounts;
+  }
+
   virtual void run(const MatchFinder::MatchResult &Result) {
 
     sourceManager = Result.SourceManager;
@@ -601,9 +606,11 @@ private:
     funcRes.defLoc = FuncDefinition->getLocation();
     funcRes.defLocStr = funcRes.defLoc.printToString(*sourceManager);
 
+    // TODO use ClassCounts inside FuncResult
     funcRes.parentPrivateVarsCount = classCounts.privateVarsCount;
     funcRes.parentPrivateMethodsCount = classCounts.privateMethodsCount;
     funcRes.types.parentPrivateCount = classCounts.privateTypesCount;
+    funcRes.parentClassInfo = classCounts.info;
 
     funcRes.diagName = getDiagName(FuncD);
 

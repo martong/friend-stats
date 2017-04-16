@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <unordered_set>
 #include "FriendStats.hpp"
 
 struct PrivateUsage {
@@ -53,6 +54,16 @@ struct SelfDiagnostics {
       return false;
     }
     return true;
+  }
+};
+
+struct HostClassesWithZeroPrivate {
+  std::unordered_set<std::shared_ptr<ClassInfo>> classes;
+  void operator()(const Result::FuncResult &funcRes) {
+    PrivateUsage usage = privateUsage(funcRes);
+    if (usage.denominator == 0 ) {
+      classes.insert(funcRes.parentClassInfo);
+    }
   }
 };
 

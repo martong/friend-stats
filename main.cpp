@@ -50,6 +50,12 @@ static cl::opt<bool> PrintPossiblyIncorrectFriend(
                    "which are possible not correct."),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
+static cl::opt<bool> PrintHostClassesWithZeroPrivate(
+    "host_classes_with_zero_priv",
+    cl::desc(
+        "Print befriending classes which have only public members and types."),
+    cl::ValueOptional, cl::cat(MyToolCategory));
+
 static cl::opt<bool> PrintStrongCandidate(
     "sc", cl::desc("Print entries (for friend function decls) whose "
                    "are strong candidates of selective friend"),
@@ -89,6 +95,8 @@ public:
   void operator()() {
     traverseFriendFuncData();
     traverseFriendClassData();
+    if (PrintHostClassesWithZeroPrivate)
+      printHostClassesWithZeroPrivate();
     if (!NoStatistics)
       conclusion();
   }
@@ -96,6 +104,7 @@ public:
 private:
   const Result &result;
   SelfDiagnostics diags;
+  HostClassesWithZeroPrivate hostClassesWithZeroPriv;
   struct Func {
     Average average;
     PercentageDistribution percentageDist;
@@ -145,6 +154,8 @@ private:
             print(funcResPair);
           }
 
+          hostClassesWithZeroPriv(funcRes);
+
         } else {
           llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
                        << "\n";
@@ -164,6 +175,7 @@ private:
             clazz.average(funcRes);
             clazz.percentageDist(funcRes);
             clazz.usedPrivsDistribution(funcRes);
+            hostClassesWithZeroPriv(funcRes);
           } else {
             llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
                          << "\n";
@@ -172,6 +184,12 @@ private:
           }
         }
       }
+    }
+  }
+
+  void printHostClassesWithZeroPrivate() {
+    for (const auto& cip : hostClassesWithZeroPriv.classes) {
+      print(*cip);
     }
   }
 
