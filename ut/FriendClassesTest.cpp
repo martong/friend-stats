@@ -81,6 +81,35 @@ class B {
   EXPECT_EQ(fr.parentPrivateVarsCount, 3);
 }
 
+TEST_F(FriendClassesStats, PrivUsageInConstructorInit) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+class A {
+  int a = 0;
+  int b = 1;
+  int c;
+  friend class B;
+};
+class B {
+  int x,y;
+  B(A &a) : x(a.a), y(a.b) {}
+};
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassDeclCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), 1u);
+
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  const auto &cr = get1stClassResult(crs);
+  ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+  const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+  EXPECT_EQ(fr.usedPrivateVarsCount, 2);
+  EXPECT_EQ(fr.parentPrivateVarsCount, 3);
+}
+
+
 TEST_F(FriendClassesStats, ConstructExpression) {
   Tool->mapVirtualFile(FileA,
                        R"(
