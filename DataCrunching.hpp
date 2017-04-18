@@ -152,9 +152,11 @@ struct MeyersCandidate {
     const auto &key = funcResPair.first;
     const auto &funcRes = funcResPair.second;
     static ZeroPrivInFriend zpf;
-    // TODO false positives: non template operator<, operator<= and operator<<
-    bool match = zpf(funcRes) && key.first.find("<") != std::string::npos &&
-                 funcRes.defLocStr == funcRes.friendDeclLocStr;
+    // is the befriending class a template instantiation?
+    bool match = key.first.find("<") != std::string::npos &&
+                 key.first.find(">") != std::string::npos;
+    match = match && zpf(funcRes) &&
+            funcRes.defLocStr == funcRes.friendDeclLocStr; // in-class defined
     if (match)
       ++count;
     return match;
