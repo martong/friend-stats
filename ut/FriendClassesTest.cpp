@@ -1060,3 +1060,32 @@ template void B<int>::func<int>(A&);
     }
   }
 }
+
+TEST_F(FriendClassesStats, UseInClassDeclContext) {
+  Tool->mapVirtualFile(FileA,
+                       R"(
+class A {
+  using U = int;
+  friend class B;
+};
+class B {
+  using Local = A::U;
+public:
+  void member() {
+    Local l = 3;
+  }
+};
+void foo () { B b; }
+    )");
+  Tool->run(newFrontendActionFactory(&Finder).get());
+  auto res = Handler.getResult();
+  ASSERT_EQ(res.friendClassDeclCount, 1);
+  ASSERT_EQ(res.ClassResults.size(), 1u);
+
+  const auto &crs = getClassResultsFor1stFriendDecl(res);
+  ASSERT_EQ(crs.size(), 1u);
+  const auto &cr = get1stClassResult(crs);
+  ASSERT_EQ(cr.memberFuncResults.size(), 1u);
+  const Result::FuncResult &fr = get1stMemberFuncResult(cr);
+  EXPECT_EQ(fr.types.usedPrivateCount, 1);
+}
