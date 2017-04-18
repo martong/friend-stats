@@ -45,6 +45,11 @@ static cl::opt<bool> NoStatistics(
     "no_stats", cl::desc("Do not print out statistics about friend usage."),
     cl::ValueOptional, cl::cat(MyToolCategory));
 
+static cl::opt<bool> PrintMeyersCandidates(
+    "meyers_candidates",
+    cl::desc("Print Meyers candidate friend function instances."),
+    cl::ValueOptional, cl::cat(MyToolCategory));
+
 static cl::opt<bool> PrintPossiblyIncorrectFriend(
     "if", cl::desc("Print friend function instances "
                    "which are possible not correct."),
@@ -130,7 +135,11 @@ private:
             print(funcResPair);
           }
 
-          func.meyersCandidate(funcResPair);
+          auto mc = func.meyersCandidate(funcResPair);
+          if (PrintMeyersCandidates && mc) {
+            llvm::outs() << "Meyers candidate:\n";
+            print(funcResPair);
+          }
 
           if (PrintPossiblyIncorrectFriend &&
               func.possiblyIncorrect(funcResPair)) {
