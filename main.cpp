@@ -104,6 +104,7 @@ private:
   const Result &result;
   SelfDiagnostics diags;
   HostClassesWithZeroPrivate hostClassesWithZeroPriv;
+  BefriendingClassesAllFriendsMC befriendingClassesAllFriendsMC;
   struct Func {
     Average average;
     PercentageDistribution percentageDist;
@@ -149,6 +150,7 @@ private:
           }
 
           hostClassesWithZeroPriv(funcRes);
+          befriendingClassesAllFriendsMC.functionInstance(funcResPair);
 
         } else {
           llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
@@ -171,6 +173,7 @@ private:
             clazz.percentageDist(funcRes);
             clazz.usedPrivsDistribution(funcRes);
             hostClassesWithZeroPriv(funcRes);
+            befriendingClassesAllFriendsMC.classFunctionInstance(funcRes);
             incorrectFriendClass(funcRes);
           } else {
             llvm::outs() << "WRONG MEASURE here:\n" << funcRes.friendDeclLocStr
@@ -187,10 +190,14 @@ private:
   }
 
   void printHostClassesWithZeroPrivate() {
+    auto befrClassWithAllMC = befriendingClassesAllFriendsMC.getResult();
     for (const auto &cip : hostClassesWithZeroPriv.classes) {
-      llvm::outs()
-          << "Warning: befriending class with zero private entities:\n";
-      print(*cip);
+      // This is not a class with just MC friend functions
+      if (befrClassWithAllMC.count(cip) == 0) {
+        llvm::outs()
+            << "Warning: befriending class with zero private entities:\n";
+        print(*cip);
+      }
     }
   }
 

@@ -2,6 +2,7 @@
 
 #include <map>
 #include <unordered_set>
+#include <unordered_map>
 #include "FriendStats.hpp"
 
 struct PrivateUsage {
@@ -188,3 +189,35 @@ struct IncorrectFriendClass {
   }
 };
 
+// Befriending classes where all friend functions are meyers candidates
+// and there are no friend classes
+// E.g. boost::less_than_comparable1
+class BefriendingClassesAllFriendsMC {
+  struct Bool {
+    bool r = true;
+  }; // wrapper to use default initialization
+  std::unordered_map<std::shared_ptr<ClassInfo>, Bool> classes;
+public:
+  void functionInstance(
+      const Result::FuncResultsForFriendDecl::value_type &funcResPair) {
+    const auto &funcRes = funcResPair.second;
+    static MeyersCandidate mc;
+    auto &ci = classes[funcRes.parentClassInfo];
+    if (mc(funcResPair)) {
+      ci.r = ci.r && true;
+    } else {
+      ci.r = false;
+    }
+  }
+  void classFunctionInstance(const Result::FuncResult &funcRes) {
+    classes[funcRes.parentClassInfo].r = false;
+  }
+  std::unordered_set<std::shared_ptr<ClassInfo>> getResult() {
+    std::unordered_set<std::shared_ptr<ClassInfo>> result;
+    for (const auto &v : classes) {
+      if (v.second.r)
+        result.insert(v.first);
+    }
+    return result;
+  }
+};
