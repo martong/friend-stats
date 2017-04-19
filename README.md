@@ -1,4 +1,4 @@
-# Statistics and warnings about friend declarations
+# Warnings and statistics about friend declarations
 
 This tool can be used to collect some statistics and to provide warnings about incorrect friend declarations.
 It is based on Clang's libTooling library.
