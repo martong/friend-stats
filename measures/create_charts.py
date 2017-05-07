@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 
+from matplotlib import rc
+import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 import charts_common as cc
 import re
 
+rc('text', usetex=True)
+rc('font',**{'family':'serif','serif':['Computer Modern Roman']})
+matplotlib.rcParams.update({'font.size': 18})
 
 def plot(xs, ys, filename, kind, meyers_candidates=0):
     kindstr = ""
@@ -25,13 +30,14 @@ def plot(xs, ys, filename, kind, meyers_candidates=0):
     plt.bar(ind + .05, mc_ys, color='w', width=width, hatch='///')
 
     lib = cc.getLib(filename)
-    libstr = "%s, version:%s" % (cc.getName(lib), cc.getVersion(lib))
-    #plt.title('Privates in friend %s\n%s' % (kindstr, libstr))
+    libstr = "%s, ver. %s" % (cc.getName(lib), cc.getVersion(lib))
+    plt.title(libstr)
     plt.xlabel('private usage')
     plt.ylabel('No. friendly function instances')
 
     #plt.show()
     plt.savefig('%s.%s.png' % (filename, kind))
+    plt.savefig('%s.%s.eps' % (filename, kind), format='eps', dpi=1000)
     plt.clf()
 
 
