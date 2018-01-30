@@ -1,0 +1,502 @@
+animation/qabstractanimation.cpp [1/425]
+animation/qanimationgroup.cpp [2/425]
+animation/qparallelanimationgroup.cpp [3/425]
+animation/qpauseanimation.cpp [4/425]
+animation/qpropertyanimation.cpp [5/425]
+animation/qsequentialanimationgroup.cpp [6/425]
+animation/qvariantanimation.cpp [7/425]
+arch/qatomic_unix.cpp [8/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/arch/sparc/qatomic_sparc.cpp. Compile command not found.
+codecs/qbig5codec.cpp [9/425]
+codecs/qeucjpcodec.cpp [10/425]
+codecs/qeuckrcodec.cpp [11/425]
+codecs/qgb18030codec.cpp [12/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/codecs/qiconvcodec.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/codecs/qicucodec.cpp. Compile command not found.
+codecs/qisciicodec.cpp [13/425]
+codecs/qjiscodec.cpp [14/425]
+codecs/qjpunicode.cpp [15/425]
+codecs/qlatincodec.cpp [16/425]
+codecs/qsimplecodec.cpp [17/425]
+codecs/qsjiscodec.cpp [18/425]
+codecs/qtextcodec.cpp [19/425]
+codecs/qtsciicodec.cpp [20/425]
+codecs/qutfcodec.cpp [21/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/codecs/qwindowscodec.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/buffer/buffer.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_containers.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_groups.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_objecttrees.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_properties.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_qalgorithms.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_qcache.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_qiterator.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_qnamespace.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_qpair.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_qplugin.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_qset.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_qtcore.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_qvarlengtharray.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/doc_src_resources.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/qlogging/qlogging.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_codecs_qtextcodec.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_concurrent_qthreadpool.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_global_qglobal.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qabstractfileengine.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qdatastream.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qdir.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qdiriterator.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qfile.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qfileinfo.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qiodevice.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qprocess.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qsettings.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qstorageinfo.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qtemporarydir.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qtemporaryfile.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qtextstream.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_io_qurl.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qabstractitemmodel.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qabstractnativeeventfilter.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qcoreapplication.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qmath.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qmetaobject.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qmetatype.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qmimedata.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qobject.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qsystemsemaphore.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qtimer.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_kernel_qvariant.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_mimetype_qmimedatabase.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_plugin_qlibrary.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_plugin_quuid.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_statemachine_qstatemachine.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qatomic.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qexception.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qfuture.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qfuturesynchronizer.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qfuturewatcher.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qmutex.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qmutexpool.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qreadwritelock.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qsemaphore.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qthread.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_thread_qwaitcondition_unix.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qbitarray.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qbytearray.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qcommandlineoption.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qcommandlineparser.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qcommandlineparser_main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qdatetime.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qeasingcurve.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qhash.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qlinkedlist.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qlistdata.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qlocale.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qmap.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qpoint.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qqueue.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qrect.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qregexp.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qregularexpression.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qscopedpointer.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qsize.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qstring.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qstringiterator.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qtimeline.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_tools_qvector.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_corelib_xml_qxmlstream.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_gui_dialogs_qmessagebox.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_gui_itemviews_qidentityproxymodel.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/code/src_gui_itemviews_qitemselectionmodel.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/eventfilters/filterobject.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/eventfilters/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/events/events.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/file/file.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/fileinfo/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/hellotrmain.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/ntfsp.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/pointer/pointer.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/process/process.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qbytearraylist/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qdebug/qdebugsnippet.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qdir-listfiles/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qdir-namefilters/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qelapsedtimer/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qloggingcategory/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qmessageauthenticationcode/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qmetaobject-invokable/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qmetaobject-invokable/window.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qmetaobject-revision/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qmetaobject-revision/window.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qprocess-environment/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qprocess/qprocess-simpleexecution.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qsignalmapper/buttonwidget.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qsortfilterproxymodel-details/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qstack/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qstring/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qstring/stringbuilder.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qstringlist/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qstringlistmodel/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qtcast/qtcast.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qversionnumber/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/qxmlstreamwriter/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/resource-system/mainwindow.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/settings/settings.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/sharedemployee/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/signalmapper/filereader.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/signalsandslots/signalsandslots.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/statemachine/eventtest.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/statemachine/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/statemachine/main2.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/statemachine/main3.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/statemachine/main4.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/statemachine/main5.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/streaming/main.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/threads/threads.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/timers/analogclock.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/doc/snippets/timers/timers.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/global/archdetect.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/global/qconfig.cpp. Compile command not found.
+global/qglobal.cpp [22/425]
+global/qglobalstatic.cpp [23/425]
+global/qhooks.cpp [24/425]
+global/qlibraryinfo.cpp [25/425]
+global/qlogging.cpp [26/425]
+global/qmalloc.cpp [27/425]
+global/qnumeric.cpp [28/425]
+global/qversiontagging.cpp [29/425]
+io/forkfd_qt.cpp [30/425]
+io/qabstractfileengine.cpp [31/425]
+io/qbuffer.cpp [32/425]
+io/qdatastream.cpp [33/425]
+io/qdataurl.cpp [34/425]
+io/qdebug.cpp [35/425]
+io/qdir.cpp [36/425]
+io/qdiriterator.cpp [37/425]
+io/qfile.cpp [38/425]
+io/qfiledevice.cpp [39/425]
+io/qfileinfo.cpp [40/425]
+io/qfileselector.cpp [41/425]
+io/qfilesystemengine.cpp [42/425]
+io/qfilesystemengine_unix.cpp [43/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qfilesystemengine_win.cpp. Compile command not found.
+io/qfilesystementry.cpp [44/425]
+io/qfilesystemiterator_unix.cpp [45/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qfilesystemiterator_win.cpp. Compile command not found.
+io/qfilesystemwatcher.cpp [46/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qfilesystemwatcher_inotify.cpp. Compile command not found.
+io/qfilesystemwatcher_kqueue.cpp [47/425]
+io/qfilesystemwatcher_polling.cpp [48/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qfilesystemwatcher_win.cpp. Compile command not found.
+io/qfsfileengine.cpp [49/425]
+io/qfsfileengine_iterator.cpp [50/425]
+io/qfsfileengine_unix.cpp [51/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qfsfileengine_win.cpp. Compile command not found.
+io/qiodevice.cpp [52/425]
+io/qipaddress.cpp [53/425]
+io/qlockfile.cpp [54/425]
+io/qlockfile_unix.cpp [55/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qlockfile_win.cpp. Compile command not found.
+io/qloggingcategory.cpp [56/425]
+io/qloggingregistry.cpp [57/425]
+io/qnoncontiguousbytedevice.cpp [58/425]
+io/qprocess.cpp [59/425]
+io/qprocess_unix.cpp [60/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qprocess_win.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qprocess_wince.cpp. Compile command not found.
+io/qresource.cpp [61/425]
+io/qresource_iterator.cpp [62/425]
+io/qsavefile.cpp [63/425]
+io/qsettings.cpp [64/425]
+io/qsettings_mac.cpp [65/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qsettings_win.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qsettings_winrt.cpp. Compile command not found.
+io/qstandardpaths.cpp [66/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qstandardpaths_android.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qstandardpaths_blackberry.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qstandardpaths_haiku.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qstandardpaths_unix.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qstandardpaths_win.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qstandardpaths_winrt.cpp. Compile command not found.
+io/qstorageinfo.cpp [67/425]
+io/qstorageinfo_mac.cpp [68/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qstorageinfo_stub.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qstorageinfo_unix.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qstorageinfo_win.cpp. Compile command not found.
+io/qtemporarydir.cpp [69/425]
+io/qtemporaryfile.cpp [70/425]
+io/qtextstream.cpp [71/425]
+io/qtldurl.cpp [72/425]
+io/qurl.cpp [73/425]
+io/qurlidna.cpp [74/425]
+io/qurlquery.cpp [75/425]
+io/qurlrecode.cpp [76/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qwindowspipereader.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qwindowspipewriter.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/io/qwinoverlappedionotifier.cpp. Compile command not found.
+itemmodels/qabstractitemmodel.cpp [77/425]
+itemmodels/qabstractproxymodel.cpp [78/425]
+itemmodels/qidentityproxymodel.cpp [79/425]
+itemmodels/qitemselectionmodel.cpp [80/425]
+itemmodels/qsortfilterproxymodel.cpp [81/425]
+itemmodels/qstringlistmodel.cpp [82/425]
+json/qjson.cpp [83/425]
+json/qjsonarray.cpp [84/425]
+json/qjsondocument.cpp [85/425]
+json/qjsonobject.cpp [86/425]
+json/qjsonparser.cpp [87/425]
+json/qjsonvalue.cpp [88/425]
+json/qjsonwriter.cpp [89/425]
+kernel/qabstracteventdispatcher.cpp [90/425]
+kernel/qabstractnativeeventfilter.cpp [91/425]
+kernel/qbasictimer.cpp [92/425]
+kernel/qcfsocketnotifier.cpp [93/425]
+kernel/qcore_mac.cpp [94/425]
+kernel/qcore_unix.cpp [95/425]
+kernel/qcoreapplication.cpp [96/425]
+kernel/qcoreapplication_mac.cpp [97/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qcoreapplication_win.cpp. Compile command not found.
+kernel/qcoreevent.cpp [98/425]
+kernel/qcoreglobaldata.cpp [99/425]
+kernel/qcrashhandler.cpp [100/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qeventdispatcher_blackberry.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qeventdispatcher_glib.cpp. Compile command not found.
+kernel/qeventdispatcher_unix.cpp [101/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qeventdispatcher_win.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qeventdispatcher_winrt.cpp. Compile command not found.
+kernel/qeventloop.cpp [102/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qfunctions_nacl.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qfunctions_vxworks.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qfunctions_wince.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qfunctions_winrt.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qjni.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qjnihelpers.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qjnionload.cpp. Compile command not found.
+kernel/qmath.cpp [103/425]
+kernel/qmetaobject.cpp [104/425]
+kernel/qmetaobjectbuilder.cpp [105/425]
+kernel/qmetatype.cpp [106/425]
+kernel/qmimedata.cpp [107/425]
+kernel/qobject.cpp [108/425]
+kernel/qobjectcleanuphandler.cpp [109/425]
+kernel/qpointer.cpp [110/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qppsattribute.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qppsobject.cpp. Compile command not found.
+kernel/qsharedmemory.cpp [111/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qsharedmemory_android.cpp. Compile command not found.
+kernel/qsharedmemory_posix.cpp [112/425]
+kernel/qsharedmemory_systemv.cpp [113/425]
+kernel/qsharedmemory_unix.cpp [114/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qsharedmemory_win.cpp. Compile command not found.
+kernel/qsignalmapper.cpp [115/425]
+kernel/qsocketnotifier.cpp [116/425]
+kernel/qsystemerror.cpp [117/425]
+kernel/qsystemsemaphore.cpp [118/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qsystemsemaphore_android.cpp. Compile command not found.
+kernel/qsystemsemaphore_posix.cpp [119/425]
+kernel/qsystemsemaphore_systemv.cpp [120/425]
+kernel/qsystemsemaphore_unix.cpp [121/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qsystemsemaphore_win.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qtcore_eval.cpp. Compile command not found.
+kernel/qtimer.cpp [122/425]
+kernel/qtimerinfo_unix.cpp [123/425]
+kernel/qtranslator.cpp [124/425]
+kernel/qvariant.cpp [125/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/kernel/qwineventnotifier.cpp. Compile command not found.
+mimetypes/qmimedatabase.cpp [126/425]
+mimetypes/qmimeglobpattern.cpp [127/425]
+mimetypes/qmimemagicrule.cpp [128/425]
+mimetypes/qmimemagicrulematcher.cpp [129/425]
+mimetypes/qmimeprovider.cpp [130/425]
+mimetypes/qmimetype.cpp [131/425]
+mimetypes/qmimetypeparser.cpp [132/425]
+plugin/qelfparser_p.cpp [133/425]
+plugin/qfactoryinterface.cpp [134/425]
+plugin/qfactoryloader.cpp [135/425]
+plugin/qlibrary.cpp [136/425]
+plugin/qlibrary_unix.cpp [137/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/plugin/qlibrary_win.cpp. Compile command not found.
+plugin/qmachparser.cpp [138/425]
+plugin/qpluginloader.cpp [139/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/plugin/qsystemlibrary.cpp. Compile command not found.
+plugin/quuid.cpp [140/425]
+statemachine/qabstractstate.cpp [141/425]
+statemachine/qabstracttransition.cpp [142/425]
+statemachine/qeventtransition.cpp [143/425]
+statemachine/qfinalstate.cpp [144/425]
+statemachine/qhistorystate.cpp [145/425]
+statemachine/qsignaltransition.cpp [146/425]
+statemachine/qstate.cpp [147/425]
+statemachine/qstatemachine.cpp [148/425]
+thread/qatomic.cpp [149/425]
+thread/qexception.cpp [150/425]
+thread/qfutureinterface.cpp [151/425]
+thread/qfuturewatcher.cpp [152/425]
+thread/qmutex.cpp [153/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/thread/qmutex_linux.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/thread/qmutex_mac.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/thread/qmutex_unix.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/thread/qmutex_win.cpp. Compile command not found.
+thread/qmutexpool.cpp [154/425]
+thread/qreadwritelock.cpp [155/425]
+thread/qresultstore.cpp [156/425]
+thread/qrunnable.cpp [157/425]
+thread/qsemaphore.cpp [158/425]
+thread/qthread.cpp [159/425]
+thread/qthread_unix.cpp [160/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/thread/qthread_win.cpp. Compile command not found.
+thread/qthreadpool.cpp [161/425]
+thread/qthreadstorage.cpp [162/425]
+thread/qwaitcondition_unix.cpp [163/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/thread/qwaitcondition_win.cpp. Compile command not found.
+tools/qarraydata.cpp [164/425]
+tools/qbitarray.cpp [165/425]
+tools/qbytearray.cpp [166/425]
+tools/qbytearraylist.cpp [167/425]
+tools/qbytearraymatcher.cpp [168/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qchar.cpp. Compile command not found.
+tools/qcollator.cpp [169/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qcollator_icu.cpp. Compile command not found.
+tools/qcollator_macx.cpp [170/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qcollator_posix.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qcollator_win.cpp. Compile command not found.
+tools/qcommandlineoption.cpp [171/425]
+tools/qcommandlineparser.cpp [172/425]
+tools/qcontiguouscache.cpp [173/425]
+tools/qcryptographichash.cpp [174/425]
+tools/qdatetime.cpp [175/425]
+tools/qdatetimeparser.cpp [176/425]
+tools/qeasingcurve.cpp [177/425]
+tools/qelapsedtimer.cpp [178/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qelapsedtimer_generic.cpp. Compile command not found.
+tools/qelapsedtimer_mac.cpp [179/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qelapsedtimer_unix.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qelapsedtimer_win.cpp. Compile command not found.
+tools/qfreelist.cpp [180/425]
+tools/qharfbuzz.cpp [181/425]
+tools/qhash.cpp [182/425]
+tools/qline.cpp [183/425]
+tools/qlinkedlist.cpp [184/425]
+tools/qlist.cpp [185/425]
+tools/qlocale.cpp [186/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qlocale_blackberry.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qlocale_icu.cpp. Compile command not found.
+tools/qlocale_tools.cpp [187/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qlocale_unix.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qlocale_win.cpp. Compile command not found.
+tools/qmap.cpp [188/425]
+tools/qmargins.cpp [189/425]
+tools/qmessageauthenticationcode.cpp [190/425]
+tools/qpoint.cpp [191/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qqueue.cpp. Compile command not found.
+tools/qrect.cpp [192/425]
+tools/qrefcount.cpp [193/425]
+tools/qregexp.cpp [194/425]
+tools/qregularexpression.cpp [195/425]
+tools/qringbuffer.cpp [196/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qscopedpointer.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qscopedvaluerollback.cpp. Compile command not found.
+tools/qshareddata.cpp [197/425]
+tools/qsharedpointer.cpp [198/425]
+tools/qsimd.cpp [199/425]
+tools/qsize.cpp [200/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qstack.cpp. Compile command not found.
+tools/qstring.cpp [201/425]
+tools/qstring_compat.cpp [202/425]
+tools/qstringbuilder.cpp [203/425]
+tools/qstringlist.cpp [204/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qstringmatcher.cpp. Compile command not found.
+tools/qtextboundaryfinder.cpp [205/425]
+tools/qtimeline.cpp [206/425]
+tools/qtimezone.cpp [207/425]
+tools/qtimezoneprivate.cpp [208/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qtimezoneprivate_android.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qtimezoneprivate_icu.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qtimezoneprivate_tz.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qtimezoneprivate_win.cpp. Compile command not found.
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qunicodetables.cpp. Compile command not found.
+tools/qunicodetools.cpp [209/425]
+tools/qvector.cpp [210/425]
+Skipping /Users/mg/Work/friend/measure/QT/qt-everywhere-opensource-src-5.6.3/qtbase/src/corelib/tools/qvector_msvc.cpp. Compile command not found.
+tools/qversionnumber.cpp [211/425]
+tools/qvsnprintf.cpp [212/425]
+xml/qxmlstream.cpp [213/425]
+xml/qxmlutils.cpp [214/425]
+
+Number of processed friend function declarations: 177
+Number of processed friend class declarations: 383
+
+########## Friend FUNCTIONS ##########
+Number of available friend function definitions: 185
+Number of friend function declarations with zero priv entity declared in host class: 0
+Average usage of priv entities (vars, funcs, types) in friend functions: 33.643822 %
+Friend functions private usage (in percentage) distribution:
+(0,0)		91
+(2,3)		1
+(3,4)		12
+(4,5)		2
+(6,7)		1
+(7,8)		2
+(10,11)		1
+(12,13)		1
+(14,15)		1
+(20,21)		3
+(25,26)		1
+(33,34)		6
+(40,41)		1
+(42,43)		1
+(50,51)		5
+(66,67)		3
+(100,101)	53
+Friend functions private usage (by piece) distribution:
+0		91
+1		49
+2		38
+3		1
+4		6
+Number of Meyers candidates: 0
+
+########## Friend CLASSES ##########
+Number of available function definitions in friend classes: 4355
+Number of function declarations of friend classes with zero priv entity declared in host class: 66
+Average usage of priv entities (vars, funcs, types) in friend classes: 1.186172 %
+"Indirect friend" functions private usage (in percentage) distribution:
+(0,0)		4046
+(1,2)		1
+(3,4)		30
+(4,5)		25
+(5,6)		2
+(6,7)		19
+(7,8)		41
+(8,9)		13
+(9,10)		14
+(10,11)		10
+(11,12)		14
+(12,13)		24
+(13,14)		5
+(14,15)		26
+(16,17)		3
+(18,19)		10
+(20,21)		4
+(21,22)		10
+(22,23)		1
+(25,26)		21
+(31,32)		1
+(33,34)		5
+(37,38)		1
+(50,51)		17
+(55,56)		1
+(78,79)		1
+(100,101)	10
+"Indirect friend" functions private usage (by piece) distribution:
+0		4046
+1		210
+2		65
+3		23
+4		5
+5		2
+6		1
+7		1
+10		1
+18		1
